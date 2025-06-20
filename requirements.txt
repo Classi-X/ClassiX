@@ -11,3 +11,4 @@ SQLAlchemy
 twilio
 Werkzeug
 gunicorn
+psycopg2-binary
