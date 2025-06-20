@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Home | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+
+<section class="position-relative text-white py-5 shadow-lg animate__animated animate__fadeInDown"
+  style="background: url('https://picsum.photos/1600/800?random=1') center center / cover no-repeat;">
+  <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
+  <div class="container text-center position-relative">
+    <h1 class="display-4 fw-bold mb-3">Smart Attendance for Smarter Institutions</h1>
+    <p class="lead mb-4">Automated tracking, AI insights & seamless communication — all in one powerful platform.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+      {% if current_user.is_authenticated %}
+      {% if current_user.role == 'admin' %}
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-lg btn-light text-primary fw-bold me-3 shadow-sm">
+        <i class="fas fa-tools me-2"></i>Admin Dashboard
+      </a>
+      {% elif current_user.role == 'teacher' %}
+      <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-lg btn-light text-info fw-bold me-3 shadow-sm">
+        <i class="fas fa-chalkboard-teacher me-2"></i>Teacher Dashboard
+      </a>
+      {% elif current_user.role == 'student' %}
+      <a href="{{ url_for('student_dashboard') }}" class="btn btn-lg btn-light text-primary fw-bold me-3 shadow-sm">
+        <i class="fas fa-user-graduate me-2"></i>My Attendance
+      </a>
+      {% elif current_user.role == 'parent' %}
+      <a href="{{ url_for('parent_dashboard') }}" class="btn btn-lg btn-light text-warning fw-bold me-3 shadow-sm">
+        <i class="fas fa-user-friends me-2"></i>Parent Panel
+      </a>
+      {% else %}
+      <a href="{{ url_for('superadmin_dashboard') }}"
+        class="btn btn-lg btn-light text-secondary fw-bold me-3 shadow-sm">
+        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+      </a>
+      {% endif %}
+      {% else %}
+      <a href="{{ url_for('register') }}" class="btn btn-lg btn-light text-primary fw-bold me-3 shadow-sm">
+        <i class="fas fa-user-plus me-2"></i>Get Started
+      </a>
+      {% endif %}
+      <a href="{{ url_for('about') }}" class="btn btn-lg btn-outline-light shadow-sm me-3 mb-2 mb-sm-0">
+        <i class="fas fa-info-circle me-2"></i>Learn More
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<section class="py-5 bg-white">
+  <div class="container animate__animated animate__fadeInUp">
+    <h2 class="text-center fw-bold mb-5">Key Features</h2>
+    <div class="row g-4">
+      {% set features = [
+      ('fas fa-qrcode', 'QR & Biometric Attendance', 'Flexible options for secure check-ins using QR codes or simulated
+      biometrics.'),
+      ('fas fa-key', 'PIN & OTP Registration', 'Role-based secure registration with admin-generated PINs and email OTP
+      verification.'),
+      ('fas fa-chart-line', 'Analytics & Forecasting', 'AI-powered attendance predictions and risk alerts using machine
+      learning.'),
+      ('fas fa-envelope', 'Multi-channel Notifications', 'Stay informed via Email, SMS, and WhatsApp messages.'),
+      ('fas fa-chalkboard-teacher', 'Class & Subject Management', 'Admins and Teachers can assign and schedule subjects
+      effortlessly.'),
+      ('fas fa-comments', 'Built-in Chat System', 'Real-time messaging between teachers, students, and parents.')
+      ] %}
+      {% for icon, title, desc in features %}
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+          <i class="{{ icon }} fa-3x text-primary mb-3"></i>
+          <h5 class="fw-semibold">{{ title }}</h5>
+          <p class="text-muted">{{ desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+<section class="bg-light py-5">
+  <div class="container animate__animated animate__fadeInUp">
+    <h2 class="text-center fw-bold mb-5">How It Works</h2>
+    <div class="row g-4 text-center">
+      {% set steps = [
+      ('fas fa-user-check', 'Register & Verify', 'Users sign up with a role and verify via OTP & PIN.'),
+      ('fas fa-university', 'Setup Institution', 'Admins configure institution details and classes.'),
+      ('fas fa-calendar-check', 'Mark Attendance', 'Teachers take attendance using QR/manual/biometric methods.'),
+      ('fas fa-chart-bar', 'Analyze & Notify', 'The system generates insights and notifies students & parents.')
+      ] %}
+      {% for icon, title, desc in steps %}
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body py-4">
+            <i class="{{ icon }} fa-2x text-success mb-3"></i>
+            <h6 class="fw-bold">{{ title }}</h6>
+            <p class="text-muted small">{{ desc }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+<section class="py-5 bg-white">
+  <div class="container animate__animated animate__fadeInUp">
+    <h2 class="text-center fw-bold mb-5">Who Is This For?</h2>
+    <div class="row g-4 text-center">
+      {% set roles = [
+      ('fas fa-user-shield', 'Admins', 'Manage institution setup, PIN generation, approvals, and analytics.'),
+      ('fas fa-chalkboard', 'Teachers', 'Assign subjects, mark attendance, chat with students/parents.'),
+      ('fas fa-user-graduate', 'Students', 'Easily mark attendance, monitor records, and stay informed.'),
+      ('fas fa-user-friends', 'Parents', 'Track child’s attendance, receive alerts, and communicate instantly.')
+      ] %}
+      {% for icon, role, benefit in roles %}
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body py-4">
+            <i class="{{ icon }} fa-2x text-info mb-3"></i>
+            <h6 class="fw-bold">{{ role }}</h6>
+            <p class="text-muted small">{{ benefit }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+
+<section class="bg-light py-4">
+  <div class="container text-center animate__animated animate__fadeInUp">
+    <h5 class="mb-4 fw-bold">Want to know more?</h5>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+      <a href="{{ url_for('about') }}" class="btn btn-outline-primary btn-sm px-3">
+        <i class="fas fa-info-circle me-1"></i> About
+      </a>
+      <a href="{{ url_for('contact') }}" class="btn btn-outline-secondary btn-sm px-3">
+        <i class="fas fa-envelope me-1"></i> Contact
+      </a>
+      <a href="{{ url_for('terms') }}" class="btn btn-outline-success btn-sm px-3">
+        <i class="fas fa-file-contract me-1"></i> Terms
+      </a>
+      <a href="{{ url_for('privacy') }}" class="btn btn-outline-dark btn-sm px-3">
+        <i class="fas fa-user-secret me-1"></i> Privacy
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<section class="text-center py-5">
+  <div class="container animate__animated animate__fadeInUp">
+    <h3 class="fw-bold mb-3">Your institution deserves smarter attendance</h3>
+    {% if current_user.is_authenticated %}
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-lg btn-success me-3 shadow-sm">
+      <i class="fas fa-tools me-2"></i>Admin Dashboard
+    </a>
+    {% elif current_user.role == 'teacher' %}
+    <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-lg btn-info me-3 shadow-sm">
+      <i class="fas fa-chalkboard-teacher me-2"></i>Teacher Dashboard
+    </a>
+    {% elif current_user.role == 'student' %}
+    <a href="{{ url_for('student_dashboard') }}" class="btn btn-lg btn-primary me-3 shadow-sm">
+      <i class="fas fa-user-graduate me-2"></i>My Attendance
+    </a>
+    {% elif current_user.role == 'parent' %}
+    <a href="{{ url_for('parent_dashboard') }}" class="btn btn-lg btn-warning me-3 shadow-sm">
+      <i class="fas fa-user-friends me-2"></i>Parent Panel
+    </a>
+    {% else %}
+    <a href="{{ url_for('superadmin_dashboard') }}" class="btn btn-lg btn-secondary me-3 shadow-sm">
+      <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+    </a>
+    {% endif %}
+    {% else %}
+    <a href="{{ url_for('register') }}" class="btn btn-lg btn-primary shadow-sm">
+      <i class="fas fa-rocket me-2"></i>Start Now
+    </a>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

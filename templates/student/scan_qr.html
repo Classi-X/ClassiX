@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Scan QR Code | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+
+<div class="container py-3">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+
+
+      <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
+        <div class="card-header bg-primary text-white text-center">
+          <h4 class="mb-0">
+            <i class="fas fa-qrcode me-2"></i>Scan QR Code for Attendance
+          </h4>
+        </div>
+        <div class="card-body">
+
+
+          <div class="alert alert-info d-flex align-items-center justify-content-center text-center mb-4">
+            <i class="fas fa-info-circle me-2"></i>
+            <span><strong>Instructions:</strong> Scan the QR code provided by your teacher or enter the token
+              manually.</span>
+          </div>
+
+
+          <div class="card mb-4 shadow-sm border-0">
+            <div class="card-header bg-light d-flex align-items-center">
+              <h6 class="mb-0"><i class="fas fa-camera me-2 text-primary"></i>QR Code Scanner</h6>
+            </div>
+            <div class="card-body text-center">
+              <div id="qr-reader" class="rounded border border-2 border-secondary-subtle mb-3"
+                style="width: 100%; max-width: 400px; margin: 0 auto; aspect-ratio: 1 / 1;"></div>
+              <button id="startScanner" class="btn btn-primary">
+                <i class="fas fa-camera me-1"></i> Start Scanner
+              </button>
+            </div>
+          </div>
+
+
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-light d-flex align-items-center">
+              <h6 class="mb-0"><i class="fas fa-keyboard me-2 text-success"></i>Manual Token Entry</h6>
+            </div>
+            <div class="card-body">
+              <form method="POST" id="attendanceForm">
+                <div class="mb-3">
+                  <label for="token" class="form-label">Enter Token</label>
+                  <input type="text" class="form-control text-center" id="token" name="token"
+                    placeholder="Enter QR token" maxlength="50" required>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                  </a>
+                  <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check me-2"></i>Mark Attendance
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <div class="card mt-4 shadow-sm border-0 animate__animated animate__fadeInUp">
+        <div class="card-header bg-light">
+          <h6 class="mb-0"><i class="fas fa-question-circle me-2 text-info"></i>Need Help?</h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="text-primary">QR Code Scanning Tips</h6>
+              <ul class="small ps-3">
+                <li>Ensure good lighting</li>
+                <li>Hold device steady</li>
+                <li>Keep QR code in camera frame</li>
+                <li>Allow camera access when prompted</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-success">Manual Entry Tips</h6>
+              <ul class="small ps-3">
+                <li>Obtain token from your teacher</li>
+                <li>Enter the token exactly as given</li>
+                <li>Token is case-sensitive</li>
+                <li>Token expires after 15 minutes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+  document.getElementById('startScanner').addEventListener('click', function () {
+    const qrReader = new Html5Qrcode("qr-reader");
+
+    qrReader.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: 250
+      },
+      qrCodeMessage => {
+
+        qrReader.stop().then(() => {
+          document.getElementById('token').value = qrCodeMessage;
+          alert("QR Code Scanned: " + qrCodeMessage);
+          document.getElementById('attendanceForm').submit();
+        }).catch(err => {
+          console.error("Failed to stop scanner", err);
+        });
+      },
+      errorMessage => {
+
+      }
+    ).catch(err => {
+      alert("Camera initialization failed: " + err);
+    });
+  });
+</script>
+{% endblock %}

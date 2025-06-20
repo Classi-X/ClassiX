@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Super Admin Dashboard | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<script src="https://kit.fontawesome.com/a2e0ad04e3.js" crossorigin="anonymous"></script>
+
+<div class="container py-4">
+    <h2 class="mb-4 d-flex align-items-center">
+        <i class="fas fa-user-shield me-2 text-primary"></i> Super Admin Dashboard
+    </h2>
+    <a href="{{ url_for('super_logout') }}" class="btn btn-outline-danger mb-4">
+        <i class="fas fa-sign-out-alt me-1"></i> Logout
+    </a>
+    <a class="btn btn-outline-primary mb-4" href="{{ url_for('chat_history') }}" id="myChatsLink">
+        <div class="d-flex align-items-center blink-area" id="blinkArea">
+            <i class="fas fa-comments me-1"></i>
+            <span class="chat-label">My Chats</span>
+        </div>
+    </a>
+    <style>
+        .blink-area.blinking {
+            color: #dc3545 !important;
+            animation: blinkRed 1.2s ease-in-out infinite;
+            font-weight: 600;
+        }
+
+        .blink-area.blinking i {
+            color: #dc3545 !important;
+        }
+
+        @keyframes blinkRed {
+
+            0%,
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 5px rgba(220, 53, 69, 0.6);
+            }
+
+            50% {
+                opacity: 0.4;
+                text-shadow: 0 0 10px rgba(220, 53, 69, 0.9);
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const blinkArea = document.getElementById('blinkArea');
+
+            async function checkNewChats() {
+                try {
+                    const res = await fetch('/chat/has-new');
+                    const data = await res.json();
+                    if (data.new_message) {
+                        blinkArea.classList.add('blinking');
+                    } else {
+                        blinkArea.classList.remove('blinking');
+                    }
+                } catch (err) {
+                    console.error("Error checking chat notifications", err);
+                }
+            }
+
+            checkNewChats();
+            setInterval(checkNewChats, 10000);
+        });
+    </script>
+    <style>
+        .blink-area.blinking {
+            color: #dc3545 !important;
+            animation: blinkRed 1.2s ease-in-out infinite;
+            font-weight: 600;
+        }
+
+        .blink-area.blinking i {
+            color: #dc3545 !important;
+        }
+
+        @keyframes blinkRed {
+
+            0%,
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 5px rgba(220, 53, 69, 0.6);
+            }
+
+            50% {
+                opacity: 0.4;
+                text-shadow: 0 0 10px rgba(220, 53, 69, 0.9);
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const blinkArea = document.getElementById('blinkArea');
+
+            async function checkNewChats() {
+                try {
+                    const res = await fetch('/chat/has-new');
+                    const data = await res.json();
+                    if (data.new_message) {
+                        blinkArea.classList.add('blinking');
+                    } else {
+                        blinkArea.classList.remove('blinking');
+                    }
+                } catch (err) {
+                    console.error("Error checking chat notifications", err);
+                }
+            }
+
+            checkNewChats();
+            setInterval(checkNewChats, 10000);
+        });
+    </script>
+
+
+    {% for role, user_list in users.items() %}
+    <div class="card mb-5 shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-capitalize"><i class="fas fa-users me-2"></i>{{ role }}</h5>
+            <input type="text" class="form-control form-control-sm w-50" placeholder="Search {{ role }}..."
+                onkeyup="filterTable(this, 'table-{{ role }}')">
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped mb-0" id="table-{{ role }}">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in user_list %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if user.status == 'active' else 'secondary' }}">{{
+                                user.status }}</span>
+                        </td>
+                        <td>
+                            <form method="post" action="{{ url_for('delete_user', user_id=user.id) }}"
+                                onsubmit="return confirm('Delete this user?');">
+                                <button class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5">No users found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    function filterTable(input, tableId) {
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById(tableId);
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            let rowText = rows[i].innerText.toLowerCase();
+            rows[i].style.display = rowText.includes(filter) ? '' : 'none';
+        }
+    }
+</script>
+
+{% endblock %}

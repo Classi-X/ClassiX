@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}User Search | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-3 animate__animated animate__fadeInDown">
+    <h4 class="fw-bold text-primary d-flex align-items-center">
+      <i class="fas fa-users me-2"></i> Search Results for "<span class="text-dark">{{ search_term }}</span>"
+    </h4>
+  </div>
+
+  {% if users %}
+  <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
+    <div class="card-body">
+
+      <div class="mb-3">
+        <input type="text" id="liveSearchInput" class="form-control form-control-sm"
+          placeholder="🔍 Filter by username, email, or role...">
+      </div>
+
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="usersTable">
+          <thead class="table-light">
+            <tr>
+              <th><i class="fas fa-user me-1"></i> Username</th>
+              <th><i class="fas fa-envelope me-1"></i> Email</th>
+              <th><i class="fas fa-user-tag me-1"></i> Role</th>
+              <th><i class="fas fa-comments me-1"></i> Chat</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.username }}</td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span class="badge bg-secondary text-uppercase small">{{ user.role.title() }}</span>
+              </td>
+              <td>
+                <a href="{{ url_for('chat_with_user', user_id=user.id) }}" class="btn btn-success btn-sm rounded-pill">
+                  <i class="fas fa-comment-dots me-1"></i> Chat
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-warning mt-4 animate__animated animate__fadeIn">
+    <i class="fas fa-exclamation-circle me-2"></i> No matching users found in your institution.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('liveSearchInput')?.addEventListener('input', function () {
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#usersTable tbody tr');
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      row.style.display = text.includes(filter) ? '' : 'none';
+    });
+  });
+</script>
+{% endblock %}

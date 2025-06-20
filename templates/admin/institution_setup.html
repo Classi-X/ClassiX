@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Institution Setup | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9">
+      <div class="card shadow-sm border-0 mt-3 animate__animated animate__fadeIn">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-1 d-flex align-items-center">
+            <i class="fas fa-building me-2"></i> Institution Setup
+          </h5>
+          <p class="text-white-50 mb-0 small">
+            Supports <strong>School, College, and University</strong> configurations with relevant fields.
+          </p>
+        </div>
+
+        <div class="card-body bg-light">
+          <form method="POST" id="institutionForm" oninput="validateForm()">
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="name" class="form-label">
+                  <i class="fas fa-school me-1 text-primary"></i> Institution Name <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="name" name="name"
+                  value="{{ institution.name if institution else '' }}" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="type" class="form-label">
+                  <i class="fas fa-landmark me-1 text-primary"></i> Type <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="type" name="type" required onchange="toggleFields()">
+                  <option value="">Select Type</option>
+                  <option value="School" {{ 'selected' if institution and institution.type=='School' else '' }}>School
+                  </option>
+                  <option value="College" {{ 'selected' if institution and institution.type=='College' else '' }}>
+                    College</option>
+                  <option value="University" {{ 'selected' if institution and institution.type=='University' else '' }}>
+                    University</option>
+                </select>
+              </div>
+            </div>
+
+
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="country" class="form-label">Country <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="country" name="country"
+                  value="{{ institution.country if institution else '' }}" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="state" class="form-label">State <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="state" name="state"
+                  value="{{ institution.state if institution else '' }}" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="city" name="city"
+                  value="{{ institution.city if institution else '' }}" required>
+              </div>
+            </div>
+
+
+            <div class="mb-3">
+              <label for="allowed_domain" class="form-label">
+                Allowed Email Domain <span class="text-muted small">(Optional)</span>
+              </label>
+              <input type="text" class="form-control" id="allowed_domain" name="allowed_domain"
+                value="{{ institution.allowed_domain if institution and institution.allowed_domain else '' }}"
+                placeholder="e.g., @institution.edu">
+              <div class="form-text text-muted">
+                Only users with emails ending in this domain can register.<br>
+                Leave blank to allow any email.
+              </div>
+            </div>
+
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="medium" class="form-label">Medium <span class="text-danger">*</span></label>
+                <select class="form-select" id="medium" name="medium" required>
+                  <option value="">Select Medium</option>
+                  <option value="English" {{ 'selected' if institution and institution.medium=='English' else '' }}>
+                    English</option>
+                  <option value="Hindi" {{ 'selected' if institution and institution.medium=='Hindi' else '' }}>Hindi
+                  </option>
+                  <option value="Other" {{ 'selected' if institution and institution.medium=='Other' else '' }}>Other
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="classes" class="form-label">Class/Semester <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="classes" name="classes" placeholder="e.g., 1, 2, 3"
+                  value="{{ institution.classes if institution else '' }}" required>
+                <div class="form-text">Comma-separated values (e.g., 1, 2, 3)</div>
+              </div>
+            </div>
+
+
+            <div class="row">
+              <div class="col-md-6 mb-3" id="streamsBlock">
+                <label for="streams" class="form-label">Streams</label>
+                <input type="text" class="form-control" id="streams" name="streams"
+                  value="{{ institution.streams if institution else '' }}" placeholder="e.g., Science, Commerce, Arts">
+                <div class="form-text">Comma-separated (for 11th/12th classes)</div>
+              </div>
+
+              <div class="col-md-6 mb-3" id="degreesBlock">
+                <label for="degrees" class="form-label">Degrees</label>
+                <input type="text" class="form-control" id="degrees" name="degrees"
+                  value="{{ institution.degrees if institution else '' }}" placeholder="e.g., BSc, BCom, BA, MSc">
+                <div class="form-text">Comma-separated (for College/University)</div>
+              </div>
+            </div>
+
+
+            <div class="d-flex justify-content-between mt-4">
+              <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+              </a>
+              <button type="submit" class="btn btn-primary" id="saveBtn" disabled>
+                <i class="fas fa-save me-2"></i>Save Institution Details
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<style>
+  .form-control,
+  .form-select,
+  .btn {
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+
+  .btn-primary:hover {
+    transform: scale(1.03);
+  }
+
+  .card-header h5 {
+    font-weight: 600;
+  }
+</style>
+
+<script>
+
+  function toggleFields() {
+    const type = document.getElementById("type").value;
+    const classesVal = document.getElementById("classes").value;
+    const streamsBlock = document.getElementById("streamsBlock");
+    const degreesBlock = document.getElementById("degreesBlock");
+
+    degreesBlock.style.display = (type === "College" || type === "University") ? "block" : "none";
+    streamsBlock.style.display = "none";
+
+    if (type === "School") {
+      const classes = classesVal.split(",").map(c => c.trim());
+      if (classes.some(c => c === "11" || c === "12")) {
+        streamsBlock.style.display = "block";
+      }
+    }
+    validateForm();
+  }
+
+
+  function validateForm() {
+    const name = document.getElementById("name").value.trim();
+    const type = document.getElementById("type").value;
+    const country = document.getElementById("country").value.trim();
+    const state = document.getElementById("state").value.trim();
+    const city = document.getElementById("city").value.trim();
+    const medium = document.getElementById("medium").value;
+    const classes = document.getElementById("classes").value.trim();
+    const saveBtn = document.getElementById("saveBtn");
+
+    if (!name || !type || !country || !state || !city || !medium || !classes) {
+      saveBtn.disabled = true;
+      return;
+    }
+
+    const classValid = /^[\w\s\d,]+$/.test(classes);
+    if (!classValid) {
+      saveBtn.disabled = true;
+      return;
+    }
+
+    const typeValue = type;
+    if (typeValue === "College" || typeValue === "University") {
+      const degrees = document.getElementById("degrees").value.trim();
+      if (!degrees || !/^[a-zA-Z\s,]+$/.test(degrees)) {
+        saveBtn.disabled = true;
+        return;
+      }
+    }
+
+    if (typeValue === "School") {
+      const classesList = classes.split(",").map(c => c.trim());
+      const hasSenior = classesList.includes("11") || classesList.includes("12");
+      if (hasSenior) {
+        const streams = document.getElementById("streams").value.trim();
+        if (!streams || !/^[a-zA-Z\s,]+$/.test(streams)) {
+          saveBtn.disabled = true;
+          return;
+        }
+      }
+    }
+
+    saveBtn.disabled = false;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    toggleFields();
+    validateForm();
+
+    document.getElementById("classes").addEventListener("input", toggleFields);
+  });
+</script>
+{% endblock %}

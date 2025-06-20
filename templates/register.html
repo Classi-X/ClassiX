@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Register | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow mt-4">
+                <div class="card-header bg-success text-white text-center">
+                    <h4><i class="fas fa-user-plus me-2"></i>Register</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="registerForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required
+                                placeholder="e.g., student@yourcollege.ac.in or personal@gmail.com">
+                            <div class="form-text text-muted">
+                                <strong>Important:</strong><br>
+                                If you are registering as a <strong>Student</strong> or <strong>Teacher</strong>, please
+                                check with your institution’s administration or head department whether your
+                                college/school/university has a specific email domain requirement (like
+                                <code>@vgecg.ac.in</code>).<br><br>
+
+                                If your institution <strong>has set a domain</strong>, you <strong>must use your
+                                    official
+                                    email</strong> that ends with that domain. Registration will be rejected
+                                otherwise.<br><br>
+
+                                If your institution <strong>does not require a domain</strong> or you don’t have an
+                                official
+                                email, you can use your <strong>personal email</strong> (like
+                                <code>name@gmail.com</code>).<br><br>
+
+                                This domain requirement is <strong>only applicable</strong> for
+                                <strong>Teachers</strong>
+                                and <strong>Students</strong>.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Role</label>
+                            <select class="form-select" id="role" name="role" required onchange="toggleFields()">
+                                <option value="">Select Role</option>
+                                <option value="admin">Admin (Institute Head)</option>
+                                <option value="teacher">Teacher</option>
+                                <option value="student">Student</option>
+                                <option value="parent">Parent</option>
+                            </select>
+                        </div>
+
+
+                        <div class="mb-3" id="pinField" style="display: none;">
+                            <label for="secure_pin" class="form-label">Secure PIN</label>
+                            <input type="text" class="form-control" id="secure_pin" name="secure_pin"
+                                placeholder="Enter 6-digit PIN provided by admin">
+                            <div class="form-text">Contact admin to get your secure PIN</div>
+                        </div>
+
+
+                        <div id="studentFields" style="display: none;">
+
+
+                            <div class="mb-3" id="classField">
+                                <label for="class_name" class="form-label">Class/Semester *</label>
+                                <select id="class_name" name="class_name" class="form-select" required>
+                                    <option value="">Select Class/Semester</option>
+                                </select>
+                            </div>
+
+
+                            <div class="mb-3" id="streamField" style="display: none;">
+                                <label for="stream_or_semester" class="form-label">Stream</label>
+                                <select id="stream_or_semester" name="stream_or_semester" class="form-select">
+                                    <option value="">Select Stream</option>
+                                </select>
+                            </div>
+
+
+                            <div class="mb-3" id="subjectField" style="display: none;">
+                                <label for="subject" class="form-label">Subject *</label>
+                                <input type="text" id="subjectSearch" class="form-control mb-2"
+                                    placeholder="🔍 Search Subject...">
+                                <select id="subject" name="subject" class="form-select" multiple>
+                                    <option value="">Select Subject</option>
+                                </select>
+                            </div>
+
+
+                            <div class="mb-3" id="degreeField" style="display: none;">
+                                <label for="degree" class="form-label">Degree</label>
+                                <select id="degree" name="degree" class="form-select">
+                                    <option value="">Select Degree</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="mb-3">
+                            <button type="button" id="sendOtpBtn" class="btn btn-warning w-100" onclick="sendOtp()">
+                                <span id="sendOtpText">Send OTP</span>
+                                <span id="sendOtpSpinner" class="spinner-border spinner-border-sm d-none" role="status"
+                                    aria-hidden="true"></span>
+                            </button>
+                        </div>
+
+
+                        <div class="mb-3" id="otpSection" style="display:none;">
+                            <label for="otp" class="form-label">Enter OTP</label>
+                            <input type="text" class="form-control" id="otpInput"
+                                placeholder="Enter OTP sent to your email">
+                            <button type="button" id="verifyOtpBtn" class="btn btn-primary mt-2" onclick="verifyOtp()">
+                                <span id="verifyOtpText">Verify OTP</span>
+                                <span id="verifyOtpSpinner" class="spinner-border spinner-border-sm d-none"
+                                    role="status" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                        <script>
+                            function sendOtp() {
+                                const email = document.getElementById('email').value.trim();
+                                const role = document.getElementById('role').value;
+
+                                if (!email || !role) {
+                                    alert('Please enter email and role first.');
+                                    return;
+                                }
+
+
+                                document.getElementById('sendOtpSpinner').classList.remove('d-none');
+                                document.getElementById('sendOtpBtn').disabled = true;
+
+                                fetch('{{ url_for("send_otp") }}', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ email, role })
+                                })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            alert('OTP sent successfully.');
+                                            document.getElementById('otpSection').style.display = 'block';
+                                        } else {
+                                            alert(data.message || 'Failed to send OTP.');
+                                        }
+                                    })
+                                    .catch(err => {
+                                        alert('Error sending OTP.');
+                                        console.error(err);
+                                    })
+                                    .finally(() => {
+
+                                        document.getElementById('sendOtpSpinner').classList.add('d-none');
+                                        document.getElementById('sendOtpBtn').disabled = false;
+                                    });
+                            }
+
+                            function verifyOtp() {
+                                const otp = document.getElementById('otpInput').value.trim();
+
+
+                                document.getElementById('verifyOtpSpinner').classList.remove('d-none');
+                                document.getElementById('verifyOtpBtn').disabled = true;
+
+                                fetch('{{ url_for("verify_otp") }}', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                    body: new URLSearchParams({ otp: otp })
+                                })
+                                    .then(res => res.text())
+                                    .then(html => {
+                                        if (html.includes('OTP verified successfully')) {
+                                            alert('OTP verified.');
+                                            document.getElementById('otpInput').disabled = true;
+                                            document.getElementById('registerForm').submit();
+                                        } else {
+                                            alert('Invalid OTP.');
+                                        }
+                                    })
+                                    .catch(err => {
+                                        alert('Error verifying OTP.');
+                                        console.error(err);
+                                    })
+                                    .finally(() => {
+
+                                        document.getElementById('verifyOtpSpinner').classList.add('d-none');
+                                        document.getElementById('verifyOtpBtn').disabled = false;
+                                    });
+                            }
+                            document.querySelectorAll('#registerForm input, #registerForm select').forEach((el, index, elements) => {
+                                el.addEventListener('keydown', function (e) {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const next = elements[index + 1];
+                                        if (next) next.focus();
+                                    }
+                                });
+                            });
+
+                        </script>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    async function updateOptions() {
+        const role = document.getElementById('role').value;
+        const pin = document.getElementById('secure_pin').value.trim();
+        if (!pin || !(role === 'teacher' || role === 'student')) return;
+
+        const resp = await fetch('{{ url_for("get_registration_options") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin, role })
+        });
+
+        if (!resp.ok) return;
+
+        const { classes, streams, subjects, degrees, institution_type } = await resp.json();
+
+
+        const classSelect = document.getElementById('class_name');
+        classSelect.innerHTML = '<option value="">Select Class/Semester</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('classField').style.display = 'block';
+
+
+        const streamSelect = document.getElementById('stream_or_semester');
+        streamSelect.innerHTML = '<option value="">Select Stream</option>' + streams.map(s => `<option value="${s}">${s}</option>`).join('');
+        document.getElementById('streamField').style.display = 'none';
+
+        const subjectSelect = document.getElementById('subject');
+        subjects.sort((a, b) => a.localeCompare(b));
+        subjectSelect.innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+        document.getElementById('subjectSearch').addEventListener('input', function () {
+            const search = this.value.toLowerCase();
+            const options = document.querySelectorAll('#subject option');
+            options.forEach(option => {
+                const match = option.textContent.toLowerCase().includes(search);
+                option.style.display = match ? 'block' : 'none';
+            });
+        });
+
+        document.getElementById('subjectField').style.display = institution_type !== 'school' ? 'block' : 'none';
+        if (institution_type !== 'school') {
+            subjectSelect.required = true;
+        }
+
+        const degreeSelect = document.getElementById('degree');
+        degreeSelect.innerHTML = '<option value="">Select Degree</option>' + degrees.map(d => `<option value="${d}">${d}</option>`).join('');
+        document.getElementById('degreeField').style.display = institution_type !== 'school' ? 'block' : 'none';
+
+
+        if (institution_type === 'school') {
+            classSelect.addEventListener('change', function () {
+                if (['11', '12'].includes(this.value)) {
+                    document.getElementById('streamField').style.display = 'block';
+                } else {
+                    document.getElementById('streamField').style.display = 'none';
+                }
+            });
+        }
+    }
+
+    document.getElementById('secure_pin').addEventListener('change', updateOptions);
+    document.getElementById('role').addEventListener('change', () => {
+        toggleFields();
+        updateOptions();
+    });
+
+    function toggleFields() {
+        const role = document.getElementById('role').value;
+        const pinField = document.getElementById('pinField');
+        const securePinInput = document.getElementById('secure_pin');
+
+        const studentFields = document.getElementById('studentFields');
+
+        const classField = document.getElementById('classField');
+        const classInput = document.getElementById('class_name');
+
+        const streamField = document.getElementById('streamField');
+        const streamInput = document.getElementById('stream_or_semester');
+
+        const subjectField = document.getElementById('subjectField');
+        const subjectInput = document.getElementById('subject');
+
+        const degreeField = document.getElementById('degreeField');
+        const degreeInput = document.getElementById('degree');
+
+
+        pinField.style.display = 'none';
+        securePinInput.required = false;
+
+        studentFields.style.display = 'none';
+
+        classField.style.display = 'none';
+        classInput.required = false;
+
+        streamField.style.display = 'none';
+        streamInput.required = false;
+
+        subjectField.style.display = 'none';
+        subjectInput.required = false;
+
+        degreeField.style.display = 'none';
+        degreeInput.required = false;
+
+        if (role === 'student' || role === 'teacher') {
+            pinField.style.display = 'block';
+            securePinInput.required = true;
+        }
+
+        if (role === 'student') {
+            studentFields.style.display = 'block';
+
+            const institutionType = document.body.getAttribute('data-institution-type');
+            const selectedClass = classInput.value;
+
+            classField.style.display = 'block';
+            classInput.required = true;
+
+            if (institutionType === 'school') {
+                if (selectedClass === '11' || selectedClass === '12') {
+                    streamField.style.display = 'block';
+                    streamInput.required = true;
+                }
+            } else if (institutionType === 'college' || institutionType === 'university') {
+                subjectField.style.display = 'block';
+                subjectInput.required = true;
+
+                degreeField.style.display = 'block';
+                degreeInput.required = true;
+            }
+        }
+    }
+
+</script>
+{% endblock %}

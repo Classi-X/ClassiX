@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="title" content="ClassiX | AI Attendance Management for Schools & Colleges">
+    <meta name="description"
+        content="ClassiX is an AI-powered attendance platform with multi-role access, QR and biometric tracking, analytics, OTP login, and secure real-time communication.">
+    <meta name="keywords"
+        content="ClassiX, attendance management system, school attendance software, biometric attendance, QR attendance, AI attendance tracker, teacher student parent login, class analytics, educational CRM, edtech SaaS platform">
+    <meta name="author" content="ClassiX Team - MultiMosaic">
+    <meta name="robots" content="index, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://classix.onrender.com/">
+
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://classix.onrender.com/">
+    <meta property="og:title" content="ClassiX | AI Attendance Platform for Schools & Colleges">
+    <meta property="og:description"
+        content="Track attendance smartly using QR codes, biometrics, AI alerts & analytics — trusted by institutions for students, teachers, parents, and admins.">
+    <meta property="og:image" content="https://classix.onrender.com/static/img/logo.png">
+
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://classix.onrender.com/">
+    <meta name="twitter:title" content="ClassiX | AI Attendance System with QR, Chat & OTP">
+    <meta name="twitter:description"
+        content="Manage attendance smarter with ClassiX — featuring AI, real-time chat, role-based access, and secure notifications.">
+    <meta name="twitter:image" content="https://classix.onrender.com/static/img/logo.png">
+
+
+    <link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/logo.png') }}">
+
+
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="ClassiX">
+
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ClassiX - Attendance Management System",
+  "operatingSystem": "Web",
+  "applicationCategory": "EducationApplication",
+  "description": "ClassiX is an AI-based attendance system supporting QR codes, biometrics, chat, analytics, OTP login, and role-specific dashboards for schools and colleges.",
+  "url": "https://classix.onrender.com/",
+  "author": {
+    "@type": "Organization",
+    "name": "MultiMosaic",
+    "url": "https://classix.onrender.com/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "MultiMosaic"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "screenshot": "https://classix.onrender.com/static/img/logo.png",
+  "image": "https://classix.onrender.com/static/img/logo.png"
+}
+</script>
+
+    <link rel="icon" href="{{ url_for('static', filename='img/logo.png') }}" type="image/x-icon">
+    <meta name="theme-color" content="#0d6efd">
+    <link rel="manifest" href="/manifest.json">
+    <title>{% block title %}ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+        }
+
+        .dashboard-card {
+            transition: transform 0.2s;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .at-risk {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .good-attendance {
+            background-color: #d1edff;
+            border-left: 4px solid #0dcaf0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-gradient bg-primary shadow-sm">
+        <div class="container">
+
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Attendance Logo" width="36" height="36"
+                    class="rounded-circle shadow-sm border border-light" style="filter: brightness(0.3) contrast(1.2);">
+                <span class="fs-5">ClassiX</span>
+            </a>
+
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'admin' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i
+                                class="fas fa-tachometer-alt me-1"></i>Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('institution_setup') }}"><i
+                                class="fas fa-school me-1"></i>Institution Setup</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('generate_pins') }}"><i
+                                class="fas fa-key me-1"></i>Generate Pins</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('student_promotions') }}"><i
+                                class="fas fa-arrow-up me-1"></i>Promotions</a></li>
+                    {% elif current_user.role == 'teacher' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('teacher_dashboard') }}"><i
+                                class="fas fa-chalkboard-teacher me-1"></i>Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('assign_classes') }}"><i
+                                class="fas fa-tasks me-1"></i>Assign Classes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('mark_attendance') }}"><i
+                                class="fas fa-clipboard-check me-1"></i>Mark Attendance</a></li>
+                    {% elif current_user.role == 'student' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('student_dashboard') }}"><i
+                                class="fas fa-user-graduate me-1"></i>Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('parent_contact') }}"><i
+                                class="fas fa-phone me-1"></i>Parent Contact</a></li>
+                    {% elif current_user.role == 'parent' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('parent_dashboard') }}"><i
+                                class="fas fa-users me-1"></i>Dashboard</a></li>
+                    {% elif current_user.role == 'superadmin' %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('superadmin_dashboard') }}"><i
+                                class="fas fa-tools me-1"></i>Super Dashboard</a></li>
+                    {% endif %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('view_own_profile') }}"><i
+                                class="fas fa-id-badge me-1"></i>Profile</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link blink-area" href="{{ url_for('chat_history') }}" id="myChatsLink"><i
+                                class="fas fa-comments me-1"></i>My Chats
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}"><i
+                                class="fas fa-sign-in-alt me-1"></i>Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}"><i
+                                class="fas fa-user-plus me-1"></i>Register</a></li>
+                    {% endif %}
+                </ul>
+
+
+                {% if current_user.is_authenticated %}
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <span>{{ current_user.username }} <small class="text-light">({{ current_user.role.title()
+                                    }})</small></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+
+    <style>
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid #dee2e6;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 1050;
+            height: 60px;
+            padding: 0 10px;
+        }
+
+        .bottom-nav a.nav-link {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-nav a.nav-link i {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+        }
+
+        .bottom-nav a.nav-link.active,
+        .bottom-nav a.nav-link:hover {
+            color: #0d6efd;
+            font-weight: 500;
+        }
+
+        @media (max-width: 767.98px) {
+            .bottom-nav {
+                display: flex;
+                justify-content: space-around;
+            }
+        }
+    </style>
+
+    <nav class="bottom-nav">
+        {% if current_user.is_authenticated %}
+        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+            <i class="fas fa-house-user"></i>
+            <span>Home</span>
+        </a>
+        <a class="nav-link" href="{% if current_user.role == 'admin' %}{{ url_for('admin_dashboard') }}
+                                   {% elif current_user.role == 'teacher' %}{{ url_for('teacher_dashboard') }}
+                                   {% elif current_user.role == 'student' %}{{ url_for('student_dashboard') }}
+                                   {% elif current_user.role == 'parent' %}{{ url_for('parent_dashboard') }}
+                                   {% elif current_user.role == 'superadmin' %}{{ url_for('superadmin_dashboard') }}
+                                   {% endif %}">
+            <i class="fas fa-gauge-high"></i>
+            <span>Dashboard</span>
+        </a>
+        <a class="nav-link" href="{{ url_for('view_own_profile') }}">
+            <i class="fas fa-user-circle"></i>
+            <span>Profile</span>
+        </a>
+        <a class="nav-link blink-area" href="{{ url_for('chat_history') }}" id="mobileChatsLink">
+            <i class="fas fa-comment-dots"></i>
+            <span>Chats</span>
+        </a>
+        <style>
+            .blink-area.blinking {
+                color: #dc3545 !important;
+                animation: blinkRed 1.2s ease-in-out infinite;
+                font-weight: 600;
+            }
+
+            .blink-area.blinking i {
+                color: #dc3545 !important;
+            }
+
+            @keyframes blinkRed {
+
+                0%,
+                100% {
+                    opacity: 1;
+                    text-shadow: 0 0 5px rgba(220, 53, 69, 0.6);
+                }
+
+                50% {
+                    opacity: 0.4;
+                    text-shadow: 0 0 10px rgba(220, 53, 69, 0.9);
+                }
+            }
+        </style>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const blinkTargets = [
+                    document.getElementById('myChatsLink'),
+                    document.getElementById('mobileChatsLink')
+                ].filter(Boolean);
+
+                async function checkNewChats() {
+                    try {
+                        const res = await fetch('/chat/has-new');
+                        const data = await res.json();
+                        blinkTargets.forEach(el => {
+                            if (data.new_message) {
+                                el.classList.add('blinking');
+                            } else {
+                                el.classList.remove('blinking');
+                            }
+                        });
+                    } catch (err) {
+                        console.error("Error checking chat notifications", err);
+                    }
+                }
+
+                checkNewChats();
+                setInterval(checkNewChats, 10000);
+            });
+        </script>
+
+        {% else %}
+        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a class="nav-link" href="{{ url_for('login') }}">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>Login</span>
+        </a>
+        <a class="nav-link" href="{{ url_for('register') }}">
+            <i class="fas fa-user-plus"></i>
+            <span>Register</span>
+        </a>
+        {% endif %}
+    </nav>
+
+    <div class="w-100 d-flex justify-content-center my-3">
+        <form class="input-group" role="search" action="{{ url_for('search_users') }}" method="get"
+            style="max-width: 600px; width: 100%;">
+            <input type="search" name="q" class="form-control shadow-sm border-0 rounded-start-pill ps-4 py-2"
+                placeholder="Search users by username..." aria-label="Search" required>
+            <button class="btn bg-white border-0 rounded-end-pill px-4" type="submit">
+                <i class="fas fa-search text-primary"></i>
+            </button>
+        </form>
+    </div>
+
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+
+    <div class="container-fluid" style="padding: 0;">
+        {% block content %}{% endblock %}
+    </div>
+    <style>
+        @media (max-width: 767.98px) {
+            footer {
+                margin-bottom: 50px !important;
+            }
+        }
+    </style>
+
+    <footer class="pt-5 pb-4 mt-5 border-top border-secondary shadow-lg animate__animated animate__fadeInUp">
+        <div class="container">
+            <div class="row gy-4">
+
+
+                <div class="col-md-4">
+                    <h5 class="text-uppercase fw-bold mb-3">
+                        <i class="fas fa-user-check me-2 text-success"></i> ClassiX
+                    </h5>
+                    <p class="small text-light-emphasis">
+                        A smart, secure, and AI-powered attendance management system for schools, colleges, and
+                        institutions—featuring multi-role access, QR and biometric check-ins, real-time analytics, and
+                        seamless parent-teacher communication.
+                    </p>
+                </div>
+
+
+                <div class="col-md-4">
+                    <h6 class="text-uppercase fw-bold mb-3">
+                        <i class="fas fa-link me-2 text-warning"></i> Quick Links
+                    </h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="/about" class="text-decoration-none d-block py-1 text-light-emphasis"><i
+                                    class="fas fa-angle-right me-2"></i>About Us</a></li>
+                        <li><a href="/terms" class="text-decoration-none d-block py-1 text-light-emphasis"><i
+                                    class="fas fa-angle-right me-2"></i>Terms & Conditions</a></li>
+                        <li><a href="/privacy" class="text-decoration-none d-block py-1 text-light-emphasis"><i
+                                    class="fas fa-angle-right me-2"></i>Privacy Policy</a></li>
+                        <li><a href="/contact" class="text-decoration-none d-block py-1 text-light-emphasis"><i
+                                    class="fas fa-angle-right me-2"></i>Contact Us</a></li>
+                        <li><a href="/chat/32" class="text-decoration-none d-block py-1 text-light-emphasis"><i
+                                    class="fas fa-comments me-2 text-info"></i>Chat with SuperAdmin</a></li>
+                    </ul>
+                </div>
+
+
+                <div class="col-md-4">
+                    <h6 class="text-uppercase fw-bold mb-3">
+                        <i class="fas fa-phone-alt me-2 text-info"></i> Contact
+                    </h6>
+                    <ul class="list-unstyled small text-light-emphasis">
+                        <li class="mb-2"><i class="fas fa-envelope me-2 text-primary"></i>multimosaic.help@gmail.com
+                        </li>
+                        <li class="mb-2"><i class="fas fa-phone me-2 text-success"></i>+91 98765 43210</li>
+                        <li><i class="fas fa-map-marker-alt me-2 text-warning"></i>Ahmedabad, Gujarat, India</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <hr class="mt-4 border-secondary">
+
+
+            <div
+                class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-light-emphasis mt-3">
+                <div class="mb-2 mb-md-0">&copy; 2025 <strong>ClassiX</strong>. All rights
+                    reserved.</div>
+                <div>
+                    <a href="https://www.facebook.com/profile.php?id=61574916413888" class="text-light-emphasis me-3"><i
+                            class="fab fa-facebook-f fa-lg"></i></a>
+                    <a href="https://x.com/multi_mosaic" class="text-light-emphasis me-3"><i
+                            class="fab fa-twitter fa-lg"></i></a>
+                    <a href="https://www.linkedin.com/company/multimosaic" class="text-light-emphasis"><i
+                            class="fab fa-linkedin-in fa-lg"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+    <style>
+        .blink-area.blinking {
+            color: #dc3545 !important;
+            animation: blinkRed 1.2s ease-in-out infinite;
+            font-weight: 600;
+        }
+
+        .blink-area.blinking i {
+            color: #dc3545 !important;
+        }
+
+        @keyframes blinkRed {
+
+            0%,
+            100% {
+                opacity: 1;
+                text-shadow: 0 0 5px rgba(220, 53, 69, 0.6);
+            }
+
+            50% {
+                opacity: 0.4;
+                text-shadow: 0 0 10px rgba(220, 53, 69, 0.9);
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const blinkArea = document.getElementById('myChatsLink');
+
+            async function checkNewChats() {
+                try {
+                    const res = await fetch('/chat/has-new');
+                    const data = await res.json();
+                    if (data.new_message) {
+                        blinkArea.classList.add('blinking');
+                    } else {
+                        blinkArea.classList.remove('blinking');
+                    }
+                } catch (err) {
+                    console.error("Error checking chat notifications", err);
+                }
+            }
+
+            checkNewChats();
+            setInterval(checkNewChats, 10000);
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Attendance | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="card shadow-lg border-0 mt-5 animate__animated animate__fadeIn">
+    <div class="card-header bg-primary text-white d-flex align-items-center">
+      <h4 class="mb-0"><i class="fas fa-check-circle me-2"></i>Mark Attendance</h4>
+    </div>
+    <div class="card-body bg-light">
+      <form method="POST" id="attendanceForm">
+        <div class="row g-4 mb-4">
+
+          <div class="col-md-3">
+            <input type="hidden" id="filtered_student_ids" name="filtered_student_ids">
+            <label for="class_name" class="form-label fw-semibold">
+              <i class="fas fa-layer-group me-1 text-primary"></i>Class/Semester <span class="text-danger">*</span>
+            </label>
+            <select class="form-select shadow-sm" id="class_name" name="class_name" required onchange="showFields()">
+              <option value="">Select Class/Semester</option>
+              {% set seen_classes = [] %}
+              {% for assignment in assignments %}
+              {% if assignment.class_name not in seen_classes %}
+              {% set _ = seen_classes.append(assignment.class_name) %}
+              <option value="{{ assignment.class_name }}">{{ assignment.class_name }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+
+          <div class="col-md-3" id="subjectField" style="display: none;">
+            <label for="subject" class="form-label fw-semibold">
+              <i class="fas fa-book me-1 text-info"></i>Subject <span id="subjectRequired"
+                class="text-danger d-none">*</span>
+            </label>
+            <select class="form-select shadow-sm" id="subject" name="subject">
+              <option value="" disabled selected>Select Subject</option>
+              {% for assignment in assignments %}
+              {% if assignment.subject %}
+              <option value="{{ assignment.subject }}" data-class="{{ assignment.class_name }}">{{ assignment.subject }}
+              </option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+
+          <div class="col-md-3" id="streamField" style="display: none;">
+            <label for="stream_or_semester" class="form-label fw-semibold">
+              <i class="fas fa-code-branch me-1 text-warning"></i>Stream <span id="streamRequired"
+                class="text-danger d-none">*</span>
+            </label>
+            <select class="form-select shadow-sm" id="stream_or_semester" name="stream_or_semester">
+              <option value="">Select Stream</option>
+              {% set seen_streams = [] %}
+              {% for assignment in assignments %}
+              {% if assignment.class_name in ['11', '12'] and assignment.stream_or_semester and
+              assignment.stream_or_semester not in seen_streams %}
+              {% set _ = seen_streams.append(assignment.stream_or_semester) %}
+              <option value="{{ assignment.stream_or_semester }}">{{ assignment.stream_or_semester }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+
+          <div class="col-md-3" id="degreeField" style="display: none;">
+            <label for="degree" class="form-label fw-semibold">
+              <i class="fas fa-graduation-cap me-1 text-success"></i>Degree <span id="degreeRequired"
+                class="text-danger d-none">*</span>
+            </label>
+            <select class="form-select shadow-sm" id="degree" name="degree">
+              <option value="">Select Degree</option>
+              {% set seen_degrees = [] %}
+              {% for assignment in assignments %}
+              {% if assignment.degree and assignment.degree not in seen_degrees %}
+              {% set _ = seen_degrees.append(assignment.degree) %}
+              <option value="{{ assignment.degree }}">{{ assignment.degree }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+
+          <div class="col-md-3">
+            <label for="date_display" class="form-label fw-semibold">
+              <i class="fas fa-calendar-alt me-1 text-secondary"></i>Date & Time (IST) <span
+                class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control shadow-sm" id="date_display" readonly>
+            <input type="hidden" id="date" name="date" required>
+          </div>
+
+
+          <div class="col-md-3 d-flex align-items-end">
+            <button type="button" class="btn btn-outline-primary w-100 shadow-sm" onclick="loadStudents()">
+              <i class="fas fa-users me-1"></i>Load Students
+            </button>
+          </div>
+        </div>
+
+
+        <div id="studentsSection" style="display: none;">
+          <div class="card border-0 shadow animate__animated animate__fadeIn">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+              <h5 class="mb-0"><i class="fas fa-user-graduate me-2 text-dark"></i>Students List</h5>
+              <div>
+                <button type="button" class="btn btn-sm btn-outline-success me-2" onclick="markAllPresent()">
+                  <i class="fas fa-check-double me-1"></i>Mark All Present
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning" onclick="markAllAbsent()">
+                  <i class="fas fa-times me-1"></i>Mark All Absent
+                </button>
+              </div>
+            </div>
+            <div class="card-body bg-light">
+              <div id="studentsList" class="row g-3 mt-3">
+
+              </div>
+              <div class="text-center mt-4">
+                <button type="submit" id="saveBtn" class="btn btn-primary btn-lg px-5 shadow"
+                  onclick="handleSubmitClick(this)">
+                  <span class="spinner-border spinner-border-sm me-2 d-none" role="status" id="submitSpinner"
+                    aria-hidden="true"></span>
+                  <i class="fas fa-save me-2"></i>
+                  <span>Save Attendance</span>
+                </button>
+                <script>
+                  function handleSubmitClick(btn) {
+                    btn.disabled = true;
+                    document.getElementById('submitSpinner').classList.remove('d-none');
+                    document.getElementById('attendanceForm').submit();
+                  }
+                </script>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showFields() {
+    const institutionType = "{{ institution_type }}";
+    const classSelect = document.getElementById('class_name');
+    const subjectField = document.getElementById('subjectField');
+    const streamField = document.getElementById('streamField');
+    const degreeField = document.getElementById('degreeField');
+    const subjectInput = document.getElementById('subject');
+    const streamInput = document.getElementById('stream_or_semester');
+    const degreeInput = document.getElementById('degree');
+    const subjectRequired = document.getElementById('subjectRequired');
+    const streamRequired = document.getElementById('streamRequired');
+    const degreeRequired = document.getElementById('degreeRequired');
+
+    subjectField.style.display = 'none';
+    streamField.style.display = 'none';
+    degreeField.style.display = 'none';
+    subjectInput.required = false;
+    streamInput.required = false;
+    degreeInput.required = false;
+    subjectRequired.style.display = 'none';
+    streamRequired.style.display = 'none';
+    degreeRequired.style.display = 'none';
+
+    if (institutionType === 'school') {
+      if (classSelect.value === '11' || classSelect.value === '12') {
+        streamField.style.display = 'block';
+        streamInput.required = true;
+        streamRequired.style.display = 'inline';
+      }
+
+    } else {
+      subjectField.style.display = 'block';
+      degreeField.style.display = 'block';
+      subjectInput.required = true;
+      degreeInput.required = true;
+      subjectRequired.style.display = 'inline';
+      degreeRequired.style.display = 'inline';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', showFields);
+  document.getElementById('class_name').addEventListener('change', showFields);
+
+  function setISTDateTime() {
+    const istDate = new Date().toLocaleString("en-GB", {
+      timeZone: "Asia/Kolkata",
+      hour12: false
+    });
+
+    const [datePart, timePart] = istDate.split(', ');
+    const [day, month, year] = datePart.split('/');
+    const [hour, minute, second] = timePart.split(':');
+
+    const displayDateTime = `${day}-${month}-${year} ${hour}:${minute}:${second}`;
+    const hiddenDateTime = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+
+    document.getElementById('date').value = hiddenDateTime;
+    document.getElementById('date_display').value = displayDateTime;
+  }
+
+  document.addEventListener('DOMContentLoaded', setISTDateTime);
+
+
+  document.getElementById('class_name').addEventListener('change', function () {
+    const selectedClass = this.value;
+    const subjectSelect = document.getElementById('subject');
+    const options = subjectSelect.querySelectorAll('option');
+    subjectSelect.value = '';
+    options.forEach(option => {
+      if (option.value === '') {
+        option.style.display = 'block';
+      } else {
+        option.style.display = (option.getAttribute('data-class') === selectedClass) ? 'block' : 'none';
+      }
+    });
+    document.getElementById('studentsSection').style.display = 'none';
+  });
+</script>
+
+<script>
+  async function loadStudents() {
+    const className = document.getElementById('class_name').value;
+    const subject = document.getElementById('subject').value;
+    const date = document.getElementById('date').value;
+    const stream = document.getElementById('stream_or_semester')?.value || '';
+    const degree = document.getElementById('degree')?.value || '';
+
+    const institutionType = "{{ institution_type }}";
+    if (!date) {
+      alert('Please select the date.');
+      return;
+    }
+
+
+    if (institutionType === 'school') {
+      if (!className) {
+        alert('Please select class.');
+        return;
+      }
+
+
+      if (className === '11' || className === '12') {
+        if (!stream) {
+          alert('Please select stream for class 11 or 12.');
+          return;
+        }
+      }
+    }
+
+
+    if (institutionType === 'college' || institutionType === 'university') {
+      if (!className || !subject || !degree) {
+        alert('Please select class, subject, and degree.');
+        return;
+      }
+    }
+    try {
+      const response = await fetch('{{ url_for("get_students_by_class") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          class_name: className,
+          date: date,
+          stream_or_semester: stream,
+          degree: degree,
+          subject: subject
+        })
+      });
+
+      const data = await response.json();
+      const students = data.students || [];
+
+      document.getElementById('filtered_student_ids').value = JSON.stringify(students.map(s => s.id));
+
+      if (!students.length) {
+        document.getElementById('studentsSection').style.display = 'none';
+        alert('No students found for this class');
+        return;
+      }
+
+      let studentsHtml = '<div class="row">';
+      students.forEach(student => {
+        studentsHtml += `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">${student.name}</h6>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" 
+                                       name="attendance_${student.id}" value="Present" 
+                                       id="present_${student.id}" checked>
+                                <label class="form-check-label text-success" for="present_${student.id}">
+                                    <i class="fas fa-check me-1"></i>Present
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" 
+                                       name="attendance_${student.id}" value="Absent"
+                                       id="absent_${student.id}">
+                                <label class="form-check-label text-danger" for="absent_${student.id}">
+                                    <i class="fas fa-times me-1"></i>Absent
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+      });
+      studentsHtml += '</div>';
+
+      document.getElementById('studentsList').innerHTML = studentsHtml;
+      document.getElementById('studentsSection').style.display = 'block';
+    } catch (err) {
+      console.error(err);
+      alert('Error loading students');
+    }
+  }
+
+  function markAllPresent() {
+    const inputs = document.querySelectorAll('#studentsList input[type="radio"][value="Present"]');
+    inputs.forEach(radio => radio.checked = true);
+  }
+
+  function markAllAbsent() {
+    const inputs = document.querySelectorAll('#studentsList input[type="radio"][value="Absent"]');
+    inputs.forEach(radio => radio.checked = true);
+  }
+</script>
+{% endblock %}

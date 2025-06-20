@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}My Profile | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="card shadow-lg border-0 rounded-4 animate__animated animate__fadeIn">
+    <div class="card-header bg-primary text-white rounded-top-4 d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 d-flex align-items-center">
+        <i class="fas fa-user-circle me-2 fs-5"></i>{{ user.role.title() }} Profile
+      </h5>
+      <a href="{{ url_for('edit_own_profile') }}" class="btn btn-sm btn-light text-primary fw-semibold shadow-sm">
+        <i class="fas fa-pen-to-square me-1"></i>Edit
+      </a>
+    </div>
+    <div class="card-body">
+      <div class="row gy-3">
+        <div class="col-md-6">
+          <p><i class="fas fa-user me-2 text-muted"></i><strong>Username:</strong> {{ user.username }}</p>
+          <p><i class="fas fa-envelope me-2 text-muted"></i><strong>Email:</strong> {{ user.email }}</p>
+          <p><i class="fas fa-user-tag me-2 text-muted"></i><strong>Role:</strong> {{ user.role.title() }}</p>
+        </div>
+        <div class="col-md-6">
+          <p><i class="fas fa-toggle-on me-2 text-muted"></i><strong>Status:</strong> {{ user.status.title() }}</p>
+          <p><i class="fas fa-calendar-alt me-2 text-muted"></i><strong>Created At:</strong> {{
+            user.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+          <p><i class="fas fa-school me-2 text-muted"></i><strong>Institution:</strong> {{ user.institution.name if
+            user.institution else 'N/A' }}</p>
+        </div>
+      </div>
+
+      {% if user.role == 'student' %}
+      <hr class="my-4">
+      <h6 class="text-primary fw-bold mb-3"><i class="fas fa-user-graduate me-2"></i>Student Info</h6>
+      <div class="row gy-2">
+        <div class="col-md-6">
+          <p><strong>Class/Semester:</strong> {{ user.class_name or '-' }}</p>
+          {% if institution_type == 'school' and user.class_name in ['11', '12'] %}
+          <p><strong>Stream:</strong> {{ user.stream_or_semester or '-' }}</p>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          {% if institution_type in ['college', 'university'] %}
+          <p><strong>Degree:</strong> {{ user.degree or '-' }}</p>
+          <p><strong>Subject:</strong>
+            {% if user.subject %}
+            {{ user.subject if user.subject is string else user.subject | join(', ') }}
+            {% else %}
+            -
+            {% endif %}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      {% elif user.role == 'teacher' %}
+      <hr class="my-4">
+      <h6 class="text-primary fw-bold mb-3"><i class="fas fa-chalkboard-teacher me-2"></i>Assigned Classes</h6>
+      <ul class="list-group list-group-flush">
+        {% for c in user.class_assignments %}
+        <li class="list-group-item px-0">
+          {% if institution_type == 'school' %}
+          <strong>Class:</strong> {{ c.class_name }}
+          {% if c.class_name in ['11', '12'] %} —
+          <strong>Stream:</strong> {{ c.stream_or_semester or '-' }}{% endif %}
+          {% elif institution_type in ['college', 'university'] %}
+          <strong>Class/Semester:</strong> {{ c.class_name }},
+          <strong>Subject:</strong> {{ c.subject }},
+          <strong>Degree:</strong> {{ c.degree or '-' }}
+          {% endif %}
+        </li>
+        {% else %}
+        <li class="list-group-item px-0 text-muted fst-italic">No classes assigned.</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<style>
+  .card .btn:hover {
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+
+  .list-group-item {
+    background-color: transparent;
+  }
+</style>
+
+{% endblock %}

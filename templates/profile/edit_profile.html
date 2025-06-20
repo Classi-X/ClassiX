@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Edit My Profile | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="card shadow-lg border-0 rounded-4 animate__animated animate__fadeIn">
+    <div class="card-header bg-primary text-white rounded-top-4 d-flex align-items-center">
+      <i class="fas fa-user-edit me-2 fs-5"></i>
+      <h5 class="mb-0">Edit Profile</h5>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-user me-1 text-secondary"></i>Username
+          </label>
+          <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+        </div>
+
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-lock me-1 text-secondary"></i>New Password
+            <small class="text-muted ms-1">(leave blank to keep current)</small>
+          </label>
+          <input type="password" name="password" class="form-control">
+        </div>
+
+        {% if user.role == 'student' %}
+
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-layer-group me-1 text-secondary"></i>Class <span class="text-danger">*</span>
+          </label>
+          <select name="class_name" class="form-select" required>
+            <option value="">Select Class</option>
+            {% for cls in class_options %}
+            <option value="{{ cls }}" {% if user.class_name==cls %}selected{% endif %}>{{ cls }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% if institution_type == 'school' %}
+
+        <div class="mb-3" id="streamField"
+          style="display: {% if user.class_name in ['11', '12'] %}block{% else %}none{% endif %};">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-diagram-project me-1 text-secondary"></i>Stream
+          </label>
+          <select name="stream_or_semester" class="form-select">
+            <option value="">Select Stream</option>
+            {% for stream in stream_options %}
+            <option value="{{ stream }}" {% if user.stream_or_semester==stream %}selected{% endif %}>{{ stream }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        {% if institution_type in ['college', 'university'] %}
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-graduation-cap me-1 text-secondary"></i>Degree
+          </label>
+          <select name="degree" class="form-select">
+            <option value="">Select Degree</option>
+            {% for degree in degree_options %}
+            <option value="{{ degree }}" {% if user.degree==degree %}selected{% endif %}>{{ degree }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-book-open me-1 text-secondary"></i>Subjects <small class="text-muted">(select
+              multiple)</small>
+          </label>
+          <select name="subject" class="form-select" multiple>
+            {% for subject in subject_options %}
+            <option value="{{ subject }}" {% if subject in (user.subject or '' ).split(', ') %}selected{% endif %}>{{ subject }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="alert alert-info d-flex align-items-center">
+          <i class="fas fa-info-circle me-2"></i>
+          You can only update your username and password.
+        </div>
+        {% endif %}
+
+        
+        <div class="mt-4">
+          <button type="submit" class="btn btn-success me-2">
+            <i class="fas fa-save me-1"></i>Save
+          </button>
+          <a href="{{ url_for('view_own_profile') }}" class="btn btn-secondary">
+              <i class="fas fa-times me-1"></i>Cancel
+              </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<style>
+  .form-label {
+    font-size: 0.95rem;
+  }
+
+  .card .btn {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .card .btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .form-select,
+  .form-control {
+    transition: box-shadow 0.2s ease-in-out;
+  }
+
+  .form-select:focus,
+  .form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  }
+</style>
+
+{% if user.role == 'student' and institution_type == 'school' %}
+<script>
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const classInput = document.querySelector('select[name="class_name"]');
+    const streamField = document.getElementById('streamField');
+
+    function toggleStreamField() {
+      if (!streamField) return;
+      streamField.style.display = (classInput.value === '11' || classInput.value === '12') ? 'block' : 'none';
+    }
+
+    if (classInput && streamField) {
+      toggleStreamField();
+      classInput.addEventListener('change', toggleStreamField);
+    }
+  });
+</script>
+{% endif %}
+
+{% if user.role == 'student' and institution_type in ['college', 'university'] %}
+<script>
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const subjectSelect = document.querySelector('select[name="subject"]');
+    if (!subjectSelect) return;
+
+
+    const subjectContainer = subjectSelect.parentNode;
+    const searchBox = document.createElement('input');
+    searchBox.type = 'text';
+    searchBox.className = 'form-control mb-2';
+    searchBox.placeholder = '🔍 Search Subject...';
+    subjectContainer.insertBefore(searchBox, subjectSelect);
+
+    searchBox.addEventListener('input', function () {
+      const search = this.value.toLowerCase();
+      const options = subjectSelect.querySelectorAll('option');
+      options.forEach(option => {
+        option.style.display = option.textContent.toLowerCase().includes(search) ? 'block' : 'none';
+      });
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}

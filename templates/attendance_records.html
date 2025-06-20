@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Attendance Records | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex align-items-center mb-4 animate__animated animate__fadeInDown">
+    <h3 class="text-primary fw-bold mb-0">
+      <i class="fas fa-clipboard-list me-2"></i>Attendance Records
+    </h3>
+  </div>
+
+
+  <form method="POST" class="row g-3 align-items-end mb-4 animate__animated animate__fadeIn" id="attendanceFilterForm">
+    <div class="col-md-2">
+      <label class="form-label fw-semibold">Class/Semester</label>
+      <select name="class_name" class="form-select">
+        <option value="">All</option>
+        {% for c in classes %}
+        <option value="{{ c }}" {% if c==selected_class %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {% if institution_type == 'school' %}
+    <div class="col-md-2">
+      <label class="form-label fw-semibold">Stream</label>
+      <select name="stream_or_semester" class="form-select">
+        <option value="">All</option>
+        {% for s in streams %}
+        <option value="{{ s }}" {% if s==selected_stream %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% elif institution_type in ['college', 'university'] %}
+    <div class="col-md-2">
+      <label class="form-label fw-semibold">Subject</label>
+      <select name="subject" class="form-select">
+        <option value="">All</option>
+        {% for s in subjects %}
+        <option value="{{ s }}" {% if s==selected_subject %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label fw-semibold">Degree</label>
+      <select name="degree" class="form-select">
+        <option value="">All</option>
+        {% for d in degrees %}
+        <option value="{{ d }}" {% if d==selected_degree %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="col-md-2">
+      <label class="form-label fw-semibold">Date</label>
+      <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+    </div>
+
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fas fa-filter me-1"></i> Filter
+      </button>
+      <a href="{{ url_for('attendance_records') }}" class="btn btn-outline-secondary w-100">
+        <i class="fas fa-undo me-1"></i> Reset
+      </a>
+    </div>
+  </form>
+
+
+  <div class="row mb-3 animate__animated animate__fadeInUp">
+    <div class="col-md-4">
+      <input type="text" id="attendanceSearchInput" class="form-control"
+        placeholder="🔍 Search student, date, status...">
+    </div>
+  </div>
+
+
+  <div class="table-responsive animate__animated animate__fadeInUp">
+    <table class="table table-striped table-bordered align-middle" id="attendanceTable">
+      <thead class="table-dark text-center">
+        <tr>
+          <th>Date</th>
+          <th>Class/Semester</th>
+          {% if institution_type == 'school' %}
+          <th>Stream</th>
+          {% elif institution_type in ['college', 'university'] %}
+          <th>Subject</th>
+          <th>Degree</th>
+          {% endif %}
+          <th>Status</th>
+          <th>Student</th>
+          <th>Marked By</th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        {% if not data %}
+        <tr>
+          <td colspan="8" class="text-muted py-4">No attendance records found.</td>
+        </tr>
+        {% else %}
+        {% for row in data %}
+        <tr>
+          <td>{{ row.date.strftime('%Y-%m-%d') }}</td>
+          <td><span class="badge bg-primary">{{ row.class_name or '-' }}</span></td>
+          {% if institution_type == 'school' %}
+          <td>{{ row.stream_or_semester or '-' }}</td>
+          {% elif institution_type in ['college', 'university'] %}
+          <td>{{ row.subject or '-' }}</td>
+          <td>{{ row.degree or '-' }}</td>
+          {% endif %}
+          <td class="{{ 'text-success fw-bold' if row.status == 'Present' else 'text-danger fw-bold' }}">
+            <i class="fas {{ 'fa-check-circle' if row.status == 'Present' else 'fa-times-circle' }} me-1"></i>
+            {{ row.status }}
+          </td>
+          <td>{{ row.student_name or '-' }}</td>
+          <td>{{ row.teacher_name or '-' }}</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<script>
+  document.getElementById('attendanceSearchInput').addEventListener('input', function () {
+    const val = this.value.toLowerCase();
+    document.querySelectorAll('#attendanceTable tbody tr').forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
+    });
+  });
+</script>
+
+
+
+
+{% endblock %}

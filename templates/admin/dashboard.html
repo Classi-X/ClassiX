@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div
+      class="d-md-none bg-gradient bg-primary text-white d-flex justify-content-between align-items-center px-4 py-3 shadow-sm rounded-bottom animate__animated animate__fadeInDown">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-chart-line fs-4 me-2"></i>
+        <h5 class="mb-0 fw-semibold">Dashboard</h5>
+      </div>
+      <button
+        class="btn btn-light btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center transition"
+        onclick="toggleSidebar()" aria-label="Toggle Sidebar">
+        <i class="fas fa-bars text-primary fs-5"></i>
+      </button>
+    </div>
+
+    <style>
+      .transition {
+        transition: all 0.3s ease-in-out;
+      }
+
+      .btn-light:hover {
+        background-color: #e2e6ea;
+        transform: scale(1.05);
+      }
+    </style>
+
+
+    <div id="sidebar" class="col-md-3 col-lg-2 bg-white border-end shadow-sm p-0 sidebar-collapse d-none d-md-block">
+      <style>
+        #sidebar {
+          transition: all 0.3s ease-in-out;
+          z-index: 1020;
+        }
+
+        .sidebar-link {
+          transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+        }
+
+        .sidebar-link:hover {
+          background-color: #f8f9fa;
+          transform: translateX(2px);
+        }
+
+        .sidebar-link.active {
+          background-color: #0d6efd;
+          color: #fff;
+          font-weight: 500;
+        }
+
+        .sidebar-link.active i {
+          color: #fff;
+        }
+
+        .blink-area.blinking {
+          color: #dc3545 !important;
+          animation: blinkRed 1.2s ease-in-out infinite;
+          font-weight: 600;
+        }
+
+        .blink-area.blinking i {
+          color: #dc3545 !important;
+        }
+
+        @keyframes blinkRed {
+
+          0%,
+          100% {
+            opacity: 1;
+            text-shadow: 0 0 5px rgba(220, 53, 69, 0.6);
+          }
+
+          50% {
+            opacity: 0.4;
+            text-shadow: 0 0 10px rgba(220, 53, 69, 0.9);
+          }
+        }
+      </style>
+
+      <div class="list-group list-group-flush py-2">
+        <a href="{{ url_for('admin_dashboard') }}"
+          class="d-none d-md-inline sidebar-link list-group-item list-group-item-action active">
+          <i class="fas fa-gauge-high me-2"></i>Dashboard
+        </a>
+        <a href="{{ url_for('institution_setup') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-building-columns me-2"></i>Institution Setup
+        </a>
+        <a href="{{ url_for('generate_pins') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-key me-2"></i>Generate PINs
+        </a>
+        <a href="{{ url_for('student_promotions') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-arrow-up-right-dots me-2"></i>Student Promotions
+        </a>
+        <a href="{{ url_for('attendance_records') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-calendar-check me-2"></i>Attendance Records
+        </a>
+        <a href="{{ url_for('students_in_class') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-users-rectangle me-2"></i>Students in Class
+        </a>
+        <a href="{{ url_for('teacher_list') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-person-chalkboard me-2"></i>Teacher Directory
+        </a>
+        <a href="{{ url_for('student_list') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-user-graduate me-2"></i>Student Directory
+        </a>
+        <a href="{{ url_for('view_own_profile') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-user-circle me-2"></i>Profile
+        </a>
+        <a href="{{ url_for('chat_history') }}"
+          class="sidebar-link list-group-item list-group-item-action d-flex justify-content-between align-items-center position-relative"
+          id="myChatsLink">
+          <div class="d-flex align-items-center blink-area" id="blinkArea">
+            <i class="fas fa-comments me-2"></i><span>My Chats</span>
+          </div>
+        </a>
+        <a href="{{ url_for('logout') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-sign-out-alt me-2"></i>Logout
+        </a>
+        <a href="{{ url_for('about') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-circle-info me-2"></i>About Us
+        </a>
+        <a href="{{ url_for('contact') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-envelope-open-text me-2"></i>Contact
+        </a>
+        <a href="/chat/32" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-user-secret me-2"></i>Chat SuperAdmin
+        </a>
+        <a href="{{ url_for('terms') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-file-contract me-2"></i>Terms & Conditions
+        </a>
+        <a href="{{ url_for('privacy') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-shield-halved me-2"></i>Privacy Policy
+        </a>
+      </div>
+
+      <script>
+        function toggleSidebar() {
+          const sidebar = document.getElementById('sidebar');
+          sidebar.classList.toggle('d-none');
+          sidebar.classList.toggle('d-block');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+          const blinkArea = document.getElementById('blinkArea');
+
+          async function checkNewChats() {
+            try {
+              const res = await fetch('/chat/has-new');
+              const data = await res.json();
+              blinkArea.classList.toggle('blinking', data.new_message);
+            } catch (err) {
+              console.error("Error checking chat notifications", err);
+            }
+          }
+
+          checkNewChats();
+          setInterval(checkNewChats, 10000);
+        });
+      </script>
+
+
+
+    </div>
+
+
+    <div class="col-md-9 col-lg-10">
+
+      <div
+        class="d-flex justify-content-between align-items-center pt-4 pb-3 mb-3 border-bottom border-2 border-primary-subtle animate__animated animate__fadeInDown">
+        <h1 class="h3 fw-bold text-primary mb-0 d-flex align-items-center">
+          <i class="fas fa-user-shield me-2"></i>Admin Dashboard
+        </h1>
+      </div>
+
+
+      {% if institution %}
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center border-bottom">
+              <h5 class="mb-0 text-secondary">
+                <i class="fas fa-building-columns me-2 text-primary"></i>Institution Information
+              </h5>
+              <a href="{{ url_for('institution_setup') }}"
+                class="btn btn-sm btn-outline-primary d-flex align-items-center">
+                <i class="fas fa-pen-to-square me-1"></i>Edit
+              </a>
+            </div>
+            <div class="card-body">
+              <div class="row gy-3">
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>Name:</strong> {{ institution.name }}</p>
+                  <p class="mb-1"><strong>Type:</strong> {{ institution.type }}</p>
+                  <p class="mb-1">
+                    <strong>Location:</strong>
+                    {{ institution.city }}, {{ institution.state }}, {{ institution.country }}
+                  </p>
+                  <p class="mb-0">
+                    <strong>Allowed Email Domain:</strong>
+                    {% if institution.allowed_domain %}
+                    <span class="text-primary">{{ institution.allowed_domain }}</span>
+                    {% else %}
+                    <span class="text-muted fst-italic">Not set (open to any email)</span>
+                    {% endif %}
+                  </p>
+                </div>
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>Medium:</strong> {{ institution.medium }}</p>
+                  <p class="mb-1"><strong>Classes/Semester:</strong> {{ institution.classes }}</p>
+                  {% if institution.type == 'School' and institution.streams %}
+                  <p class="mb-1"><strong>Streams:</strong> {{ institution.streams }}</p>
+                  {% elif institution.type in ['College', 'University'] and institution.degrees %}
+                  <p class="mb-1"><strong>Degrees:</strong> {{ institution.degrees }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-warning d-flex align-items-center mt-4 shadow-sm animate__animated animate__fadeIn">
+        <i class="fas fa-exclamation-circle me-2 fs-5"></i>
+        <div>
+          Institution details not configured.
+          <a href="{{ url_for('institution_setup') }}" class="alert-link">Set up now</a>
+        </div>
+      </div>
+      {% endif %}
+
+
+
+
+
+
+
+
+      <div class="row g-4 mt-4">
+
+        <div class="col-sm-6 col-md-3">
+          <div
+            class="card shadow-sm border-0 bg-gradient animate__animated animate__fadeInUp bg-primary text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-uppercase fw-semibold mb-1">Total Students</h6>
+                <h3 class="mb-0">{{ insights.overall_stats.total_students }}</h3>
+              </div>
+              <div class="icon-container">
+                <i class="fas fa-users fa-2x opacity-75"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="col-sm-6 col-md-3">
+          <div
+            class="card shadow-sm border-0 bg-gradient animate__animated animate__fadeInUp bg-success text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-uppercase fw-semibold mb-1">Overall Attendance</h6>
+                <h3 class="mb-0">{{ insights.overall_stats.overall_percentage }}%</h3>
+              </div>
+              <div class="icon-container">
+                <i class="fas fa-chart-line fa-2x opacity-75"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="col-sm-6 col-md-3">
+          <div
+            class="card shadow-sm border-0 bg-gradient animate__animated animate__fadeInUp bg-warning text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-uppercase fw-semibold mb-1">At Risk Students</h6>
+                <h3 class="mb-0">{{ insights.at_risk_students|length }}</h3>
+              </div>
+              <div class="icon-container">
+                <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="col-sm-6 col-md-3">
+          <div class="card shadow-sm border-0 bg-gradient animate__animated animate__fadeInUp bg-info text-white h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="text-uppercase fw-semibold mb-1">Pending Approvals</h6>
+                <h3 class="mb-0">{{ pending_users|length }}</h3>
+              </div>
+              <div class="icon-container">
+                <i class="fas fa-clock fa-2x opacity-75"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+
+
+      <style>
+        .card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          border-radius: 0.75rem;
+        }
+
+        .card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 48px;
+          height: 48px;
+        }
+
+        h6 {
+          letter-spacing: 0.5px;
+        }
+      </style>
+
+
+      {% if insights.at_risk_students %}
+      <div class="row mt-5">
+        <div class="col-12">
+          <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
+            <div
+              class="card-header bg-light d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+              <h5 class="mb-0 text-danger d-flex align-items-center">
+                <i class="fas fa-triangle-exclamation me-2"></i> Students at Risk
+              </h5>
+              <div class="w-100 w-md-50">
+                <input type="text" id="studentSearchInput" class="form-control form-control-sm"
+                  placeholder="🔍 Search by name or class/semester..." oninput="filterRiskTable()">
+              </div>
+            </div>
+
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="riskTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th scope="col"><i class="fas fa-user me-1"></i> Name</th>
+                      <th scope="col"><i class="fas fa-layer-group me-1"></i> Class/Semester</th>
+                      <th scope="col"><i class="fas fa-percentage me-1"></i> Attendance</th>
+                      <th scope="col"><i class="fas fa-bolt me-1"></i> Risk Level</th>
+                      <th scope="col"><i class="fas fa-chart-line me-1"></i> Trend</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for student_data in insights.at_risk_students %}
+                    <tr>
+                      <td>{{ student_data.student.username }}</td>
+                      <td>{{ student_data.student.class_name }}</td>
+                      <td>
+                        <span
+                          class="badge bg-{{ 'danger' if student_data.current_percentage < 60 else 'warning' }} text-white">
+                          {{ student_data.current_percentage }}%
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge bg-{{ 'danger' if student_data.risk_score >= 4 else 'warning' }} text-white">
+                          {{ 'High' if student_data.risk_score >= 4 else 'Medium' }}
+                        </span>
+                      </td>
+                      <td>
+                        {% if student_data.trend and student_data.trend.is_declining %}
+                        <span class="text-danger d-flex align-items-center">
+                          <i class="fas fa-arrow-down me-1"></i> Declining
+                        </span>
+                        {% else %}
+                        <span class="text-success d-flex align-items-center">
+                          <i class="fas fa-arrow-up me-1"></i> Stable
+                        </span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <script>
+        function filterRiskTable() {
+          const input = document.getElementById('studentSearchInput').value.toLowerCase();
+          const rows = document.querySelectorAll('#riskTable tbody tr');
+          rows.forEach(row => {
+            const name = row.cells[0].textContent.toLowerCase();
+            const cls = row.cells[1].textContent.toLowerCase();
+            row.style.display = name.includes(input) || cls.includes(input) ? '' : 'none';
+          });
+        }
+      </script>
+
+
+
+
+      {% endif %}
+
+
+      {% if pending_users %}
+      <div class="row mt-5">
+        <div class="col-12">
+          <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
+            <div
+              class="card-header bg-light d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+              <h5 class="mb-0 text-info d-flex align-items-center">
+                <i class="fas fa-user-clock me-2"></i> Pending User Approvals
+              </h5>
+              <div class="w-100 w-md-50">
+                <input type="text" id="pendingUserSearch" class="form-control form-control-sm"
+                  placeholder="🔍 Search by username, email, or role..." oninput="filterPendingUsers()">
+              </div>
+            </div>
+
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="pendingUserTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th scope="col"><i class="fas fa-user me-1"></i> Username</th>
+                      <th scope="col"><i class="fas fa-envelope me-1"></i> Email</th>
+                      <th scope="col"><i class="fas fa-user-tag me-1"></i> Role</th>
+                      <th scope="col"><i class="fas fa-calendar-alt me-1"></i> Registered</th>
+                      <th scope="col"><i class="fas fa-cogs me-1"></i> Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for user in pending_users %}
+                    <tr>
+                      <td>{{ user.username }}</td>
+                      <td>{{ user.email }}</td>
+                      <td>
+                        <span class="badge bg-secondary text-uppercase small">
+                          {{ user.role.title() }}
+                        </span>
+                      </td>
+                      <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                      <td>
+                        <a href="{{ url_for('approve_user', user_id=user.id) }}" class="btn btn-sm btn-success me-1"
+                          onclick="return confirm('Approve this user?')">
+                          <i class="fas fa-check-circle me-1"></i>Approve
+                        </a>
+                        <a href="{{ url_for('reject_user', user_id=user.id) }}" class="btn btn-sm btn-danger"
+                          onclick="return confirm('Reject this user? This action cannot be undone.')">
+                          <i class="fas fa-times-circle me-1"></i>Reject
+                        </a>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <script>
+        function filterPendingUsers() {
+          const input = document.getElementById('pendingUserSearch').value.toLowerCase();
+          const rows = document.querySelectorAll('#pendingUserTable tbody tr');
+          rows.forEach(row => {
+            const username = row.cells[0].textContent.toLowerCase();
+            const email = row.cells[1].textContent.toLowerCase();
+            const role = row.cells[2].textContent.toLowerCase();
+            row.style.display = username.includes(input) || email.includes(input) || role.includes(input) ? '' : 'none';
+          });
+        }
+      </script>
+
+
+
+
+      {% endif %}
+
+      {% if subject_stats %}
+      <div class="row mt-5">
+        <div class="col-12">
+          <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
+            <div
+              class="card-header bg-light d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+              <h5 class="mb-0 text-primary d-flex align-items-center">
+                <i class="fas fa-book-open-reader me-2"></i> Subject-wise Attendance Statistics
+              </h5>
+              <div class="w-100 w-md-50">
+                <input type="text" id="subjectSearchInput" class="form-control form-control-sm"
+                  placeholder="🔍 Search by class, subject, or stream..." oninput="filterSubjectStats()">
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="row g-3" id="subjectStatsContainer">
+                {% for subject, stats in subject_stats.items() %}
+                <div class="col-md-6 col-lg-4 subject-stat-card">
+                  <div class="card h-100 shadow-sm border-0 bg-light animate__animated animate__fadeIn">
+                    <div class="card-body">
+                      <h6 class="fw-semibold text-secondary mb-3">
+                        {% if institution_type == 'school' %}
+                        Class: {{ stats.class_name }}
+                        {% if stats.class_name in ['11', '12'] and stats.stream_or_semester %}
+                        <br><span class="text-muted">Stream: {{ stats.stream_or_semester }}</span>
+                        {% endif %}
+                        {% else %}
+                        {{ subject }}
+                        {% endif %}
+                      </h6>
+
+                      <div class="progress mb-2" role="progressbar" aria-valuenow="{{ stats.attendance_rate }}"
+                        aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-{{
+                      'success' if stats.attendance_rate >= 75 else
+                      'warning' if stats.attendance_rate >= 60 else
+                      'danger'
+                    }}" style="width: {{ stats.attendance_rate }}%">
+                          {{ stats.attendance_rate }}%
+                        </div>
+                      </div>
+
+                      <small class="text-muted d-block mt-1">
+                        <i class="fas fa-calendar-days me-1"></i>
+                        Total Classes: {{ stats.total_classes }}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <script>
+        function filterSubjectStats() {
+          const input = document.getElementById('subjectSearchInput').value.toLowerCase().trim();
+          const cards = document.querySelectorAll('#subjectStatsContainer .subject-stat-card');
+
+          cards.forEach(card => {
+            const text = card.innerText.toLowerCase();
+            card.style.display = text.includes(input) ? '' : 'none';
+          });
+        }
+      </script>
+
+
+
+
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

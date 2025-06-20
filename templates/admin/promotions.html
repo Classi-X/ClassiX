@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Student Promotions | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card mt-3 shadow-sm border-0 animate__animated animate__fadeInUp">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+          <i class="fas fa-user-graduate me-2 fa-lg"></i>
+          <h5 class="mb-0">Student Promotions</h5>
+        </div>
+
+        <div class="card-body bg-light">
+          <form method="POST" id="promotionForm">
+
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label for="filterClass" class="form-label">
+                  <i class="fas fa-filter me-1 text-primary"></i> Filter by Current Class/Semester
+                </label>
+                <select class="form-select" id="filterClass" onchange="filterStudents()">
+                  <option value="">All Classes/Semesters</option>
+                  {% for class_name in class_options %}
+                  <option value="{{ class_name }}">{{ class_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="new_class" class="form-label">
+                  <i class="fas fa-arrow-up me-1 text-primary"></i> Promote to Class/Semester <span
+                    class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="new_class" name="new_class" required>
+                  <option value="">Select Class/Semester</option>
+                  {% for class_name in class_options %}
+                  <option value="{{ class_name }}">{{ class_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-4" id="streamField" style="display: none;">
+                <label for="new_stream" class="form-label">
+                  <i class="fas fa-stream me-1 text-primary"></i> New Stream/Semester
+                </label>
+                <select class="form-select" id="new_stream" name="new_stream">
+                  <option value="">Select Stream</option>
+                  {% for stream_name in stream_options %}
+                  <option value="{{ stream_name }}">{{ stream_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <label class="form-label fw-semibold mb-0">
+                <i class="fas fa-search me-1 text-primary"></i> Search Students:
+              </label>
+              <input type="text" class="form-control w-50" id="studentSearchInput"
+                placeholder="🔍 Search by name, class, stream, subject, email..." oninput="filterBySearch()">
+            </div>
+
+
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAll()">
+              <label class="form-check-label fw-semibold" for="selectAll">
+                <i class="fas fa-user-check me-1 text-primary"></i> Select All Students
+              </label>
+            </div>
+
+
+            <div class="table-responsive">
+              <table class="table table-hover align-middle table-bordered" id="studentsTable">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 40px;">
+                      <input type="checkbox" id="headerCheck" onchange="toggleAll()">
+                    </th>
+                    <th>Student Name</th>
+                    <th>Current Class/Semester</th>
+                    {% if institution_type in ['college', 'university'] %}
+                    <th>Subject</th>
+                    <th>Degree</th>
+                    {% else %}
+                    <th>Stream</th>
+                    {% endif %}
+                    <th>Email</th>
+                    <th>Registration Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for student in students %}
+                  <tr class="student-row" data-class="{{ student.class_name }}">
+                    <td>
+                      <input type="checkbox" name="student_ids" value="{{ student.id }}" class="student-checkbox"
+                        onchange="updateSelectAll()">
+                    </td>
+                    <td><strong>{{ student.username }}</strong></td>
+                    <td><span class="badge bg-primary">{{ student.class_name or 'Not Set' }}</span></td>
+                    {% if institution_type in ['college', 'university'] %}
+                    <td>{{ student.subject or '-' }}</td>
+                    <td>{{ student.degree or '-' }}</td>
+                    {% else %}
+                    <td>
+                      {% if student.class_name in ['11', '12'] %}
+                      {{ student.stream_or_semester or '-' }}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </td>
+                    {% endif %}
+                    <td>{{ student.email }}</td>
+                    <td>{{ student.created_at.strftime('%Y-%m-%d') }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+
+            <div class="d-flex justify-content-between mt-4">
+              <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+              </a>
+              <button type="submit" class="btn btn-success" id="promoteBtn" onclick="return confirmPromotion()">
+                <i class="fas fa-arrow-up-from-bracket me-2"></i> Promote Selected Students
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<script>
+  function filterBySearch() {
+    const input = document.getElementById('studentSearchInput').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('#studentsTable tbody .student-row');
+    rows.forEach(row => {
+      const rowText = row.innerText.toLowerCase();
+      row.style.display = rowText.includes(input) ? '' : 'none';
+    });
+    updateSelectAll();
+  }
+  function filterStudents() {
+    const selectedClass = document.getElementById('filterClass').value;
+    const rows = document.querySelectorAll('.student-row');
+
+    rows.forEach(row => {
+      if (selectedClass === '' || row.dataset.class === selectedClass) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+    updateSelectAll();
+  }
+
+  function toggleAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+
+    checkboxes.forEach(checkbox => {
+      if (checkbox.closest('.student-row').style.display !== 'none') {
+        checkbox.checked = selectAll.checked;
+      }
+    });
+    updateSelectAll();
+  }
+
+  function updateSelectAll() {
+    const visibleCheckboxes = Array.from(document.querySelectorAll('.student-checkbox'))
+      .filter(cb => cb.closest('.student-row').style.display !== 'none');
+    const checkedBoxes = visibleCheckboxes.filter(cb => cb.checked);
+
+    const selectAll = document.getElementById('selectAll');
+    selectAll.checked = visibleCheckboxes.length > 0 && checkedBoxes.length === visibleCheckboxes.length;
+    selectAll.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < visibleCheckboxes.length;
+  }
+
+  function confirmPromotion() {
+    const checkedBoxes = document.querySelectorAll('.student-checkbox:checked');
+    const newClass = document.getElementById('new_class').value;
+
+    if (checkedBoxes.length === 0) {
+      alert('Please select at least one student to promote.');
+      return false;
+    }
+    if (!newClass.trim()) {
+      alert('Please select a new class.');
+      return false;
+    }
+    return confirm(`Are you sure you want to promote ${checkedBoxes.length} student(s) to ${newClass}?`);
+
+    const promoteBtn = document.getElementById('promoteBtn');
+    promoteBtn.disabled = true;
+    promoteBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Promoting...`;
+
+    return true;
+  }
+
+
+  document.getElementById('new_class').addEventListener('change', function () {
+    const newClass = this.value;
+    const streamField = document.getElementById('streamField');
+    const institutionType = "{{ institution_type }}";
+
+    if (institutionType === 'school' && (newClass === '11' || newClass === '12')) {
+      streamField.style.display = 'block';
+    } else {
+      streamField.style.display = 'none';
+    }
+  });
+
+
+  document.addEventListener('DOMContentLoaded', function () {
+    updateSelectAll();
+
+    document.getElementById('new_class').dispatchEvent(new Event('change'));
+  });
+</script>
+{% endblock %}

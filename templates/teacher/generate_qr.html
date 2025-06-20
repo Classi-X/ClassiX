@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Generate QR Code | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-lg mt-3 animate__animated animate__fadeIn">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+          <h4 class="mb-0">
+            <i class="fas fa-qrcode me-2"></i>Generate QR Code for Attendance
+          </h4>
+        </div>
+        <div class="card-body bg-light">
+          <form method="POST">
+
+            <div class="mb-3">
+              <label for="class_name" class="form-label fw-semibold">
+                <i class="fas fa-layer-group me-1 text-primary"></i>Class/Semester <span class="text-danger">*</span>
+              </label>
+              <select class="form-select shadow-sm" id="class_name" name="class_name" required>
+                <option value="">Select Class/Semester</option>
+                {% set class_list = [] %}
+                {% for a in assignments %}
+                {% if a.class_name and a.class_name not in class_list %}
+                {% set _ = class_list.append(a.class_name) %}
+                {% endif %}
+                {% endfor %}
+                {% set numeric_classes = [] %}
+                {% set text_classes = [] %}
+                {% for cls in class_list %}
+                {% if cls.isdigit() %}
+                {% set _ = numeric_classes.append(cls|int) %}
+                {% else %}
+                {% set _ = text_classes.append(cls) %}
+                {% endif %}
+                {% endfor %}
+                {% for cls in numeric_classes | sort %}
+                <option value="{{ cls }}">{{ cls }}</option>
+                {% endfor %}
+                {% for cls in text_classes | sort %}
+                <option value="{{ cls }}">{{ cls }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+
+            <div class="mb-3" id="streamField" style="display:none;">
+              <label for="stream_or_semester" class="form-label fw-semibold">
+                <i class="fas fa-code-branch me-1 text-warning"></i>Stream
+              </label>
+              <select class="form-select shadow-sm" id="stream_or_semester" name="stream_or_semester">
+                <option value="">Select Stream</option>
+                {% set seen_streams = [] %}
+                {% for a in assignments %}
+                {% if a.stream_or_semester and a.stream_or_semester not in seen_streams %}
+                {% set _ = seen_streams.append(a.stream_or_semester) %}
+                <option value="{{ a.stream_or_semester }}" data-class="{{ a.class_name }}">{{ a.stream_or_semester }}
+                </option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+
+
+            <div class="mb-3" id="subjectField" style="display:none;">
+              <label for="subject" class="form-label fw-semibold">
+                <i class="fas fa-book me-1 text-info"></i>Subject <span class="text-danger">*</span>
+              </label>
+              <select class="form-select shadow-sm" id="subject" name="subject">
+                <option value="">Select Subject</option>
+                {% for a in assignments %}
+                {% if a.subject %}
+                <option value="{{ a.subject }}" data-class="{{ a.class_name }}">{{ a.subject }}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+
+
+            <div class="mb-3" id="degreeField" style="display:none;">
+              <label for="degree" class="form-label fw-semibold">
+                <i class="fas fa-graduation-cap me-1 text-success"></i>Degree *
+              </label>
+              <select class="form-select shadow-sm" id="degree" name="degree">
+                <option value="">Select Degree</option>
+                {% set seen_class_degree = [] %}
+                {% for a in assignments %}
+                {% if a.degree and (a.class_name ~ '|' ~ a.degree) not in seen_class_degree %}
+                {% set _ = seen_class_degree.append(a.class_name ~ '|' ~ a.degree) %}
+                <option value="{{ a.degree }}" data-class="{{ a.class_name }}">{{ a.degree }}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+
+
+            <div class="alert alert-info mt-3 shadow-sm">
+              <i class="fas fa-info-circle me-2"></i>
+              QR code will be valid for <strong>15 minutes</strong>. Students must scan it within this time to mark
+              attendance.
+            </div>
+
+
+            <div class="d-flex justify-content-between align-items-center">
+              <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i>Back
+              </a>
+              <button type="submit" class="btn btn-primary shadow-sm">
+                <i class="fas fa-qrcode me-2"></i>Generate QR Code
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const institutionType = "{{ institution_type }}";
+    const classSelect = document.getElementById('class_name');
+    const streamField = document.getElementById('streamField');
+    const subjectField = document.getElementById('subjectField');
+    const degreeField = document.getElementById('degreeField');
+
+    classSelect.addEventListener('change', function () {
+      const selectedClass = this.value;
+
+      if (institutionType === 'school') {
+        subjectField.style.display = 'none';
+        degreeField.style.display = 'none';
+
+
+        if (['11', '12'].includes(selectedClass)) {
+          streamField.style.display = 'block';
+        } else {
+          streamField.style.display = 'none';
+        }
+      } else {
+
+        streamField.style.display = 'none';
+        subjectField.style.display = 'block';
+        degreeField.style.display = 'block';
+
+
+        document.querySelectorAll('#subject option').forEach(opt => {
+          opt.style.display = opt.dataset.class === selectedClass || opt.value === '' ? 'block' : 'none';
+        });
+
+        document.querySelectorAll('#degree option').forEach(opt => {
+          opt.style.display = opt.dataset.class === selectedClass || opt.value === '' ? 'block' : 'none';
+        });
+
+
+        document.getElementById('subject').value = '';
+        document.getElementById('degree').value = '';
+      }
+    });
+  });
+</script>
+{% endblock %}

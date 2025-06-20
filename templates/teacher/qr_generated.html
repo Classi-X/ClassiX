@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}QR Code Generated | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+
+
+      <div class="card shadow-lg animate__animated animate__fadeInDown">
+        <div class="card-header bg-success text-white text-center">
+          <h4 class="mb-0">
+            <i class="fas fa-check-circle me-2"></i>QR Code Generated Successfully
+          </h4>
+        </div>
+        <div class="card-body text-center bg-light">
+
+
+          <div class="mb-4">
+            <h5>
+              <i class="fas fa-layer-group text-primary me-2"></i>
+              Class/Semester:
+              <span class="badge bg-primary">{{ class_name }}</span>
+            </h5>
+
+            {% if institution_type == 'school' %}
+            {% if class_name in ['11', '12'] and stream %}
+            <h5>
+              <i class="fas fa-code-branch text-info me-2"></i>
+              Stream:
+              <span class="badge bg-info">{{ stream }}</span>
+            </h5>
+            {% endif %}
+            {% else %}
+            <h5>
+              <i class="fas fa-book text-info me-2"></i>
+              Subject:
+              <span class="badge bg-info">{{ subject }}</span>
+            </h5>
+            {% if degree %}
+            <h5>
+              <i class="fas fa-graduation-cap text-warning me-2"></i>
+              Degree:
+              <span class="badge bg-warning text-dark">{{ degree }}</span>
+            </h5>
+            {% endif %}
+            {% endif %}
+
+            <p class="text-muted mb-0"><i class="fas fa-clock me-1"></i>Valid for 15 minutes from now</p>
+          </div>
+
+
+          <div class="mb-4">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code"
+              class="img-fluid border border-2 rounded shadow" style="max-width: 300px;">
+          </div>
+
+
+          <div class="mb-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="fas fa-key me-2"></i>Manual Token Entry</h6>
+              </div>
+              <div class="card-body">
+                <p class="mb-2">Students can enter this token manually if QR scanning fails:</p>
+                <div class="d-flex align-items-center justify-content-center">
+                  <code class="fs-4 bg-light px-3 py-1 rounded">{{ token }}</code>
+                  <button class="btn btn-sm btn-outline-primary ms-3" onclick="copyToken()" title="Copy Token">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="d-flex justify-content-center flex-wrap gap-3">
+            <a href="{{ url_for('generate_qr') }}" class="btn btn-primary">
+              <i class="fas fa-qrcode me-2"></i>Generate New QR
+            </a>
+            <button class="btn btn-secondary" onclick="window.print()">
+              <i class="fas fa-print me-2"></i>Print QR Code
+            </button>
+            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-outline-primary">
+              <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+
+      <div class="card mt-4 shadow-sm animate__animated animate__fadeInUp">
+        <div class="card-header bg-light border-bottom d-flex align-items-center">
+          <h6 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Instructions for Students</h6>
+        </div>
+        <div class="card-body">
+          <ol class="ps-3">
+            <li>Open the student portal and go to <strong>"Scan QR"</strong></li>
+            <li>Scan this QR code using your mobile or device camera</li>
+            <li>Or enter the token manually: <code class="fw-bold">{{ token }}</code></li>
+            <li>Attendance will be recorded instantly</li>
+          </ol>
+          <div class="alert alert-warning mt-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Note:</strong> The QR code expires after 15 minutes.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function copyToken() {
+    const token = '{{ token }}';
+    navigator.clipboard.writeText(token).then(function () {
+      alert('Token copied to clipboard!');
+    }, function (err) {
+      console.error('Could not copy token:', err);
+    });
+  }
+
+
+  setTimeout(function () {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger';
+    alert.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>Warning:</strong> QR code will expire in 5 minutes!';
+    document.querySelector('.container').insertBefore(alert, document.querySelector('.container').firstChild);
+  }, 10 * 60 * 1000); 
+</script>
+{% endblock %}

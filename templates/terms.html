@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Terms & Conditions | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+
+<section class="bg-light py-5 shadow-sm animate__animated animate__fadeInDown">
+  <div class="container text-center">
+    <h1 class="display-5 fw-bold text-primary">
+      <i class="bi bi-file-earmark-text-fill me-2"></i>Terms & Conditions
+    </h1>
+    <p class="lead text-muted">Effective Date: June 2025</p>
+    <p class="text-muted">Please read these terms carefully before using the Attendance Management System.</p>
+  </div>
+</section>
+
+
+<section class="container my-5 animate__animated animate__fadeInUp">
+  <div class="row g-4">
+
+    {% set sections = [
+    {
+    "icon": "bi bi-journal-check",
+    "title": "General Terms",
+    "color": "primary",
+    "content": "The Attendance Management System ('the Platform') is a secure, cloud-based solution designed to
+    streamline attendance and communication in educational settings. By accessing or using this Platform, you agree to
+    the terms below. If you disagree with any part, you should not use the service."
+    },
+    {
+    "icon": "bi bi-person-check-fill",
+    "title": "User Responsibilities",
+    "color": "primary",
+    "list": [
+    "Users must provide accurate, current information during registration.",
+    "Users are responsible for keeping their credentials confidential.",
+    "Secure PINs and OTPs must be used by students and teachers as provided by admins.",
+    "Users should only access data relevant to their assigned role."
+    ],
+    "list_icon": "bi bi-check-circle-fill text-success"
+    },
+    {
+    "icon": "bi bi-slash-circle-fill",
+    "title": "Prohibited Activities",
+    "color": "danger",
+    "list": [
+    "Impersonating another individual or accessing others’ accounts.",
+    "Submitting fraudulent or manipulated attendance data.",
+    "Bypassing or tampering with system security features.",
+    "Engaging in disruptive, malicious, or exploitative behavior."
+    ],
+    "list_icon": "bi bi-x-circle-fill text-danger"
+    },
+    {
+    "icon": "bi bi-shield-lock-fill",
+    "title": "Privacy & Data Use",
+    "color": "primary",
+    "content": "Your privacy matters. The Platform securely stores data including user profiles, attendance logs, and
+    contact information. By using our services, you consent to communication via email, SMS, or WhatsApp where
+    necessary. See our <a href='{{ url_for(' privacy') }}'>Privacy Policy</a> for details.",
+    "sublist": [
+    ("bi bi-lock-fill text-success", "All data is encrypted and stored securely."),
+    ("bi bi-envelope-fill text-info", "Email/OTP-based communication is part of the workflow."),
+    ("bi bi-exclamation-circle-fill text-warning", "We do not sell or share your personal information.")
+    ]
+    },
+    {
+    "icon": "bi bi-cpu-fill",
+    "title": "Intellectual Property",
+    "color": "primary",
+    "content": "All content, source code, branding, and documentation related to the Attendance Management System are
+    protected by intellectual property laws. Unauthorized use, distribution, or reverse engineering is strictly
+    prohibited."
+    },
+    {
+    "icon": "bi bi-arrow-repeat",
+    "title": "Modifications to the Terms",
+    "color": "primary",
+    "content": "These Terms & Conditions may be updated at any time. Notices of updates will be posted here. Continued
+    use after updates indicates acceptance. Please review the terms periodically to stay informed."
+    },
+    {
+    "icon": "bi bi-telephone-fill",
+    "title": "Contact & Dispute Resolution",
+    "color": "primary",
+    "content": "If you have any questions or concerns regarding these terms, contact us at <a
+      href='mailto:multimosaic.help@gmail.com'>multimosaic.help@gmail.com</a>. We aim to resolve concerns amicably.
+    Legal jurisdiction shall follow the applicable laws of India."
+    }
+    ] %}
+
+    {% for section in sections %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h4 class="card-title mb-3 text-{{ section.color }}">
+            <i class="{{ section.icon }} me-2"></i>{{ section.title }}
+          </h4>
+
+          {% if section.content %}
+          <p class="text-muted">{{ section.content | safe }}</p>
+          {% endif %}
+
+          {% if section.list %}
+          <ul class="list-group list-group-flush">
+            {% for item in section.list %}
+            <li class="list-group-item border-0 ps-0">
+              <i class="{{ section.list_icon }} me-2"></i>{{ item }}
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          {% if section.sublist %}
+          <ul class="list-unstyled small mt-3">
+            {% for icon, text in section.sublist %}
+            <li><i class="{{ icon }} me-2"></i>{{ text }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

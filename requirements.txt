@@ -1,0 +1,13 @@
+Flask
+Flask_Login
+flask_mail
+Flask_Migrate
+flask_sqlalchemy
+numpy
+pytz
+qrcode
+scikit_learn
+SQLAlchemy
+twilio
+Werkzeug
+gunicorn

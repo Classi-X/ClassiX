@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Students in Class | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex align-items-center mb-4 animate__animated animate__fadeInDown">
+    <h3 class="text-primary fw-bold mb-0">
+      <i class="fas fa-user-graduate me-2"></i> Students in Class
+    </h3>
+  </div>
+
+
+  <form method="POST" class="row g-3 mb-4 animate__animated animate__fadeIn">
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Class/Semester</label>
+      <select name="class_name" class="form-select" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for c in classes %}
+        <option value="{{ c }}" {% if c==selected_class %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {% if institution_type == 'school' and selected_class in ['11', '12'] %}
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Stream</label>
+      <select name="stream_or_semester" class="form-select" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for s in streams %}
+        <option value="{{ s }}" {% if s==selected_stream %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% elif institution_type in ['college', 'university'] %}
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Subject</label>
+      <select name="subject" class="form-select" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for s in subjects %}
+        <option value="{{ s }}" {% if s==selected_subject %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Degree</label>
+      <select name="degree" class="form-select" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for d in degrees %}
+        <option value="{{ d }}" {% if d==selected_degree %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+  </form>
+
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <input type="text" id="studentSearchInput" class="form-control" placeholder="🔍 Search by name, email...">
+    </div>
+  </div>
+
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-bordered animate__animated animate__fadeInUp" id="studentTable">
+      <thead class="table-dark text-center">
+        <tr>
+          <th>Name</th>
+          <th>Class/Semester</th>
+          {% if institution_type == 'school' %}
+          <th>Stream</th>
+          {% elif institution_type in ['college', 'university'] %}
+          <th>Subject</th>
+          <th>Degree</th>
+          {% endif %}
+          <th>Total</th>
+          <th>Present</th>
+          <th>Absent</th>
+          <th>%</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody class="text-center">
+        {% for stats in students %}
+        <tr>
+          <td>{{ stats.student.username }}</td>
+          <td>{{ stats.student.class_name or '-' }}</td>
+          {% if institution_type == 'school' %}
+          <td>{% if stats.student.class_name in ['11', '12'] %}{{ stats.student.stream_or_semester or '-' }}{% else
+            %}-{% endif %}</td>
+          {% elif institution_type in ['college', 'university'] %}
+          <td>{{ stats.student.subject or '-' }}</td>
+          <td>{{ stats.student.degree or '-' }}</td>
+          {% endif %}
+          <td>{{ stats.total }}</td>
+          <td class="text-success fw-semibold">{{ stats.present }}</td>
+          <td class="text-danger fw-semibold">{{ stats.absent }}</td>
+          <td class="fw-bold">{{ stats.percentage }}%</td>
+          <td>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="showStudentModal(
+              '{{ stats.student.username }}',
+              '{{ stats.student.class_name or '-' }}',
+              '{% if institution_type == 'school' and stats.student.class_name in ['11', '12'] %}{{ stats.student.stream_or_semester or '-' }}{% else %}-{% endif %}',
+              '{% if institution_type in ['college', 'university'] %}{{ stats.student.subject or '-' }}{% else %}-{% endif %}',
+              '{% if institution_type in ['college', 'university'] %}{{ stats.student.degree or '-' }}{% else %}-{% endif %}',
+              {{ stats.total }},
+              {{ stats.present }},
+              {{ stats.absent }},
+              {{ stats.percentage }}
+            )">
+              <i class="fas fa-eye me-1"></i>View
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not students %}
+        <tr>
+          <td colspan="{% if institution_type == 'school' %}9{% else %}10{% endif %}"
+            class="text-muted text-center py-4">
+            <i class="fas fa-info-circle me-2"></i>No students found.
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+
+  <div class="modal fade" id="studentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-user-graduate me-2"></i><span id="modalStudentName"></span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <p><strong><i class="fas fa-chalkboard me-2"></i>Class:</strong> <span id="modalClass"></span></p>
+            {% if institution_type == 'school' %}
+            <p><strong><i class="fas fa-stream me-2"></i>Stream:</strong> <span id="modalStream"></span></p>
+            {% elif institution_type in ['college', 'university'] %}
+            <p><strong><i class="fas fa-book me-2"></i>Subject:</strong> <span id="modalSubject"></span></p>
+            <p><strong><i class="fas fa-certificate me-2"></i>Degree:</strong> <span id="modalDegree"></span></p>
+            {% endif %}
+          </div>
+          <div class="alert alert-light border">
+            <h6 class="mb-3"><i class="fas fa-chart-line text-primary me-2"></i>Performance Summary</h6>
+            <div class="row">
+              <div class="col-6">
+                <p><strong><i class="fas fa-check text-success me-1"></i>Present:</strong> <span
+                    id="modalPresent"></span></p>
+                <p><strong><i class="fas fa-times text-danger me-1"></i>Absent:</strong> <span id="modalAbsent"></span>
+                </p>
+              </div>
+              <div class="col-6">
+                <p><strong><i class="fas fa-list-alt text-info me-1"></i>Total:</strong> <span id="modalTotal"></span>
+                </p>
+                <p><strong><i class="fas fa-percentage text-warning me-1"></i>Percentage:</strong> <span
+                    id="modalPercentage"></span>%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  document.getElementById('studentSearchInput').addEventListener('input', function () {
+    const val = this.value.toLowerCase();
+    document.querySelectorAll('#studentTable tbody tr').forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
+    });
+  });
+
+  function showStudentModal(name, cls, stream, subject, degree, total, present, absent, percentage) {
+    const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    set('modalStudentName', name);
+    set('modalClass', cls);
+    set('modalStream', stream);
+    set('modalSubject', subject);
+    set('modalDegree', degree);
+    set('modalTotal', total);
+    set('modalPresent', present);
+    set('modalAbsent', absent);
+    set('modalPercentage', percentage);
+
+    new bootstrap.Modal(document.getElementById('studentModal')).show();
+  }
+</script>
+
+{% endblock %}

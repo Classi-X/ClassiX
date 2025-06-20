@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Teacher Directory | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="mb-4 d-flex align-items-center animate__animated animate__fadeInDown">
+    <h3 class="text-primary fw-bold mb-0">
+      <i class="fas fa-chalkboard-teacher me-2"></i>Teacher Directory
+    </h3>
+  </div>
+
+
+  <form method="POST" class="row g-3 mb-4 animate__animated animate__fadeIn">
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Class/Semester</label>
+      <select name="class_name" class="form-select" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for cls in classes %}
+        <option value="{{ cls }}" {% if cls==selected_class %}selected{% endif %}>{{ cls }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {% if institution_type == 'school' and selected_class in ['11', '12'] %}
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Stream</label>
+      <select name="stream_or_semester" class="form-select">
+        <option value="">All Streams</option>
+        {% for st in streams %}
+        <option value="{{ st }}" {% if st==selected_stream %}selected{% endif %}>{{ st }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% elif institution_type in ['college', 'university'] %}
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Subject</label>
+      <select name="subject" class="form-select">
+        <option value="">All Subjects</option>
+        {% for subj in subjects %}
+        <option value="{{ subj }}" {% if subj==selected_subject %}selected{% endif %}>{{ subj }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label fw-semibold">Degree</label>
+      <select name="degree" class="form-select">
+        <option value="">All Degrees</option>
+        {% for deg in degrees %}
+        <option value="{{ deg }}" {% if deg==selected_degree %}selected{% endif %}>{{ deg }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="col-md-3 d-flex align-items-end gap-2">
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="fas fa-filter me-1"></i>Filter
+      </button>
+      <a href="{{ url_for('teacher_list') }}" class="btn btn-outline-secondary w-100">
+        <i class="fas fa-sync-alt me-1"></i>Reset
+      </a>
+    </div>
+  </form>
+
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <input type="text" id="teacherSearchInput" class="form-control" placeholder="🔍 Search teachers...">
+    </div>
+  </div>
+
+
+  <div class="table-responsive animate__animated animate__fadeInUp">
+    <table class="table table-hover table-bordered align-middle text-center" id="teacherTable">
+      <thead class="table-dark">
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Classes/Semester</th>
+          {% if institution_type == 'school' %}
+          <th>Stream (11/12)</th>
+          {% elif institution_type in ['college', 'university'] %}
+          <th>Subject</th>
+          <th>Degree</th>
+          {% endif %}
+          {% if current_user_role == 'admin' %}
+          <th>Action</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in teachers %}
+        <tr>
+          <td>{{ t.username }}</td>
+          <td>{{ t.email }}</td>
+          <td>{{ t.classes }}</td>
+
+          {% if institution_type == 'school' %}
+          <td>{{ t.streams if '11' in t.classes or '12' in t.classes else '-' }}</td>
+          {% elif institution_type in ['college', 'university'] %}
+          <td>{{ t.subjects or '-' }}</td>
+          <td>{{ t.degrees or '-' }}</td>
+          {% endif %}
+
+          {% if current_user_role == 'admin' %}
+          <td>
+            <form method="POST" action="{{ url_for('delete_teacher', teacher_id=t.id) }}"
+              onsubmit="return confirm('Are you sure you want to delete this teacher?');">
+              <button type="submit" class="btn btn-sm btn-danger">
+                <i class="fas fa-trash-alt me-1"></i>Delete
+              </button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+
+        {% if not teachers %}
+        <tr>
+          <td
+            colspan="{% if institution_type == 'school' %}4{% elif institution_type in ['college', 'university'] %}5{% endif %}{% if current_user_role == 'admin' %}+1{% endif %}"
+            class="text-muted text-center py-4">
+            <i class="fas fa-info-circle me-2"></i>No teachers found.
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<script>
+  document.getElementById('teacherSearchInput').addEventListener('input', function () {
+    const value = this.value.toLowerCase();
+    document.querySelectorAll('#teacherTable tbody tr').forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(value) ? '' : 'none';
+    });
+  });
+</script>
+
+{% endblock %}

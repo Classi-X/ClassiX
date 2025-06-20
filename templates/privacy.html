@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<style>
+  li {
+    list-style-type: none;
+  }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+
+<section class="bg-light py-5 shadow-sm animate__animated animate__fadeInDown">
+  <div class="container text-center">
+    <h1 class="display-5 fw-bold text-primary mb-2">
+      <i class="bi bi-shield-lock-fill me-2"></i>Privacy Policy
+    </h1>
+    <p class="lead text-muted">Your privacy and data security are our top priority.</p>
+  </div>
+</section>
+
+
+<section class="container my-5 animate__animated animate__fadeInUp">
+  <div class="row g-4">
+
+    {% set sections = [
+    {
+    "icon": "bi bi-info-circle-fill",
+    "title": "Information We Collect",
+    "content": "We collect information from all user roles (Admins, Teachers, Students, Parents) to deliver secure
+    attendance tracking and personalized features.",
+    "bullets": [
+    "Full name, email address, phone number",
+    "Institution details, roles, class associations",
+    "Attendance logs, timestamps, IP/browser metadata",
+    "Parent contact details (linked to students)",
+    "Messages exchanged through real-time chat",
+    "Biometric simulation data (non-identifiable abstraction)"
+    ]
+    },
+    {
+    "icon": "bi bi-gear-fill",
+    "title": "Use of Information",
+    "bullets": [
+    "Facilitate QR/biometric-based attendance tracking",
+    "Send alerts via Email, SMS, and WhatsApp",
+    "Generate class-wide analytics and performance reports",
+    "Enable secure chat between authorized users",
+    "Authenticate logins via secure OTP workflows"
+    ]
+    },
+    {
+    "icon": "bi bi-people-fill",
+    "title": "Data Sharing & Disclosure",
+    "content": "We do <strong>not</strong> sell, rent, or share your personal information without your consent. Limited
+    data is used solely for operational purposes via trusted providers:",
+    "bullets": [
+    "Email delivery services (e.g., Flask-Mail)",
+    "WhatsApp/SMS APIs (e.g., Twilio)"
+    ],
+    "note": "These third-party services are contractually bound to handle data securely and privately."
+    },
+    {
+    "icon": "bi bi-chat-left-dots-fill",
+    "title": "Communication & Notifications",
+    "content": "We send role-specific messages and alerts via:",
+    "icons_bullets": [
+    ("bi bi-envelope-fill text-info", "Email (e.g., OTPs, system alerts)"),
+    ("bi bi-whatsapp text-success", "WhatsApp (e.g., student attendance updates)"),
+    ("bi bi-bell-fill text-warning", "In-app real-time notifications")
+    ],
+    "note": "Notification preferences can be adjusted via your profile settings where applicable."
+    },
+    {
+    "icon": "bi bi-lock-fill",
+    "title": "Data Security",
+    "content": "We use industry-standard measures to protect your data:",
+    "icons_bullets": [
+    ("bi bi-shield-check text-success", "End-to-end encrypted sessions (HTTPS)"),
+    ("bi bi-shield-lock-fill text-success", "OTP-secured and PIN-based login processes"),
+    ("bi bi-person-badge-fill text-success", "Granular, role-based access control"),
+    ("bi bi-database-fill-lock text-success", "Restricted access to sensitive logs and databases")
+    ]
+    },
+    {
+    "icon": "bi bi-person-lines-fill",
+    "title": "Your Rights",
+    "content": "As a user, you may:",
+    "icons_bullets": [
+    ("bi bi-eye-fill", "Access your personal and attendance data"),
+    ("bi bi-pencil-fill", "Request corrections to inaccurate data"),
+    ("bi bi-trash-fill", "Request account or data deletion (subject to verification)")
+    ]
+    },
+    {
+    "icon": "bi bi-arrow-clockwise",
+    "title": "Changes to This Policy",
+    "content": "We may update this Privacy Policy periodically. Changes will be posted on this page, and your continued
+    use of the system constitutes acceptance of those updates."
+    },
+    {
+    "icon": "bi bi-envelope-fill",
+    "title": "Contact Us",
+    "content": "For privacy-related inquiries or requests, contact us at <a
+      href='mailto:multimosaic.help@gmail.com'>multimosaic.help@gmail.com</a>. We aim to respond within a reasonable
+    timeframe."
+    }
+    ] %}
+
+    {% for section in sections %}
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h4 class="card-title text-primary mb-3">
+            <i class="{{ section.icon }} me-2"></i>{{ section.title }}
+          </h4>
+          {% if section.content %}
+          <p class="text-muted mb-3">{{ section.content | safe }}</p>
+          {% endif %}
+
+          {% if section.bullets %}
+          <ul class="text-muted small ps-3">
+            {% for item in section.bullets %}
+            <li><i class="bi bi-chevron-right me-2"></i>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          {% if section.icons_bullets %}
+          <ul class="text-muted small ps-3">
+            {% for icon, item in section.icons_bullets %}
+            <li><i class="{{ icon }} me-2"></i>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          {% if section.note %}
+          <p class="text-muted small mt-3"><em>{{ section.note }}</em></p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+{% endblock %}
