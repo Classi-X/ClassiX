@@ -5,11 +5,11 @@
   },
   {
     "question": "Who can use the system?",
-    "answer": "The platform is designed for educational institutions and supports four types of users: Admins manage the institution setup; Teachers manage attendance and classes; Students mark their attendance and view records; and Parents can monitor their child’s attendance and communicate with teachers."
+    "answer": "The platform is designed for educational institutions and supports four types of users: Admins manage the institution setup; Teachers manage attendance and classes; Students mark their attendance and view records; and Parents can monitor their child attendance and communicate with teachers."
   },
   {
     "question": "How do I register as a student or teacher?",
-    "answer": "To register, you’ll need a PIN provided by your institution’s Admin. Go to the registration page, enter your email, select your role, provide the PIN, and verify your email with the OTP sent to you. Once submitted, your account will be reviewed for approval."
+    "answer": "To register, you will need a PIN provided by your institution Admin. Go to the registration page, enter your email, select your role, provide the PIN, and verify your email with the OTP sent to you. Once submitted, your account will be reviewed for approval."
   },
   {
     "question": "What is a PIN and why do I need it to register?",
@@ -21,11 +21,11 @@
   },
   {
     "question": "How do I log in to the system?",
-    "answer": "Go to the login page and enter your registered email and password. Once your account is approved, you’ll be redirected to your role-specific dashboard after a successful login."
+    "answer": "Go to the login page and enter your registered email and password. Once your account is approved, you will be redirected to your role-specific dashboard after a successful login."
   },
   {
     "question": "I forgot my password. How can I reset it?",
-    "answer": "Click 'Forgot Password' on the login page, enter your email, and you’ll receive an OTP. After verifying the OTP, you’ll be able to create a new password."
+    "answer": "Click 'Forgot Password' on the login page, enter your email, and you will receive an OTP. After verifying the OTP, you will be able to create a new password."
   },
   {
     "question": "What can I do as a student?",
@@ -37,7 +37,7 @@
   },
   {
     "question": "What is biometric attendance?",
-    "answer": "It’s a simulated page that mimics biometric scanning. While not connected to real hardware, it allows students to check in by clicking a button. It records attendance as 'biometric' in the system."
+    "answer": "It a simulated page that mimics biometric scanning. While not connected to real hardware, it allows students to check in by clicking a button. It records attendance as 'biometric' in the system."
   },
   {
     "question": "What is QR code attendance and how does it work?",
@@ -53,15 +53,15 @@
   },
   {
     "question": "What is my role as a parent?",
-    "answer": "As a parent, you can log in to view your child’s attendance history, receive updates or alerts, and chat with teachers for feedback or communication."
+    "answer": "As a parent, you can log in to view your child attendance history, receive updates or alerts, and chat with teachers for feedback or communication."
   },
   {
     "question": "How do I get a parent login?",
-    "answer": "Parent accounts are automatically created when a student enters their parent’s contact details. Credentials are sent by the system once verified by a teacher or admin."
+    "answer": "Parent accounts are automatically created when a student enters their parent contact details. Credentials are sent by the system once verified by a teacher or admin."
   },
   {
-    "question": "How do I see my child’s attendance as a parent?",
-    "answer": "After logging in, your dashboard will show a summary of your child’s attendance, including charts and recent attendance records."
+    "question": "How do I see my child attendance as a parent?",
+    "answer": "After logging in, your dashboard will show a summary of your child attendance, including charts and recent attendance records."
   },
   {
     "question": "How can I chat with teachers as a parent?",
@@ -113,7 +113,7 @@
   },
   {
     "question": "How does the system detect at-risk students?",
-    "answer": "The system uses AI to analyze attendance patterns. If a student’s predicted attendance falls below a threshold, they are flagged as 'at risk' on the dashboard."
+    "answer": "The system uses AI to analyze attendance patterns. If a student predicted attendance falls below a threshold, they are flagged as 'at risk' on the dashboard."
   },
   {
     "question": "How secure is my data?",
@@ -125,11 +125,11 @@
   },
   {
     "question": "What should I do if my QR code scan fails?",
-    "answer": "Make sure the QR code is still valid (not expired) and you’re logged into your account. Try refreshing the page or ask your teacher to regenerate the QR."
+    "answer": "Make sure the QR code is still valid (not expired) and you are logged into your account. Try refreshing the page or ask your teacher to regenerate the QR."
   },
   {
-    "question": "What if I entered the wrong OTP or didn’t receive it?",
-    "answer": "Check your spam or junk folder. If you still don’t receive it, try resending the OTP. Make sure your email address is correct."
+    "question": "What if I entered the wrong OTP or did not receive it?",
+    "answer": "Check your spam or junk folder. If you still do not receive it, try resending the OTP. Make sure your email address is correct."
   },
   {
     "question": "How will I know if my registration is approved?",
@@ -137,23 +137,23 @@
   },
   {
     "question": "Can I change my role after registration?",
-    "answer": "No, roles are assigned during registration and verified by Admins. If you need to change your role, contact your institution’s Admin for assistance."
+    "answer": "No, roles are assigned during registration and verified by Admins. If you need to change your role, contact your institution Admin for assistance."
   },
   {
     "question": "How can I contact support if I have issues?",
-    "answer": "If you face issues, first check the FAQ or contact your school’s Admin. You can also use the 'Contact Us' page to send a message to the support team."
+    "answer": "If you face issues, first check the FAQ or contact your school Admin. You can also use the 'Contact Us' page to send a message to the support team."
   },
   {
     "question": "I registered but I can't log in. What should I do?",
-    "answer": "Make sure your account has been approved by your teacher or admin. If you see a 'pending approval' message, you’ll need to wait until it's approved. If you're still having trouble, double-check your email and password, or try resetting your password."
+    "answer": "Make sure your account has been approved by your teacher or admin. If you see a 'pending approval' message, you will need to wait until it's approved. If you're still having trouble, double-check your email and password, or try resetting your password."
   },
   {
     "question": "I never received the OTP email. What can I do?",
-    "answer": "Please check your spam or junk folder. If it’s not there, make sure you entered the correct email address and try resending the OTP. Still having issues? Contact your school admin to check if your email is correct in the system."
+    "answer": "Please check your spam or junk folder. If it not there, make sure you entered the correct email address and try resending the OTP. Still having issues? Contact your school admin to check if your email is correct in the system."
   },
   {
     "question": "What if I lost or forgot my PIN code before registering?",
-    "answer": "If you haven’t registered yet and lost your PIN, you’ll need to contact your school or institution’s Admin. They can provide a new PIN or resend the existing one."
+    "answer": "If you have not registered yet and lost your PIN, you will need to contact your school or institution Admin. They can provide a new PIN or resend the existing one."
   },
   {
     "question": "Can I register without a PIN?",
@@ -161,7 +161,7 @@
   },
   {
     "question": "Why does it say 'invalid credentials' when I try to log in?",
-    "answer": "This message means either your email or password is incorrect, or your account hasn’t been approved yet. Double-check your login details and make sure your account is active."
+    "answer": "This message means either your email or password is incorrect, or your account has not been approved yet. Double-check your login details and make sure your account is active."
   },
   {
     "question": "I marked my attendance but it doesn't show up. What happened?",
@@ -180,7 +180,7 @@
     "answer": "Click on your name or profile icon in the top-right corner of the page, then select 'Logout'. Always log out if you're using a shared or public device."
   },
   {
-    "question": "I’m a new institution. How do we get started with this platform?",
+    "question": "I am a new institution. How do we get started with this platform?",
     "answer": "First, create an Admin account. Once logged in, set up your institution details, generate PINs for students and teachers, and configure classes, streams, and subjects. You can then start approving users and managing attendance."
   },
   {
@@ -189,14 +189,14 @@
   },
   {
     "question": "How do I know when my child misses a class?",
-    "answer": "You’ll receive an email or WhatsApp notification if your child has low attendance or misses a class. Make sure your contact info is up to date in the system."
+    "answer": "You will receive an email or WhatsApp notification if your child has low attendance or misses a class. Make sure your contact info is up to date in the system."
   },
   {
     "question": "Can multiple parents view the same student's attendance?",
-    "answer": "Currently, one parent account is created per student using the contact details submitted. If you’d like to add another parent or guardian, ask your child to update the contact info in their dashboard."
+    "answer": "Currently, one parent account is created per student using the contact details submitted. If you would like to add another parent or guardian, ask your child to update the contact info in their dashboard."
   },
   {
-    "question": "Is there a way to contact support if FAQs don’t help?",
+    "question": "Is there a way to contact support if FAQs do not help?",
     "answer": "Yes. You can use the 'Contact Us' page to send a message to the support team, or ask your school Admin for assistance. Some versions of the system also include a chatbot for quick help."
   },
   {
@@ -217,23 +217,23 @@
   },
   {
     "question": "What does 'at-risk student' mean in the analytics?",
-    "answer": "It means the system has detected that the student’s attendance trend is declining and might fall below the required level. Teachers and parents are alerted so they can take action early."
+    "answer": "It means the system has detected that the student attendance trend is declining and might fall below the required level. Teachers and parents are alerted so they can take action early."
   },
   {
     "question": "Can I be logged in on multiple devices at once?",
-    "answer": "For security reasons, it’s recommended to use one device at a time. If you log in from a new device, the previous session may be logged out automatically."
+    "answer": "For security reasons, it recommended to use one device at a time. If you log in from a new device, the previous session may be logged out automatically."
   },
   {
     "question": "What should I do if I forgot both my PIN and the OTP email?",
-    "answer": "If you’ve lost your PIN and didn’t receive the OTP, contact your institution's Admin. They can resend the PIN and make sure your email is correct so you can receive a new OTP."
+    "answer": "If you have lost your PIN and did not receive the OTP, contact your institution's Admin. They can resend the PIN and make sure your email is correct so you can receive a new OTP."
   },
   {
     "question": "A student was marked absent by mistake. How can it be corrected?",
     "answer": "Teachers can update attendance records after the fact. If you're a student and notice an error, kindly inform your teacher so they can review and correct it."
   },
   {
-    "question": "The QR code won’t scan on my device. What should I try?",
-    "answer": "Make sure your camera is working and your screen is clean. Try adjusting the distance or lighting. If it still doesn’t work, notify your teacher—they can mark your attendance manually if needed."
+    "question": "The QR code wo not scan on my device. What should I try?",
+    "answer": "Make sure your camera is working and your screen is clean. Try adjusting the distance or lighting. If it still does not work, notify your teacher—they can mark your attendance manually if needed."
   },
   {
     "question": "Can parents use the platform on a mobile phone?",
@@ -253,23 +253,23 @@
   },
   {
     "question": "Can I resend a parent invitation or login link?",
-    "answer": "If a parent did not receive their login details, the teacher or admin can verify the parent’s contact info and resend the invitation or credentials."
+    "answer": "If a parent did not receive their login details, the teacher or admin can verify the parent contact info and resend the invitation or credentials."
   },
   {
     "question": "Can an admin delete a chat message or conversation?",
     "answer": "No, chats are private and only visible to the users involved. Admins cannot delete or view chat messages for privacy reasons."
   },
   {
-    "question": "What should I do if my camera doesn’t work for QR scanning?",
+    "question": "What should I do if my camera does not work for QR scanning?",
     "answer": "You can try using a different device or ask your teacher to mark your attendance manually. Some devices may also allow you to upload a screenshot of the QR if supported."
   },
   {
     "question": "Why is my account still pending approval?",
-    "answer": "After registration, your account must be approved by a teacher or admin. If it’s been a while, reach out to your teacher or school to remind them to review your request."
+    "answer": "After registration, your account must be approved by a teacher or admin. If it been a while, reach out to your teacher or school to remind them to review your request."
   },
   {
     "question": "Can I register two students under the same parent contact info?",
-    "answer": "Yes, the same parent contact (email and phone) can be used for multiple students. Each child’s attendance will be visible from the parent’s dashboard."
+    "answer": "Yes, the same parent contact (email and phone) can be used for multiple students. Each child attendance will be visible from the parent dashboard."
   },
   {
     "question": "Can teachers see which students scanned the QR code?",
@@ -277,11 +277,11 @@
   },
   {
     "question": "How do I know if my attendance was recorded successfully?",
-    "answer": "After scanning a QR code or using biometric attendance, you’ll see a confirmation message. You can also check your attendance records to confirm."
+    "answer": "After scanning a QR code or using biometric attendance, you will see a confirmation message. You can also check your attendance records to confirm."
   },
   {
     "question": "Can parents receive attendance alerts by email instead of WhatsApp?",
-    "answer": "Yes, the system supports both email and WhatsApp alerts. If one isn’t working, make sure your contact details are correct and notify the teacher if needed."
+    "answer": "Yes, the system supports both email and WhatsApp alerts. If one is not working, make sure your contact details are correct and notify the teacher if needed."
   },
   {
     "question": "What happens if I accidentally close the QR scanner before scanning?",
@@ -289,18 +289,18 @@
   },
   {
     "question": "What should I do if I registered with the wrong role?",
-    "answer": "If you registered with the wrong role (e.g., student instead of teacher), contact your institution’s Admin. They may ask you to register again with the correct role and a valid PIN."
+    "answer": "If you registered with the wrong role (e.g., student instead of teacher), contact your institution Admin. They may ask you to register again with the correct role and a valid PIN."
   },
   {
-    "question": "Why can’t I send messages to some users in chat?",
-    "answer": "You can only chat with users who are part of your institution and relevant to your role. For example, students can chat with assigned teachers, and parents can chat with their child’s teachers."
+    "question": "Why ca not I send messages to some users in chat?",
+    "answer": "You can only chat with users who are part of your institution and relevant to your role. For example, students can chat with assigned teachers, and parents can chat with their child teachers."
   },
   {
     "question": "Can students or parents delete their accounts?",
-    "answer": "No, users cannot delete their own accounts. If you no longer need access, contact your school’s Admin and they can deactivate your account if needed."
+    "answer": "No, users cannot delete their own accounts. If you no longer need access, contact your school Admin and they can deactivate your account if needed."
   },
   {
-    "question": "What’s the best way to get help if I’m stuck?",
-    "answer": "First, check the FAQs. If you still need help, use the 'Contact Us' form or speak to your school’s Admin. The built-in chatbot can also answer common questions instantly."
+    "question": "What the best way to get help if I am stuck?",
+    "answer": "First, check the FAQs. If you still need help, use the 'Contact Us' form or speak to your school Admin. The built-in chatbot can also answer common questions instantly."
   }
 ]
