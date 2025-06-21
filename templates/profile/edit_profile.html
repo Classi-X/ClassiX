@@ -31,6 +31,12 @@
 
         {% if user.role == 'student' %}
 
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-id-badge me-1 text-secondary"></i>Roll Number <span class="text-danger">*</span>
+          </label>
+          <input type="text" name="roll_number" class="form-control" value="{{ user.roll_number or '' }}" required>
+        </div>
 
         <div class="mb-3">
           <label class="form-label fw-semibold">

@@ -34,6 +34,7 @@
       <div class="row gy-2">
         <div class="col-md-6">
           <p><strong>Class/Semester:</strong> {{ user.class_name or '-' }}</p>
+          <p><strong>Roll Number:</strong> {{ user.roll_number or '-' }}</p>
           {% if institution_type == 'school' and user.class_name in ['11', '12'] %}
           <p><strong>Stream:</strong> {{ user.stream_or_semester or '-' }}</p>
           {% endif %}

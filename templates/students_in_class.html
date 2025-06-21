@@ -66,6 +66,7 @@
       <thead class="table-dark text-center">
         <tr>
           <th>Name</th>
+          <th>Roll Number</th>
           <th>Class/Semester</th>
           {% if institution_type == 'school' %}
           <th>Stream</th>
@@ -84,6 +85,7 @@
         {% for stats in students %}
         <tr>
           <td>{{ stats.student.username }}</td>
+          <td>{{ stats.student.roll_number }}</td>
           <td>{{ stats.student.class_name or '-' }}</td>
           {% if institution_type == 'school' %}
           <td>{% if stats.student.class_name in ['11', '12'] %}{{ stats.student.stream_or_semester or '-' }}{% else

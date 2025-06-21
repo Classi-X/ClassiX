@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Add Students | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card shadow-lg border-0 rounded-4 animate__animated animate__fadeIn">
+        <div class="card-header bg-primary text-white rounded-top-4 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-user-plus me-2"></i>Add Students
+            </h5>
+        </div>
+        <div class="card-body">
+
+            <div class="alert alert-info" role="alert">
+                <strong>Instructions:</strong><br>
+                You can add students either manually one by one, or upload a CSV file to add many students at once.
+
+                <hr>
+                <p class="fw-semibold mb-1">📌 Manual Entry:</p>
+                <ul class="mt-1">
+                    <li>Click the <strong>"Add Student"</strong> button to add student fields.</li>
+                    <li>Fill in all the required details for each student:
+                        <ul>
+                            <li><strong>Roll Number</strong> – must be unique (not used before)</li>
+                            <li><strong>Username</strong> – must be unique</li>
+                            <li><strong>Email</strong> – must be a valid email and not used for another student</li>
+                            <li><strong>Class</strong> – select the class of the student</li>
+                            <li><strong>Stream</strong> – only required if class is <strong>11</strong> or
+                                <strong>12</strong></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <hr>
+                <p class="fw-semibold mb-1">📂 Upload via CSV File:</p>
+                <ul class="mt-1">
+                    <li>Click the "Choose File" button below to upload a CSV file.</li>
+                    <li><strong>Use the exact format</strong> as shown in the sample file. Each row must contain:
+                        <ul>
+                            <li>Roll Number</li>
+                            <li>Username</li>
+                            <li>Email</li>
+                            <li>Class</li>
+                            <li>Stream (leave blank if class is not 11 or 12)</li>
+                        </ul>
+                    </li>
+                    <li>Do not change the column names in the first row.</li>
+                    <li>Make sure all rows are complete and follow the same order.</li>
+                    <li>If there's any error in a row (duplicate email, missing class, etc.), that student won't be
+                        added.</li>
+                </ul>
+                <p class="mt-2 mb-0">
+                    👉 Download the sample CSV file, open it in Excel or Google Sheets, fill in the student data, and
+                    save it as CSV:
+                    <a href="{{ url_for('static', filename='sample_students.csv') }}" download
+                        class="fw-semibold text-decoration-none">
+                        Download CSV File Format to Insert Data
+                    </a>
+                </p>
+
+                <hr>
+                <p class="mb-1 fw-semibold">🔐 How Students Will Login:</p>
+                <ul class="mt-1">
+                    <li>Passwords are <strong>not created here</strong>.</li>
+                    <li>After registration, students can go to the login page and click <strong>"Forgot
+                            Password"</strong>.</li>
+                    <li>They will enter their email (that you provided here) and receive an OTP.</li>
+                    <li>After entering the OTP, they can create their own password.</li>
+                </ul>
+            </div>
+
+            <hr class="my-4">
+            <div class="mb-3">
+                <label for="csvUpload" class="form-label fw-semibold">Upload CSV File</label>
+                <input type="file" id="csvUpload" accept=".csv" class="form-control">
+                <small class="form-text text-muted mt-1">
+                    Select the CSV file you filled out using the above format to bulk upload students.
+                </small>
+            </div>
+
+            <form method="POST" id="studentsForm">
+                <div id="student-container"></div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" id="addBtn" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-1"></i> Add Student
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i> Save All Students
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card .form-control,
+    .card .form-select {
+        box-shadow: none;
+        transition: border-color 0.2s ease-in-out;
+    }
+
+    .card .form-control:focus,
+    .card .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.2);
+    }
+
+    .student-block {
+        background-color: #f9f9f9;
+        border-left: 5px solid #0d6efd;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1.2rem;
+        position: relative;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .student-block:hover {
+        background-color: #f1f1f1;
+    }
+
+    .remove-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+
+    .animate__animated {
+        animation-duration: 0.5s;
+    }
+</style>
+
+<script>
+    document.getElementById('csvUpload').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const lines = e.target.result.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+            const rows = lines.slice(1);
+
+            for (let i = 0; i < rows.length; i++) {
+                const data = rows[i].split(',').map(v => v.trim());
+                const entry = Object.fromEntries(headers.map((h, idx) => [h, data[idx] || '']));
+
+                let block = container.children[i];
+                if (!block) {
+                    newStudentBlock();
+                    block = container.lastElementChild;
+                }
+
+                block.querySelector('[data-key="roll_number"]').value = entry['roll number'] || '';
+                block.querySelector('[data-key="username"]').value = entry['username'] || '';
+                block.querySelector('[data-key="email"]').value = entry['email'] || '';
+                block.querySelector('[data-key="class_name"]').value = entry['class'] || '';
+                block.querySelector('[data-key="stream_or_semester"]').value = entry['stream'] || '';
+
+                block.querySelector('.class-select').dispatchEvent(new Event('change'));
+            }
+
+            validateAllStudents();
+        };
+
+        reader.readAsText(file);
+    });
+
+    const classes = {{ classes| tojson }};
+    const streams = {{ streams| tojson }};
+    const container = document.getElementById('student-container');
+    const submitBtn = document.querySelector('button[type="submit"]');
+
+    function newStudentBlock() {
+        const idx = container.children.length;
+        const div = document.createElement('div');
+        div.className = 'student-block animate__animated animate__fadeInUp';
+        div.innerHTML = `
+      <input name="students" type="hidden" id="json_${idx}">
+      <div class="row g-3">
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Roll No</label>
+          <input class="form-control roll-input" placeholder="e.g. 1001" data-key="roll_number" required>
+          <div class="text-danger small roll-error d-none">Duplicate roll number</div>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Username</label>
+          <input class="form-control username-input" placeholder="e.g. john_doe" data-key="username" required>
+          <div class="text-danger small username-error d-none">Username already exists</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Email</label>
+          <input class="form-control email-input" placeholder="e.g. john@example.com" data-key="email" type="email" required>
+          <div class="text-danger small email-error d-none">Email already exists</div>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Class</label>
+          <select class="form-select class-select" data-key="class_name" required>
+            <option value="">Select</option>
+            ${classes.map(c => `<option>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">Stream</label>
+          <select class="form-select stream-select" data-key="stream_or_semester" disabled>
+            <option value="">Select</option>
+            ${streams.map(s => `<option>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="button" class="btn btn-sm btn-danger remove-btn" title="Remove student">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      </div>
+    `;
+        container.append(div);
+
+        const usernameInput = div.querySelector('.username-input');
+        const emailInput = div.querySelector('.email-input');
+        const rollInput = div.querySelector('.roll-input');
+        const classSelect = div.querySelector('.class-select');
+        const streamSelect = div.querySelector('.stream-select');
+        const removeBtn = div.querySelector('.remove-btn');
+
+        const usernameError = div.querySelector('.username-error');
+        const emailError = div.querySelector('.email-error');
+        const rollError = div.querySelector('.roll-error');
+
+        classSelect.onchange = () => {
+            const isSenior = ['11', '12'].includes(classSelect.value);
+            streamSelect.disabled = !isSenior;
+            if (!isSenior) streamSelect.value = '';
+        };
+
+        removeBtn.onclick = () => {
+            div.remove();
+            validateAllStudents();
+        };
+
+        [usernameInput, emailInput, rollInput].forEach(inp => {
+            inp.addEventListener('blur', () => validateAllStudents());
+        });
+        [usernameInput, emailInput, rollInput, classSelect, streamSelect].forEach(inp => {
+            inp.addEventListener('input', () => validateAllStudents());
+        });
+
+        classSelect.dispatchEvent(new Event('change'));
+    }
+
+    function validateAllStudents() {
+        const usernames = new Set();
+        const emails = new Set();
+        const rolls = new Set();
+        let isValid = true;
+
+        document.querySelectorAll('.student-block').forEach(block => {
+            const uname = block.querySelector('.username-input').value.trim();
+            const email = block.querySelector('.email-input').value.trim().toLowerCase();
+            const roll = block.querySelector('.roll-input').value.trim();
+
+            const unameErr = block.querySelector('.username-error');
+            const emailErr = block.querySelector('.email-error');
+            const rollErr = block.querySelector('.roll-error');
+
+            const dupUser = usernames.has(uname);
+            const dupEmail = emails.has(email);
+            const dupRoll = rolls.has(roll);
+
+            usernames.add(uname);
+            emails.add(email);
+            rolls.add(roll);
+
+            unameErr.classList.toggle('d-none', !dupUser);
+            emailErr.classList.toggle('d-none', !dupEmail);
+            rollErr.classList.toggle('d-none', !dupRoll);
+
+            block.querySelector('.username-input').classList.toggle('is-invalid', dupUser);
+            block.querySelector('.email-input').classList.toggle('is-invalid', dupEmail);
+            block.querySelector('.roll-input').classList.toggle('is-invalid', dupRoll);
+
+            if (uname && !dupUser) {
+                fetch('/api/check-username', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: uname })
+                }).then(res => res.json()).then(data => {
+                    unameErr.classList.toggle('d-none', !data.exists);
+                    block.querySelector('.username-input').classList.toggle('is-invalid', data.exists);
+                    updateSubmitButtonState();
+                });
+            }
+
+            if (email && !dupEmail) {
+                fetch('/api/check-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                }).then(res => res.json()).then(data => {
+                    emailErr.classList.toggle('d-none', !data.exists);
+                    block.querySelector('.email-input').classList.toggle('is-invalid', data.exists);
+                    updateSubmitButtonState();
+                });
+            }
+        });
+
+        updateSubmitButtonState();
+    }
+
+    function updateSubmitButtonState() {
+        const invalids = document.querySelectorAll('.is-invalid');
+        submitBtn.disabled = invalids.length > 0;
+    }
+
+    document.getElementById('addBtn').onclick = () => {
+        newStudentBlock();
+        validateAllStudents();
+    };
+
+    document.getElementById('studentsForm').onsubmit = (e) => {
+        validateAllStudents();
+        const invalids = document.querySelectorAll('.is-invalid');
+        if (invalids.length > 0) {
+            e.preventDefault();
+            alert("Please fix all errors before submitting.");
+            return;
+        }
+
+        container.querySelectorAll('.student-block').forEach(div => {
+            const obj = {};
+            div.querySelectorAll('[data-key]').forEach(inp => obj[inp.dataset.key] = inp.value);
+            div.querySelector('input[type=hidden]').value = JSON.stringify(obj);
+        });
+    };
+
+    newStudentBlock();
+</script>
+
+{% endblock %}

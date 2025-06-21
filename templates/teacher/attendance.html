@@ -284,13 +284,22 @@
         return;
       }
 
-      let studentsHtml = '<div class="row">';
+      let studentsHtml = `
+  <div class="mb-3">
+    <input type="text" id="studentSearchInput" class="form-control" placeholder="🔍 Search student by name or roll number...">
+  </div>
+  <div class="row">
+`;
       students.forEach(student => {
         studentsHtml += `
                 <div class="col-md-6 col-lg-4 mb-3">
                     <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title">${student.name}</h6>
+                           <h6 class="card-title">
+  ${student.name} 
+  <span class="text-muted small">(${student.roll_number || 'No Roll'})</span>
+</h6>
+
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" 
                                        name="attendance_${student.id}" value="Present" 
@@ -316,6 +325,14 @@
 
       document.getElementById('studentsList').innerHTML = studentsHtml;
       document.getElementById('studentsSection').style.display = 'block';
+      document.getElementById('studentSearchInput').addEventListener('input', function () {
+        const val = this.value.toLowerCase();
+        document.querySelectorAll('#studentsList .card').forEach(card => {
+          const name = card.querySelector('.card-title').innerText.toLowerCase();
+          card.parentElement.style.display = name.includes(val) ? '' : 'none';
+        });
+      });
+
     } catch (err) {
       console.error(err);
       alert('Error loading students');

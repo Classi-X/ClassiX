@@ -90,6 +90,7 @@
           <th>Degree</th>
           {% endif %}
           <th>Status</th>
+          <th>Roll Number</th>
           <th>Student</th>
           <th>Marked By</th>
         </tr>
@@ -114,6 +115,7 @@
             <i class="fas {{ 'fa-check-circle' if row.status == 'Present' else 'fa-times-circle' }} me-1"></i>
             {{ row.status }}
           </td>
+          <td>{{ row.roll_number or '-' }}</td>
           <td>{{ row.student_name or '-' }}</td>
           <td>{{ row.teacher_name or '-' }}</td>
         </tr>

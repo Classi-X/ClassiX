@@ -135,6 +135,13 @@
         <a href="{{ url_for('privacy') }}" class="sidebar-link list-group-item list-group-item-action">
           <i class="fas fa-shield-halved me-2"></i>Privacy Policy
         </a>
+        <a href="{{ url_for('faq') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-question-circle me-2"></i>FAQ
+        </a>
+        <a href="{{ url_for('ai_chat') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-robot me-2"></i>AI ChatBot
+        </a>
+
       </div>
 
       <script>
@@ -365,6 +372,7 @@
                     {% for student_data in insights.at_risk_students %}
                     <tr>
                       <td>{{ student_data.student.username }}</td>
+                      <td>{{ student_data.student.roll_number }}</td>
                       <td>{{ student_data.student.class_name }}</td>
                       <td>
                         <span
@@ -438,6 +446,7 @@
                   <thead class="table-light">
                     <tr>
                       <th scope="col"><i class="fas fa-user me-1"></i> Username</th>
+                      <th scope="col"><i class="fas fa-id-badge me-1"></i> Roll Number</th>
                       <th scope="col"><i class="fas fa-envelope me-1"></i> Email</th>
                       <th scope="col"><i class="fas fa-user-tag me-1"></i> Role</th>
                       <th scope="col"><i class="fas fa-calendar-alt me-1"></i> Registered</th>
@@ -448,6 +457,7 @@
                     {% for user in pending_users %}
                     <tr>
                       <td>{{ user.username }}</td>
+                      <td>{{ user.roll_number }}</td>
                       <td>{{ user.email }}</td>
                       <td>
                         <span class="badge bg-secondary text-uppercase small">

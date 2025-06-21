@@ -71,6 +71,10 @@
 
                         <div id="studentFields" style="display: none;">
 
+                            <div class="mb-3" id="rollNumberField" style="display: none;">
+                                <label for="roll_number" class="form-label">Roll Number *</label>
+                                <input type="text" class="form-control" id="roll_number" name="roll_number" required>
+                            </div>
 
                             <div class="mb-3" id="classField">
                                 <label for="class_name" class="form-label">Class/Semester *</label>
@@ -287,6 +291,8 @@
         const role = document.getElementById('role').value;
         const pinField = document.getElementById('pinField');
         const securePinInput = document.getElementById('secure_pin');
+        const rollNumberField = document.getElementById('rollNumberField');
+        const rollNumberInput = document.getElementById('roll_number');
 
         const studentFields = document.getElementById('studentFields');
 
@@ -306,6 +312,8 @@
         pinField.style.display = 'none';
         securePinInput.required = false;
 
+        rollNumberField.style.display = 'none';
+        rollNumberInput.required = false;
         studentFields.style.display = 'none';
 
         classField.style.display = 'none';
@@ -330,7 +338,8 @@
 
             const institutionType = document.body.getAttribute('data-institution-type');
             const selectedClass = classInput.value;
-
+            rollNumberField.style.display = 'block';
+            rollNumberInput.required = true;
             classField.style.display = 'block';
             classInput.required = true;
 

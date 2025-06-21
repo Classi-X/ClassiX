@@ -24,6 +24,7 @@
           <thead class="table-light">
             <tr>
               <th><i class="fas fa-user me-1"></i> Username</th>
+              <th scope="col"><i class="fas fa-id-badge me-1"></i> Roll Number</th>
               <th><i class="fas fa-envelope me-1"></i> Email</th>
               <th><i class="fas fa-user-tag me-1"></i> Role</th>
               <th><i class="fas fa-comments me-1"></i> Chat</th>
@@ -33,6 +34,7 @@
             {% for user in users %}
             <tr>
               <td>{{ user.username }}</td>
+              <td>{{ user.roll_number or '-' }}</td>
               <td>{{ user.email }}</td>
               <td>
                 <span class="badge bg-secondary text-uppercase small">{{ user.role.title() }}</span>

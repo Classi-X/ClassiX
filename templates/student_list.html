@@ -83,6 +83,7 @@
       <thead class="table-dark text-center">
         <tr>
           <th>Username</th>
+          <th>Roll Number</th>
           <th>Email</th>
           <th>Class/Semester</th>
           {% if institution_type == 'school' %}
@@ -100,6 +101,7 @@
         {% for s in students %}
         <tr>
           <td>{{ s.username }}</td>
+          <td>{{ s.roll_number or '-' }}</td>
           <td>{{ s.email }}</td>
           <td>{{ s.class_name or '-' }}</td>
 

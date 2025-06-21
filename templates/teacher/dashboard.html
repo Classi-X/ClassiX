@@ -77,6 +77,12 @@
         <a href="{{ url_for('generate_qr') }}" class="list-group-item list-group-item-action d-flex align-items-center">
           <i class="fas fa-qrcode me-2"></i> Generate QR
         </a>
+        {% if current_user.institution.type.lower() == 'school' %}
+        <a href="{{ url_for('add_students') }}"
+          class="list-group-item list-group-item-action d-flex align-items-center">
+          <i class="fas fa-user-plus me-2"></i> Add Students
+        </a>
+        {% endif %}
 
         <a href="{{ url_for('parent_status') }}"
           class="list-group-item list-group-item-action d-flex align-items-center">
@@ -144,6 +150,13 @@
         <a href="{{ url_for('privacy') }}" class="list-group-item list-group-item-action d-flex align-items-center">
           <i class="fas fa-shield-alt me-2"></i> Privacy Policy
         </a>
+        <a href="{{ url_for('faq') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-question-circle me-2"></i>FAQ
+        </a>
+        <a href="{{ url_for('ai_chat') }}" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-robot me-2"></i>AI ChatBot
+        </a>
+
       </nav>
 
 
@@ -491,6 +504,7 @@
                   <thead class="table-light">
                     <tr>
                       <th><i class="fas fa-user me-1"></i> Name</th>
+                      <th><i class="fas fa-id-badge me-1"></i> Roll Number</th>
                       <th><i class="fas fa-layer-group me-1"></i> Class/Semester</th>
                       {% if institution_type == 'school' %}
                       {% set has_11_12 = pending_students | selectattr('class_name', 'in', ['11', '12']) | list %}
@@ -510,6 +524,7 @@
                     {% for student in pending_students %}
                     <tr>
                       <td>{{ student.username }}</td>
+                      <td>{{ student.roll_number }}</td>
                       <td><span class="badge bg-secondary">{{ student.class_name }}</span></td>
 
                       {% if institution_type == 'school' and has_11_12 %}
@@ -584,6 +599,7 @@
                   <thead class="table-light">
                     <tr>
                       <th><i class="fas fa-user me-1"></i> Name</th>
+                      <th><i class="fas fa-id-badge me-1"></i> Roll Number</th>
                       <th><i class="fas fa-layer-group me-1"></i> Class/Semester</th>
 
                       {% if institution_type == 'school' %}
@@ -605,6 +621,7 @@
                     {% for student_info in insights.at_risk_in_classes %}
                     <tr>
                       <td>{{ student_info.student.username }}</td>
+                      <td>{{ student_info.student.roll_number }}</td>
                       <td><span class="badge bg-primary">{{ student_info.class }}</span></td>
 
                       {% if institution_type == 'school' %}

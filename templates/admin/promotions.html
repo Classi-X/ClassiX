@@ -78,6 +78,7 @@
                       <input type="checkbox" id="headerCheck" onchange="toggleAll()">
                     </th>
                     <th>Student Name</th>
+                    <th>Roll Number</th>
                     <th>Current Class/Semester</th>
                     {% if institution_type in ['college', 'university'] %}
                     <th>Subject</th>
@@ -97,6 +98,7 @@
                         onchange="updateSelectAll()">
                     </td>
                     <td><strong>{{ student.username }}</strong></td>
+                    <td><strong>{{ student.roll_number }}</strong></td>
                     <td><span class="badge bg-primary">{{ student.class_name or 'Not Set' }}</span></td>
                     {% if institution_type in ['college', 'university'] %}
                     <td>{{ student.subject or '-' }}</td>

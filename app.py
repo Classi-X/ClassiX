@@ -8,14 +8,16 @@ import qrcode
 from utils import send_email_notification, send_whatsapp_message
 import io
 import base64
-import random
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from difflib import SequenceMatcher
+import re
 import string
+import random
 from models import *
 from analytics import AttendanceAnalytics
 from config import Config
 import json
-
-
 from extensions import db, login_manager  
 
 app = Flask(__name__)
@@ -52,7 +54,9 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter(
+            (User.username == username) | (User.email == username)
+        ).first()
 
         if user and check_password_hash(user.password, password):
             if user.status != 'active':
@@ -196,6 +200,7 @@ def register():
                 subjects = request.form.getlist('subject')
                 user.subject = ', '.join(subjects) if subjects else ''
                 user.degree = request.form.get('degree', '')
+                user.roll_number = request.form.get('roll_number', '').strip()
             elif role == 'teacher':
                 user.subject = request.form.get('subject', '')
                 user.degree = request.form.get('degree', '')
@@ -398,6 +403,7 @@ def edit_own_profile():
             user.stream_or_semester = request.form.get('stream_or_semester', '')
             user.subject = ', '.join(request.form.getlist('subject'))  
             user.degree = request.form.get('degree', '')
+            user.roll_number = request.form.get('roll_number', '').strip()
 
         try:
             db.session.commit()
@@ -1385,7 +1391,8 @@ def mark_attendance():
                         date=date,
                         status=status,
                         method='manual',
-                        institution_id=current_user.institution_id
+                        institution_id=current_user.institution_id,
+                        roll_number=student.roll_number
                     )
                     db.session.add(attendance)
                     if status == 'Absent':
@@ -1503,7 +1510,7 @@ def get_students_by_class():
 
     students = students.filter(~User.id.in_(subquery)).all()
 
-    student_list = [{'id': s.id, 'name': s.username} for s in students]
+    student_list = [{'id': s.id, 'name': s.username, 'roll_number': s.roll_number} for s in students]
     return jsonify({'students': student_list})
 
 @app.route('/teacher/generate-qr', methods=['GET', 'POST'])
@@ -1828,7 +1835,8 @@ def scan_qr():
             institution_id=current_user.institution_id,  
             date=today,
             status='Present',
-            method='QR'
+            method='QR',
+            roll_number=current_user.roll_number,
         )
         db.session.add(attendance)
         db.session.commit()
@@ -1889,8 +1897,12 @@ def send_otps():
     data = request.get_json()
     email = data.get('email')
     role = data.get('role')
-
-    
+    if current_user.is_authenticated and email.strip().lower() == current_user.email.strip().lower():
+        return jsonify({
+            'success': False,
+            'message': 'Do not enter your own email. Please provide the parent\'s email address.'
+        }), 400
+        
     otp = random.randint(100000, 999999)
 
     
@@ -2447,6 +2459,209 @@ def terms():
 @app.route('/privacy')
 def privacy():
     return render_template('privacy.html')
+
+@app.route("/faq")
+def faq():
+    with open("static/data/faq.json") as f:
+        faqs = json.load(f)
+    return render_template("faq.html", faqs=faqs)
+
+FAQ_PATH = os.path.join('static', 'data', 'faq.json')
+with open(FAQ_PATH, 'r', encoding='utf-8') as f:
+    faqs = json.load(f)
+
+questions = [faq['question'] for faq in faqs]
+answers = [faq['answer'] for faq in faqs]
+
+vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2)).fit(questions)
+question_vectors = vectorizer.transform(questions)
+
+user_context = {}
+chat_history_dict = {}
+
+def clean(text):
+    return re.sub(rf"[{string.punctuation}]", "", text.lower())
+
+def keyword_overlap(q1, q2):
+    s1 = set(clean(q1).split())
+    s2 = set(clean(q2).split())
+    if not s1 or not s2:
+        return 0
+    return len(s1 & s2) / len(s1 | s2)
+
+def fuzzy_ratio(q1, q2):
+    return SequenceMatcher(None, q1, q2).ratio()
+
+def score_input(user_input):
+    input_vec = vectorizer.transform([user_input])
+    tfidf_scores = cosine_similarity(input_vec, question_vectors).flatten()
+
+    scores = []
+    for i, question in enumerate(questions):
+        overlap = keyword_overlap(user_input, question)
+        fuzzy = fuzzy_ratio(user_input, question)
+        score = 0.5 * tfidf_scores[i] + 0.3 * overlap + 0.2 * fuzzy
+        scores.append((score, i))
+    scores.sort(reverse=True)
+    return scores
+
+def get_best_answer(user_input, user_id='default'):
+    scores = score_input(user_input)
+    top_score, top_idx = scores[0]
+
+    if top_score < 0.35:
+        return "I'm not sure I understand. Could you rephrase that?"
+
+    user_context[user_id] = top_idx
+    return answers[top_idx]
+
+def get_contextual_answer(user_input, user_id='default'):
+    if user_id in user_context:
+        prev_idx = user_context[user_id]
+        ref_question = questions[prev_idx]
+        combined_input = f"{ref_question} {user_input}"
+        return get_best_answer(combined_input, user_id)
+    return get_best_answer(user_input, user_id)
+
+@app.route('/ai-chat', methods=['GET'])
+def ai_chat():
+    return render_template('chat.html')
+
+@app.route('/chatbot', methods=['POST'])
+def chatbot():
+    if not request.is_json:
+        return jsonify({'error': 'Request must be JSON'}), 400
+
+    data = request.get_json()
+    user_message = data.get('message', '').strip()
+    user_id = 'default'
+
+    if user_id not in user_context:
+        user_context[user_id] = None
+    if user_id not in chat_history_dict:
+        chat_history_dict[user_id] = []
+
+    normalized = user_message.lower()
+    greetings = {'hi', 'hello', 'hey', 'good morning', 'good afternoon'}
+    farewells = {'bye', 'goodbye', 'see you', 'see ya', 'take care'}
+    gratitude = {'thanks', 'thank you', 'thanks a lot', 'thank you very much', 'appreciate it'}
+
+    if not user_message:
+        bot_response = "I'm sorry, I didn't catch that."
+    elif normalized in greetings:
+        bot_response = "Hi there! How can I help you today?"
+    elif normalized in farewells:
+        bot_response = "Goodbye! Feel free to come back if you have more questions."
+    elif normalized in gratitude:
+        bot_response = "You're welcome! Let me know if there's anything else I can help with."
+    elif re.search(r'\b(this|that|how|it|do it|what about)\b', normalized):
+        bot_response = get_contextual_answer(user_message, user_id)
+    else:
+        bot_response = get_best_answer(user_message, user_id)
+
+    chat_history_dict[user_id].append({'sender': 'user', 'text': user_message})
+    chat_history_dict[user_id].append({'sender': 'bot', 'text': bot_response})
+
+    return jsonify({'response': bot_response})
+
+from sqlalchemy.exc import IntegrityError
+
+@app.route('/api/check-username', methods=['POST'])
+@login_required
+@role_required('teacher')
+def check_username():
+    username = request.json.get('username', '').strip()
+    exists = User.query.filter_by(username=username).first() is not None
+    return jsonify({'exists': exists})
+
+@app.route('/api/check-email', methods=['POST'])
+@login_required
+@role_required('teacher')
+def check_email():
+    email = request.json.get('email', '').strip().lower()
+    exists = User.query.filter_by(email=email).first() is not None
+    return jsonify({'exists': exists})
+
+@app.route('/teacher/add-students', methods=['GET', 'POST'])
+@role_required('teacher')
+def add_students():
+    institution = InstitutionDetails.query.get(current_user.institution_id)
+    if institution.type.lower() != 'school':
+        flash('This feature is only for schools.', 'danger')
+        return redirect(url_for('teacher_dashboard'))
+
+    classes = [c.strip() for c in (institution.classes or '').split(',')]
+    streams = [s.strip() for s in (institution.streams or '').split(',')]
+
+    if request.method == 'POST':
+        entries = request.form.getlist('students')
+        errors = []
+        usernames = set()
+        emails = set()
+        roll_numbers = set()
+
+        for raw in entries:
+            data = json.loads(raw)
+            u = data['username'].strip()
+            e = data['email'].strip().lower()
+            r = data['roll_number'].strip()
+            c = data['class_name']
+            s = data.get('stream_or_semester', '').strip()
+
+            if u in usernames:
+                errors.append(f"{u}: Duplicate username in form.")
+                continue
+            if e in emails:
+                errors.append(f"{e}: Duplicate email in form.")
+                continue
+            if r in roll_numbers:
+                errors.append(f"{r}: Duplicate roll number in form.")
+                continue
+
+            usernames.add(u)
+            emails.add(e)
+            roll_numbers.add(r)
+
+            if c in ['11', '12'] and s not in streams:
+                errors.append(f"{u}: Invalid or missing stream.")
+                continue
+            elif c not in ['11', '12']:
+                s = ''
+
+            if User.query.filter((User.username == u) | (User.email == e)).first():
+                errors.append(f"{u} / {e} / {r}: Already exists in system.")
+                continue
+
+            pw = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+            student = User(
+                username=u,
+                email=e,
+                roll_number=r,
+                role='student',
+                status='active',
+                class_name=c,
+                stream_or_semester=s,
+                institution_id=current_user.institution_id
+            )
+            student.set_password(pw)
+            db.session.add(student)
+            try:
+                db.session.flush()
+            except IntegrityError:
+                db.session.rollback()
+                errors.append(f"{u} / {e}: Already exists.")
+            except Exception as ex:
+                db.session.rollback()
+                errors.append(f"{u}: Failed to create account ({ex})")
+
+        if errors:
+            flash("Some errors occurred:\n" + "\n".join(errors), 'warning')
+        else:
+            db.session.commit()
+            flash("All students added successfully!", 'success')
+            return redirect(url_for('teacher_dashboard'))
+
+    return render_template('teacher/add_students.html', classes=classes, streams=streams)
 
 if __name__ == '__main__':
     with app.app_context():

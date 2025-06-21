@@ -23,6 +23,7 @@ class User(UserMixin, db.Model):
         backref=db.backref('users', lazy=True)  
     )
     last_parent_report_sent = db.Column(db.DateTime)
+    roll_number = db.Column(db.String(50))
 
     def check_password(self, password):
         return check_password_hash(self.password, password)  
@@ -85,9 +86,10 @@ class Attendance(db.Model):
     institution_id = db.Column(db.Integer, db.ForeignKey('institution_details.id'), nullable=False)
     student = db.relationship('User', foreign_keys=[student_id], backref='attendance_records')
     teacher = db.relationship('User', foreign_keys=[teacher_id], backref='marked_attendance')
+    roll_number = db.Column(db.String(50))
     @classmethod
     def detailed_report(cls, institution_id=None, teacher_id=None,
-                        class_name=None, subject=None, date=None, student_id=None, degree=None, stream_or_semester=None):
+                        class_name=None, subject=None, date=None, student_id=None, degree=None, stream_or_semester=None, roll_number=None):
 
         StudentAlias = aliased(User)
         TeacherAlias = aliased(User)
@@ -108,6 +110,8 @@ class Attendance(db.Model):
             query = query.filter(cls.subject == subject)
         if date:
             query = query.filter(cls.date == date)
+        if roll_number:
+            query = query.filter(cls.roll_number == roll_number)
         if degree:
             query = query.filter(StudentAlias.degree == degree)
         if stream_or_semester:
@@ -121,6 +125,7 @@ class Attendance(db.Model):
             cls.stream_or_semester,
             cls.degree,
             cls.status,
+            cls.roll_number,
             TeacherAlias.username.label('teacher_name')
         ).order_by(cls.date.desc()).all()
 
