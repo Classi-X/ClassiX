@@ -10,9 +10,7 @@
       <h5 class="mb-0">Edit Profile</h5>
     </div>
     <div class="card-body">
-      <form method="POST">
-
-
+      <form method="POST" enctype="multipart/form-data">
         <div class="mb-3">
           <label class="form-label fw-semibold">
             <i class="fas fa-user me-1 text-secondary"></i>Username
@@ -30,6 +28,206 @@
         </div>
 
         {% if user.role == 'student' %}
+        <style>
+          .example-img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 8px;
+          }
+        </style>
+
+        <div class="mb-3">
+          <style>
+            .profile-photo-wrapper {
+              position: relative;
+              width: 140px;
+              height: 140px;
+              margin: auto;
+              cursor: pointer;
+            }
+
+            .profile-photo-wrapper input[type="file"] {
+              display: none;
+            }
+
+            .profile-photo {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              border-radius: 50%;
+              border: 3px solid #0d6efd;
+              background-color: #f8f9fa;
+            }
+
+            .profile-placeholder {
+              font-size: 3rem;
+              color: #6c757d;
+              background-color: #e9ecef;
+              width: 100%;
+              height: 100%;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: 3px dashed #adb5bd;
+            }
+
+            .profile-photo-wrapper:hover .profile-overlay {
+              opacity: 1;
+            }
+
+            .profile-overlay {
+              position: absolute;
+              bottom: 0;
+              width: 100%;
+              height: 35%;
+              background: rgba(0, 0, 0, 0.4);
+              color: white;
+              font-size: 0.85rem;
+              border-radius: 0 0 50% 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              opacity: 0;
+              transition: 0.3s ease;
+            }
+          </style>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold d-block">
+              <i class="fas fa-camera me-1 text-secondary"></i>Profile Photo (Optional but recommended)
+            </label>
+
+            <div class="text-center">
+              <label class="profile-photo-wrapper position-relative d-inline-block" for="photoInput">
+
+                <img id="profilePreview" src="{{ url_for('static', filename=user.photo) if user.photo else '' }}"
+                  alt="Profile Photo" class="profile-photo"
+                  style="display: {{ 'block' if user.photo else 'none' }}; max-width: 150px; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.2);"
+                  onerror="loadImageFromLocalStorage()">
+                <script>
+                  document.addEventListener('DOMContentLoaded', function () {
+                    const photoInput = document.getElementById('photoInput');
+                    const preview = document.getElementById('profilePreview');
+                    const placeholder = document.getElementById('profilePlaceholder');
+
+                    if (!preview.src || preview.src.includes('None')) {
+                      const savedImage = localStorage.getItem('savedProfileImage');
+                      if (savedImage) {
+                        preview.src = savedImage;
+                        preview.style.display = 'block';
+                        placeholder.style.display = 'none';
+                      }
+                    }
+
+                    photoInput.addEventListener('change', function () {
+                      const file = this.files[0];
+                      if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                          const base64Image = e.target.result;
+                          preview.src = base64Image;
+                          preview.style.display = 'block';
+                          placeholder.style.display = 'none';
+
+                          localStorage.removeItem('savedProfileImage');
+                          localStorage.setItem('savedProfileImage', base64Image);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    });
+
+                  });
+
+                  function loadImageFromLocalStorage() {
+                    const preview = document.getElementById('profilePreview');
+                    const placeholder = document.getElementById('profilePlaceholder');
+                    const savedImage = localStorage.getItem('savedProfileImage');
+
+                    if (savedImage) {
+                      preview.src = savedImage;
+                      preview.style.display = 'block';
+                      placeholder.style.display = 'none';
+                    } else {
+                      preview.style.display = 'none';
+                      placeholder.style.display = 'block';
+                    }
+                  }
+                </script>
+
+                <div id="profilePlaceholder" class="profile-placeholder text-secondary"
+                  style="font-size: 100px; display: {{ 'none' if user.photo else 'block' }};">
+                  <i class="fas fa-user-circle"></i>
+                </div>
+
+                <div
+                  class="profile-overlay position-absolute top-50 start-50 translate-middle text-white bg-dark bg-opacity-75 px-3 py-2 rounded"
+                  style="pointer-events: none;">
+                  <i class="fas fa-camera me-1"></i> Change Photo
+                </div>
+
+                <input type="file" id="photoInput" name="photo" accept="image/*" style="display: none;">
+              </label>
+            </div>
+
+            <div class="form-text mt-2">
+              This photo will be used for facial recognition-based attendance. Please upload a clear, front‑facing image
+              where your full face can be detected.
+            </div>
+          </div>
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              const photoInput = document.getElementById('photoInput');
+              const preview = document.getElementById('profilePreview');
+              const placeholder = document.getElementById('profilePlaceholder');
+
+              photoInput.addEventListener('change', function () {
+                const file = this.files[0];
+                if (file && file.type.startsWith('image/')) {
+                  const reader = new FileReader();
+                  reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                  };
+                  reader.readAsDataURL(file);
+                }
+              });
+            });
+          </script>
+
+          <div class="mt-3">
+            <label class="form-label fw-semibold">Example Photos</label>
+            <div class="row text-center g-2">
+              <div class="col-4 d-flex">
+                <div class="border rounded p-2 h-100 d-flex flex-column justify-content-between">
+                  <img
+                    src="https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg?semt=ais_hybrid&w=740"
+                    class="img-fluid rounded mb-2 example-img" alt="Good front-facing male">
+                  <div class="text-success"><i class="fas fa-check-circle me-1"></i> Clear Front‑Facing</div>
+                </div>
+              </div>
+              <div class="col-4 d-flex">
+                <div class="border rounded p-2 h-100 d-flex flex-column justify-content-between">
+                  <img src="https://img.freepik.com/free-photo/side-view-man-with-face-mask_23-2148780042.jpg"
+                    class="img-fluid rounded mb-2 example-img" alt="Bad covered face male">
+                  <div class="text-danger"><i class="fas fa-times-circle me-1"></i> Covered Face (e.g. mask/glasses)
+                  </div>
+                </div>
+              </div>
+              <div class="col-4 d-flex">
+                <div class="border rounded p-2 h-100 d-flex flex-column justify-content-between">
+                  <img
+                    src="https://images.openai.com/thumbnails/url/j65uDXicu1mSUVJSUGylr5-al1xUWVCSmqJbkpRnoJdeXJJYkpmsl5yfq5-Zm5ieWmxfaAuUsXL0S7F0Tw5xK3TOLjVL8zAIziv38sk1yg2srMxLLM3y8s2v8vAMiix2Sg4OtjTMjfBNzDHIDSrTNS8JSneLCE0yD1QrBgAxRio0"
+                    class="img-fluid rounded mb-2 example-img" alt="Bad side-angle male">
+                  <div class="text-danger"><i class="fas fa-times-circle me-1"></i> Side/Angled Face</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="mb-3">
           <label class="form-label fw-semibold">
@@ -115,10 +313,6 @@
     </div>
   </div>
 </div>
-
-
-
-
 
 
 <style>

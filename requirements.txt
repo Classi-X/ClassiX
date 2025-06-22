@@ -4,6 +4,9 @@ flask_mail
 Flask_Migrate
 flask_sqlalchemy
 numpy
+opencv_contrib_python
+opencv_python_headless
+Pillow
 pytz
 qrcode
 scikit_learn

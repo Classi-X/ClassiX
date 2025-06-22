@@ -75,7 +75,7 @@
         </a>
 
         <a href="{{ url_for('generate_qr') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-          <i class="fas fa-qrcode me-2"></i> Generate QR
+          <i class="fas fa-user-shield me-2"></i> Smart Attendance
         </a>
         {% if current_user.institution.type.lower() == 'school' %}
         <a href="{{ url_for('add_students') }}"
@@ -498,11 +498,21 @@
                 <input type="text" id="studentSearchInput" class="form-control form-control-sm"
                   placeholder="🔍 Search student by name, class, subject..." oninput="filterStudents()">
               </div>
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-outline-success btn-sm" onclick="bulkStudentAction('approve')">
+                  <i class="fas fa-check-double me-1"></i>Approve Selected
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="bulkStudentAction('reject')">
+                  <i class="fas fa-times-circle me-1"></i>Reject Selected
+                </button>
+              </div>
 
               <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0" id="pendingStudentsTable">
                   <thead class="table-light">
                     <tr>
+                      <th><input type="checkbox" id="selectAllStudents" onchange="toggleAllStudentCheckboxes(this)">
+                      </th>
                       <th><i class="fas fa-user me-1"></i> Name</th>
                       <th><i class="fas fa-id-badge me-1"></i> Roll Number</th>
                       <th><i class="fas fa-layer-group me-1"></i> Class/Semester</th>
@@ -523,6 +533,7 @@
                   <tbody>
                     {% for student in pending_students %}
                     <tr>
+                      <td><input type="checkbox" class="student-checkbox" value="{{ student.id }}"></td>
                       <td>{{ student.username }}</td>
                       <td>{{ student.roll_number }}</td>
                       <td><span class="badge bg-secondary">{{ student.class_name }}</span></td>
@@ -542,21 +553,85 @@
 
                       <td>{{ student.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                       <td>
-                        <a href="{{ url_for('approve_student', student_id=student.id) }}" class="btn btn-sm btn-success"
-                          onclick="return confirm('Approve this student?')">
-                          <i class="fas fa-check-circle me-1"></i> Approve
-                        </a>
+                        <div class="d-flex gap-2 flex-nowrap">
+                          <button class="btn btn-sm btn-success"
+                            onclick="handleStudentAction({{ student.id }}, 'approve', this)">
+                            <i class="fas fa-check-circle me-1"></i>Approve
+                          </button>
+                          <button class="btn btn-sm btn-danger"
+                            onclick="handleStudentAction({{ student.id }}, 'reject', this)">
+                            <i class="fas fa-times-circle me-1"></i>Reject
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     {% endfor %}
                   </tbody>
                 </table>
               </div>
+
             </div>
           </div>
         </div>
       </div>
+      <script>
+        function handleStudentAction(studentId, action, btnElement) {
+          btnElement.disabled = true;
+          const originalHTML = btnElement.innerHTML;
+          btnElement.innerHTML = `${action.charAt(0).toUpperCase() + action.slice(1)}ing...`;
 
+          fetch(`/teacher/${action}-student/${studentId}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(() => {
+              btnElement.parentElement.innerHTML = `<span class="badge bg-${action === 'approve' ? 'success' : 'danger'}">Student ${action}d</span>`;
+            })
+            .catch(() => {
+              btnElement.disabled = false;
+              btnElement.innerHTML = originalHTML;
+            });
+        }
+
+        function toggleAllStudentCheckboxes(master) {
+          document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = master.checked);
+        }
+
+        function bulkStudentAction(action) {
+          const selected = [...document.querySelectorAll('.student-checkbox:checked')].map(cb => cb.value);
+          if (selected.length === 0) return alert('Select at least one student.');
+          if (!confirm(`Are you sure to ${action} ${selected.length} students?`)) return;
+
+          const btn = document.querySelector(`button[onclick="bulkStudentAction('${action}')"]`);
+          const originalHTML = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = `${action.charAt(0).toUpperCase() + action.slice(1)}ing...`;
+
+          fetch(`/teacher/bulk-${action}-students`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ student_ids: selected })
+          })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(() => {
+              selected.forEach(id => {
+                const row = document.querySelector(`.student-checkbox[value="${id}"]`).closest('tr');
+                row.innerHTML = `<td colspan="8"><span class="badge bg-${action === 'approve' ? 'success' : 'danger'}">Student ${action}d</span></td>`;
+              });
+              btn.disabled = false;
+              btn.innerHTML = originalHTML;
+            })
+            .catch(() => {
+              alert('Bulk action failed. Try again.');
+              btn.disabled = false;
+              btn.innerHTML = originalHTML;
+            });
+        }
+      </script>
 
       <script>
         function filterStudents() {
@@ -569,9 +644,6 @@
           });
         }
       </script>
-
-
-
 
       {% endif %}
 

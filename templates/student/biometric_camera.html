@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Face Recognition | ClassiX | AI Attendance{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-8">
+
+      <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
+        <div class="card-header bg-primary text-white text-center">
+          <h4 class="mb-0">
+            <i class="fas fa-user-check me-2"></i>Biometric Face Scan Attendance
+          </h4>
+        </div>
+        <div class="card-body">
+
+          <div class="alert alert-info d-flex align-items-start gap-2 mb-4">
+            <i class="fas fa-info-circle fs-4 mt-1 text-primary"></i>
+            <div>
+              <strong>Instructions:</strong>
+              <ul class="mb-0 small">
+                <li>Click "Allow" when your browser asks for camera permission.</li>
+                <li>Align your face within the camera view properly.</li>
+                <li>Click <strong>Scan & Submit</strong> when ready.</li>
+                <li>Make sure your face matches your profile photo.</li>
+              </ul>
+            </div>
+          </div>
+
+          <form method="POST" action="{{ url_for('face_match') }}" id="faceForm">
+            <div class="text-center mb-3">
+              <video id="video" width="100%" class="rounded shadow-sm border" style="max-width: 400px;"
+                autoplay></video>
+              <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+              <input type="hidden" name="image_data" id="image_data">
+            </div>
+
+            <div class="d-flex justify-content-center">
+              <button type="button" class="btn btn-success px-4" onclick="captureAndSend()">
+                <i class="fas fa-camera me-2"></i>Scan & Submit
+              </button>
+            </div>
+          </form>
+
+          <div id="flash-messages" class="mt-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div
+              class="alert alert-{{ 'success' if category == 'success' else 'danger' }} animate__animated animate__fadeIn">
+              <i class="fas {{ 'fa-check-circle' if category == 'success' else 'fa-exclamation-circle' }} me-2"></i>
+              {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card mt-4 shadow-sm border-0 animate__animated animate__fadeInUp">
+        <div class="card-header bg-light">
+          <h6 class="mb-0"><i class="fas fa-question-circle me-2 text-info"></i>Need Help?</h6>
+        </div>
+        <div class="card-body">
+          <div class="row gy-3">
+            <div class="col-md-6">
+              <h6 class="text-primary">Face Scan Tips</h6>
+              <ul class="small ps-3">
+                <li>Use a well-lit background</li>
+                <li>Keep your device steady</li>
+                <li>Face forward and avoid sunglasses/masks</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-success">Troubleshooting</h6>
+              <ul class="small ps-3">
+                <li>Refresh the page if camera doesn't load</li>
+                <li>Try different lighting conditions</li>
+                <li>Contact your teacher if the issue persists</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const imageDataInput = document.getElementById('image_data');
+
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => { video.srcObject = stream; })
+    .catch(err => {
+      alert("Camera access denied or not supported in this browser.");
+    });
+
+  function captureAndSend() {
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL('image/png');
+    imageDataInput.value = imageData;
+
+    const form = new FormData();
+    form.append('image_data', imageData);
+
+    const savedRef = localStorage.getItem('savedProfileImage');
+    if (savedRef) {
+      form.append('fallback_image', savedRef);
+    }
+
+    fetch("{{ url_for('face_match') }}", {
+      method: 'POST',
+      body: form
+    })
+      .then(async res => {
+        try {
+          return await res.json();
+        } catch (e) {
+          throw new Error("Invalid JSON returned");
+        }
+      })
+      .then(data => {
+        if (data.redirect) {
+          window.location.href = data.redirect;
+        } else if (data.html) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data.html, 'text/html');
+          const newMessages = doc.querySelector('#flash-messages');
+          const currentMessages = document.getElementById('flash-messages');
+          if (newMessages && currentMessages) {
+            currentMessages.innerHTML = newMessages.innerHTML;
+          }
+        }
+      })
+      .catch(err => {
+        alert("Something went wrong while submitting the image.");
+        console.error(err);
+      });
+
+  }
+
+</script>
+{% endblock %}

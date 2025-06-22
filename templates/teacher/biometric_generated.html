@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Biometric Session Started | ClassiX | AI Attendance Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+
+      <div class="card shadow-lg animate__animated animate__fadeInDown">
+        <div class="card-header bg-success text-white text-center">
+          <h4 class="mb-0">
+            <i class="fas fa-user-check me-2"></i>Biometric Attendance Session Started
+          </h4>
+        </div>
+
+        <div class="card-body text-center bg-light">
+
+          <div class="mb-4">
+            <h5>
+              <i class="fas fa-layer-group text-primary me-2"></i>
+              Class/Semester:
+              <span class="badge bg-primary">{{ class_name }}</span>
+            </h5>
+
+            {% if institution_type == 'school' %}
+            {% if class_name in ['11', '12'] and stream %}
+            <h5>
+              <i class="fas fa-code-branch text-info me-2"></i>
+              Stream:
+              <span class="badge bg-info">{{ stream }}</span>
+            </h5>
+            {% endif %}
+            {% else %}
+            <h5>
+              <i class="fas fa-book text-info me-2"></i>
+              Subject:
+              <span class="badge bg-info">{{ subject }}</span>
+            </h5>
+            {% if degree %}
+            <h5>
+              <i class="fas fa-graduation-cap text-warning me-2"></i>
+              Degree:
+              <span class="badge bg-warning text-dark">{{ degree }}</span>
+            </h5>
+            {% endif %}
+            {% endif %}
+
+            <p class="text-muted mb-0">
+              <i class="fas fa-clock me-1"></i>Session is active and will expire in <strong>15 minutes</strong>.
+            </p>
+          </div>
+
+          <div class="my-4">
+            <i class="fas fa-face-smile fa-5x text-success"></i>
+            <h5 class="mt-3 fw-semibold">Students can now scan their face to mark attendance</h5>
+            <p class="text-muted small">Face must match the uploaded profile photo to be marked present.</p>
+          </div>
+
+          <div class="d-flex justify-content-center flex-wrap gap-3">
+            <a href="{{ url_for('generate_qr') }}" class="btn btn-primary">
+              <i class="fas fa-plus-circle me-2"></i>Start New Biometric Session
+            </a>
+            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-outline-primary">
+              <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-4 shadow-sm animate__animated animate__fadeInUp">
+        <div class="card-header bg-light border-bottom d-flex align-items-center">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle me-2 text-primary"></i>Instructions for Students
+          </h6>
+        </div>
+        <div class="card-body">
+          <ol class="ps-3 mb-0">
+            <li>Visit the <strong>Scan Face</strong> page in the student portal.</li>
+            <li>Camera access will be requested — click <strong>"Allow"</strong>.</li>
+            <li>Align your face properly, in a well-lit area.</li>
+            <li>Once matched with your profile photo, attendance is automatically marked.</li>
+          </ol>
+          <div class="alert alert-warning mt-3">
+            <i class="fas fa-hourglass-half me-2"></i>
+            <strong>Note:</strong> This session will automatically expire after 15 minutes.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

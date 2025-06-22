@@ -5,6 +5,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://classix_user:0nAONiyEmw0WsLMqwH5uVElErq9DBIGW@dpg-d1amq1qli9vc73dpn0hg-a.singapore-postgres.render.com/classix'
     # sqlite:///classix.db
+    # postgresql://classix_user:0nAONiyEmw0WsLMqwH5uVElErq9DBIGW@dpg-d1amq1qli9vc73dpn0hg-a.singapore-postgres.render.com/classix
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     

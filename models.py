@@ -5,6 +5,7 @@ from sqlalchemy.orm import aliased
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(UserMixin, db.Model):
+    photo = db.Column(db.String(200))
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -70,6 +71,7 @@ class TeacherClassAssignment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     degree = db.Column(db.String(50))
     teacher = db.relationship('User', backref='class_assignments')
+    institution_id = db.Column(db.Integer, db.ForeignKey('institution_details.id'), nullable=False)
 
 class Attendance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -162,6 +164,7 @@ class QRCodeSession(db.Model):
     expires_at = db.Column(db.DateTime, nullable=False)
     stream_or_semester = db.Column(db.String(100), nullable=True)  
     degree = db.Column(db.String(100), nullable=True)
+    mode = db.Column(db.String(20), nullable=False, default='qr')
     teacher = db.relationship('User', backref='qr_sessions')
     institution_id = db.Column(db.Integer, db.ForeignKey('institution_details.id'), nullable=False)
 

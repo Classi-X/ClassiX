@@ -33,6 +33,7 @@
       <h6 class="text-primary fw-bold mb-3"><i class="fas fa-user-graduate me-2"></i>Student Info</h6>
       <div class="row gy-2">
         <div class="col-md-6">
+
           <p><strong>Class/Semester:</strong> {{ user.class_name or '-' }}</p>
           <p><strong>Roll Number:</strong> {{ user.roll_number or '-' }}</p>
           {% if institution_type == 'school' and user.class_name in ['11', '12'] %}
@@ -51,6 +52,52 @@
           </p>
           {% endif %}
         </div>
+        <div class="d-flex align-items-center gap-3 mb-4">
+          {% if user.photo %}
+          <img id="profileImage" src="{{ url_for('static', filename=user.photo) }}" alt="Profile Photo"
+            class="rounded-circle shadow border border-2 border-primary"
+            style="width: 80px; height: 80px; object-fit: cover;" onerror="loadLocalProfileImage(this)">
+          <script>
+            function loadLocalProfileImage(img) {
+              const savedImage = localStorage.getItem('savedProfileImage');
+
+              if (savedImage) {
+                img.src = savedImage;
+                img.style.display = 'block';
+              } else {
+                img.style.display = 'none';
+
+                img.insertAdjacentHTML('afterend',
+                  `<div class="d-flex align-items-center justify-content-center rounded-circle border border-2 border-secondary"
+              style="width: 80px; height: 80px;">
+            <i class="fas fa-user text-secondary fs-3"></i>
+         </div>`);
+              }
+            }
+          </script>
+
+          <div>
+            <div class="fw-semibold text-dark">Face photo saved for attendance</div>
+            <div class="text-muted small">Used for facial recognition attendance system.</div>
+          </div>
+          {% else %}
+          <div class="position-relative">
+            <div
+              class="bg-light rounded-circle d-flex justify-content-center align-items-center border border-secondary"
+              style="width: 80px; height: 80px;">
+              <i class="fas fa-user text-secondary fs-3"></i>
+            </div>
+          </div>
+          <div>
+            <div class="fw-semibold text-danger">No face photo uploaded</div>
+            <div class="text-muted small mb-1">Upload your clear face photo to enable biometric attendance.</div>
+            <a href="{{ url_for('edit_own_profile') }}" class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-camera me-1"></i>Upload Now
+            </a>
+          </div>
+          {% endif %}
+        </div>
+
       </div>
 
       {% elif user.role == 'teacher' %}

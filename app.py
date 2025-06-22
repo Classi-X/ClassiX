@@ -5,6 +5,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from calendar import monthrange
 import qrcode
+from werkzeug.utils import secure_filename
 from utils import send_email_notification, send_whatsapp_message
 import io
 import base64
@@ -404,6 +405,16 @@ def edit_own_profile():
             user.subject = ', '.join(request.form.getlist('subject'))  
             user.degree = request.form.get('degree', '')
             user.roll_number = request.form.get('roll_number', '').strip()
+            if 'photo' in request.files:
+                photo_file = request.files['photo']
+                if photo_file and photo_file.filename != '':
+                    filename = secure_filename(f"{user.id}_{photo_file.filename}")
+                    upload_folder = os.path.join('static', 'uploads', 'photos')
+                    os.makedirs(upload_folder, exist_ok=True)
+                    filepath = os.path.join(upload_folder, filename)
+                    photo_file.save(filepath)
+                    
+                    user.photo = os.path.join('uploads', 'photos', filename).replace('\\', '/')
 
         try:
             db.session.commit()
@@ -750,35 +761,46 @@ def generate_pins():
     all_pins = Pin.query.filter_by(institution_id=current_user.institution_id).all()
     return render_template('admin/generate_pins.html', unused_pins=all_pins)
 
-@app.route('/admin/approve-user/<int:user_id>')
+@app.route('/admin/approve-user/<int:user_id>', methods=['POST'])
 @role_required('admin')
 def approve_user(user_id):
     user = User.query.get_or_404(user_id)
 
-    
     if user.institution_id != current_user.institution_id:
-        flash("You can't approve users from other institutions.", 'error')
-        return redirect(url_for('admin_dashboard'))
+        return jsonify({'error': 'Unauthorized'}), 403
 
     user.status = 'active'
     db.session.commit()
-    flash(f'User {user.username} approved successfully!', 'success')
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'approved'})
 
-@app.route('/admin/reject-user/<int:user_id>')
+@app.route('/admin/reject-user/<int:user_id>', methods=['POST'])
 @role_required('admin')
 def reject_user(user_id):
     user = User.query.get_or_404(user_id)
 
-    
     if user.institution_id != current_user.institution_id:
-        flash("You can't reject users from another institution.", 'error')
-        return redirect(url_for('admin_dashboard'))
+        return jsonify({'error': 'Unauthorized'}), 403
 
     db.session.delete(user)
     db.session.commit()
-    flash(f'User {user.username} rejected and removed!', 'info')
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'rejected'})
+
+@app.route('/admin/bulk-<action>-users', methods=['POST'])
+@role_required('admin')
+def bulk_user_action(action):
+    data = request.get_json()
+    user_ids = data.get('user_ids', [])
+
+    for user_id in user_ids:
+        user = User.query.get(user_id)
+        if user and user.institution_id == current_user.institution_id:
+            if action == 'approve':
+                user.status = 'active'
+            elif action == 'reject':
+                db.session.delete(user)
+
+    db.session.commit()
+    return jsonify({'success': True})
 
 @app.route('/admin/promotions', methods=['GET', 'POST'])
 @role_required('admin')
@@ -1238,7 +1260,8 @@ def assign_classes():
                     
                     existing = TeacherClassAssignment.query.filter_by(
                         class_name=class_name,
-                        stream_or_semester=stream
+                        stream_or_semester=stream,
+                        institution_id=current_user.institution_id
                     ).first()
                     if existing:
                         flash(f"Class {class_name} with stream '{stream}' is already assigned to another teacher.", 'warning')
@@ -1246,7 +1269,8 @@ def assign_classes():
                 else:
                     
                     existing = TeacherClassAssignment.query.filter_by(
-                        class_name=class_name
+                        class_name=class_name,
+                        institution_id=current_user.institution_id
                     ).first()
                     if existing:
                         flash(f"Class {class_name} is already assigned to another teacher.", 'warning')
@@ -1269,6 +1293,7 @@ def assign_classes():
             else:
                 db.session.add(TeacherClassAssignment(
                     teacher_id=current_user.id,
+                    institution_id=current_user.institution_id,
                     class_name=class_name,
                     subject=subject,
                     stream_or_semester=stream,
@@ -1296,14 +1321,46 @@ def assign_classes():
         teacher_pin=pin.pin_code if pin else ''
     )
 
-@app.route('/teacher/approve-student/<int:student_id>')
+@app.route('/teacher/approve-student/<int:student_id>', methods=['POST'])
 @role_required('teacher')
-def approve_student(student_id):
+def approve_student_ajax(student_id):
     student = User.query.get_or_404(student_id)
+
+    if student.institution_id != current_user.institution_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
     student.status = 'active'
     db.session.commit()
-    flash(f'Student {student.username} approved!', 'success')
-    return redirect(url_for('teacher_dashboard'))
+    return jsonify({'status': 'approved'})
+
+@app.route('/teacher/reject-student/<int:student_id>', methods=['POST'])
+@role_required('teacher')
+def reject_student_ajax(student_id):
+    student = User.query.get_or_404(student_id)
+
+    if student.institution_id != current_user.institution_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    db.session.delete(student)
+    db.session.commit()
+    return jsonify({'status': 'rejected'})
+
+@app.route('/teacher/bulk-<action>-students', methods=['POST'])
+@role_required('teacher')
+def bulk_teacher_student_action(action):
+    data = request.get_json()
+    student_ids = data.get('student_ids', [])
+
+    for student_id in student_ids:
+        student = User.query.get(student_id)
+        if student and student.institution_id == current_user.institution_id:
+            if action == 'approve':
+                student.status = 'active'
+            elif action == 'reject':
+                db.session.delete(student)
+
+    db.session.commit()
+    return jsonify({'success': True})
 
 from pytz import timezone
 
@@ -1524,7 +1581,7 @@ def generate_qr():
         subject = request.form.get('subject', '')
         stream = request.form.get('stream_or_semester', '')
         degree = request.form.get('degree', '')
-
+        mode = request.form.get('mode', 'qr')
         token = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
 
         qr_session = QRCodeSession(
@@ -1535,7 +1592,8 @@ def generate_qr():
             degree=degree,
             teacher_id=current_user.id,
             institution_id=current_user.institution_id,
-            expires_at=datetime.now() + timedelta(minutes=15)
+            expires_at=datetime.now() + timedelta(minutes=15),
+    mode=mode
         )
         db.session.add(qr_session)
         db.session.commit()
@@ -1549,14 +1607,24 @@ def generate_qr():
         img.save(buf, format='PNG')
         qr_code_data = base64.b64encode(buf.getvalue()).decode()
 
-        return render_template('teacher/qr_generated.html',
-                               qr_code=qr_code_data,
-                            token=token,
-                            class_name=class_name,
-                            subject=subject,
-                            stream=stream,
-                            degree=degree,
-                            institution_type=institution_type)
+        if mode == 'qr':
+            return render_template('teacher/qr_generated.html',
+                                qr_code=qr_code_data,
+                                token=token,
+                                class_name=class_name,
+                                subject=subject,
+                                stream=stream,
+                                degree=degree,
+                                institution_type=institution_type)
+        else:
+            return render_template('teacher/biometric_generated.html',
+                                token=token,
+                                class_name=class_name,
+                                subject=subject,
+                                stream=stream,
+                                degree=degree,
+                                expires_at=qr_session.expires_at,
+                                institution_type=institution_type)
 
     assignments = TeacherClassAssignment.query.filter_by(teacher_id=current_user.id).all()
     return render_template('teacher/generate_qr.html',
@@ -1764,14 +1832,18 @@ def scan_qr():
     if request.method == 'POST':
         token = request.form['token']
 
-        qr_session = QRCodeSession.query.filter_by(token=token).first()
+        qr_session = QRCodeSession.query.filter_by(token=token, mode='qr').first()
 
         if not qr_session:
-            flash('Invalid QR code token!', 'error')
+            flash("No active QR session found. Please contact your teacher.", "warning")
             return render_template('student/scan_qr.html')
 
         if qr_session.expires_at < datetime.now():
-            flash('QR code has expired!', 'error')
+            flash("QR code has expired!", "warning")
+            return render_template('student/scan_qr.html')
+
+        if qr_session.institution_id != current_user.institution_id:
+            flash("This QR code belongs to a different institution.", "danger")
             return render_template('student/scan_qr.html')
 
         institution = InstitutionDetails.query.get(current_user.institution_id)
@@ -1846,51 +1918,192 @@ def scan_qr():
 
     return render_template('student/scan_qr.html')
 
-@app.route('/student/biometric-attendance', methods=['GET', 'POST'])
+@app.route('/student/scan-face')
 @role_required('student')
-def biometric_attendance():
-    student = current_user
+def scan_face():
+    if not current_user.photo:
+        flash("You must upload your face photo in your profile before using biometric attendance.", "danger")
+        return redirect(url_for('edit_own_profile'))  
 
-    
-    subjects = db.session.query(TeacherClassAssignment.subject).filter_by(
-        class_name=student.class_name
-    ).distinct().all()
+    latest_session = QRCodeSession.query.filter_by(
+        class_name=current_user.class_name,
+        institution_id=current_user.institution_id,
+        mode='biometric'
+    ).order_by(QRCodeSession.expires_at.desc()).first()
 
-    subject_list = [s.subject for s in subjects]
+    if not latest_session or latest_session.expires_at < datetime.now():
+        flash("No active biometric session found. Please contact your teacher.", "warning")
+        return redirect(url_for('student_dashboard'))
 
-    if request.method == 'POST':
-        subject = request.form['subject']
-        today = datetime.now().date()
+    return render_template('student/biometric_camera.html', session=latest_session)
 
-        
-        existing = Attendance.query.filter_by(
-            student_id=student.id,
-            date=today,
-            subject=subject
+import cv2
+import numpy as np
+import base64
+from io import BytesIO
+from PIL import Image
+
+@app.route('/face-match', methods=['POST'])
+@role_required('student')
+def face_match():
+    result = None
+
+    image_data = request.form.get('image_data')
+    if not image_data:
+        flash("No image captured!", "error")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
+
+    try:
+        header, encoded = image_data.split(",", 1)
+        image_bytes = base64.b64decode(encoded)
+        np_arr = np.frombuffer(image_bytes, np.uint8)
+        uploaded_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    except Exception as e:
+        flash("Failed to process captured image.", "error")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
+
+    gray_uploaded = cv2.cvtColor(uploaded_img, cv2.COLOR_BGR2GRAY)
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    faces_uploaded = face_cascade.detectMultiScale(gray_uploaded, 1.1, 5)
+
+    if len(faces_uploaded) == 0:
+        flash("No face detected!", "error")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
+
+    x, y, w, h = faces_uploaded[0]
+    test_face = gray_uploaded[y:y+h, x:x+w]
+    test_face = cv2.resize(test_face, (200, 200))
+
+    ref_path = os.path.join('static', current_user.photo)
+
+    if os.path.exists(ref_path):
+        ref_img = cv2.imread(ref_path)
+    else:
+        fallback_base64 = request.form.get('fallback_image')
+        if not fallback_base64:
+            flash("Reference photo not found!", "error")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
+        try:
+            header, encoded = fallback_base64.split(",", 1)
+            image_bytes = base64.b64decode(encoded)
+            np_arr = np.frombuffer(image_bytes, np.uint8)
+            ref_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        except Exception:
+            flash("Failed to decode fallback reference photo.", "error")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
+
+    if ref_img is None:
+        flash("Failed to load reference image.", "error")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
+
+    gray_ref = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
+    faces_ref = face_cascade.detectMultiScale(gray_ref, 1.1, 5)
+    if len(faces_ref) == 0:
+        flash("No face found in reference photo!", "error")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
+
+    x_ref, y_ref, w_ref, h_ref = faces_ref[0]
+    ref_face = gray_ref[y_ref:y_ref+h_ref, x_ref:x_ref+w_ref]
+    ref_face = cv2.resize(ref_face, (200, 200))
+
+    try:
+        recognizer = cv2.face.LBPHFaceRecognizer_create()
+        recognizer.train([ref_face], np.array([1]))
+        label, confidence = recognizer.predict(test_face)
+    except Exception as e:
+        flash("Error during face recognition.", "error")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
+
+    if confidence >= 60:
+        flash("Face did not match!", "error")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
+
+    session = QRCodeSession.query.filter_by(
+        institution_id=current_user.institution_id,
+        mode='biometric'
+    ).order_by(QRCodeSession.expires_at.desc()).first()
+
+    if not session or session.expires_at < datetime.now():
+        flash("No active biometric session found. Contact teacher.", "error")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
+
+    institution = InstitutionDetails.query.get(current_user.institution_id)
+    institution_type = institution.type.lower() if institution else 'school'
+
+    if current_user.class_name != session.class_name:
+        flash("Class does not match!", "error")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
+
+    if institution_type == 'school' and current_user.class_name in ['11', '12']:
+        if current_user.stream_or_semester != session.stream_or_semester:
+            flash("Stream does not match for your class!", "error")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
+
+    if institution_type in ['college', 'university']:
+        if current_user.degree != session.degree:
+            flash("Degree does not match!", "error")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
+
+        student_subjects = [s.strip().lower() for s in (current_user.subject or '').split(',')]
+        session_subject = (session.subject or '').strip().lower()
+
+        if session_subject not in student_subjects:
+            flash("Subject does not match your enrolled subjects!", "error")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
+
+    today = datetime.now().date()
+
+    if institution_type in ['college', 'university']:
+        existing = Attendance.query.filter(
+            Attendance.student_id == current_user.id,
+            Attendance.teacher_id == session.teacher_id,
+            Attendance.subject == session.subject,
+            Attendance.degree == session.degree,
+            func.date(Attendance.date) == today
+        ).first()
+    else:
+        existing = Attendance.query.filter(
+            Attendance.student_id == current_user.id,
+            Attendance.class_name == session.class_name,
+            func.date(Attendance.date) == today
         ).first()
 
-        if existing:
-            flash('Attendance already marked for today!', 'warning')
-        else:
-            attendance = Attendance(
-                student_id=student.id,
-                teacher_id=1,  
-                class_name=student.class_name,
-                subject=subject,
-                date=today,
-                status='Present',
-                method='biometric'
-            )
-            db.session.add(attendance)
-            db.session.commit()
-            flash('Biometric attendance marked successfully!', 'success')
-            return redirect(url_for('student_dashboard'))
+    if existing:
+        flash("Attendance already marked for today!", "warning")
+        return jsonify({'redirect': url_for('student_dashboard')})
 
-    return render_template(
-        'student/biometric_attendance.html',
-        class_name=student.class_name,
-        subjects=subject_list
+    attendance = Attendance(
+        student_id=current_user.id,
+        teacher_id=session.teacher_id,
+        class_name=session.class_name,
+        subject=session.subject,
+        stream_or_semester=current_user.stream_or_semester or '',
+        degree=current_user.degree or '',
+        institution_id=current_user.institution_id,
+        date=today,
+        status='Present',
+        method='Biometric',
+        roll_number=current_user.roll_number,
     )
+    db.session.add(attendance)
+    db.session.commit()
+
+    flash("Attendance marked successfully via Face Recognition!", "success")
+    return jsonify({'redirect': url_for('student_dashboard')})
 
 @app.route('/send-otps', methods=['POST'])
 def send_otps():
