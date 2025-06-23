@@ -355,9 +355,17 @@
                   placeholder="🔍 Search by name or class/semester..." oninput="filterRiskTable()">
               </div>
             </div>
+            <style>
+              #riskTable thead th {
+                position: sticky;
+                top: 0;
+                background: #f8f9fa;
+                z-index: 1;
+              }
+            </style>
 
             <div class="card-body p-0">
-              <div class="table-responsive">
+              <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-hover align-middle mb-0" id="riskTable">
                   <thead class="table-light">
                     <tr>
@@ -445,8 +453,17 @@
               </button>
             </div>
 
+            <style>
+              #pendingUserTable thead th {
+                position: sticky;
+                top: 0;
+                background: #f8f9fa;
+                z-index: 1;
+              }
+            </style>
+
             <div class="card-body p-0">
-              <div class="table-responsive">
+              <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-hover align-middle mb-0" id="pendingUserTable">
                   <thead class="table-light">
                     <tr>

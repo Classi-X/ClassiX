@@ -129,10 +129,10 @@
                     <span>Privacy Policy</span>
                 </a>
                 <a href="{{ url_for('faq') }}" class="sidebar-link list-group-item list-group-item-action">
-                        <i class="fas fa-question-circle me-2"></i>FAQ
+                    <i class="fas fa-question-circle me-2"></i>FAQ
                 </a>
                 <a href="{{ url_for('ai_chat') }}" class="sidebar-link list-group-item list-group-item-action">
-                <i class="fas fa-robot me-2"></i>AI ChatBot
+                    <i class="fas fa-robot me-2"></i>AI ChatBot
                 </a>
 
             </nav>
@@ -352,11 +352,19 @@
                                 </div>
 
                                 <div class="col-md-6  mt-3">
-                                    <h6>Recent Attendance (Last 7 Days)</h6>
+                                    <h6>Attendance</h6>
+                                    <style>
+                                        #attendanceTable thead th {
+                                            position: sticky;
+                                            top: 0;
+                                            background: #f8f9fa;
+                                            z-index: 1;
+                                        }
+                                    </style>
 
                                     {% if child_data.recent_attendance %}
-                                    <div class="table-responsive">
-                                        <table class="table table-sm">
+                                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                        <table class="table table-sm" id="attendanceTable">
                                             <thead>
                                                 <tr>
                                                     <th>Date</th>

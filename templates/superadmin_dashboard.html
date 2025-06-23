@@ -123,7 +123,21 @@
             <input type="text" class="form-control form-control-sm w-50" placeholder="Search {{ role }}..."
                 onkeyup="filterTable(this, 'table-{{ role }}')">
         </div>
-        <div class="table-responsive">
+        <style>
+            #table- {
+                    {
+                    role
+                }
+            }
+
+            thead th {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }
+        </style>
+
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
             <table class="table table-bordered table-striped mb-0" id="table-{{ role }}">
                 <thead class="table-dark">
                     <tr>

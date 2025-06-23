@@ -1311,6 +1311,12 @@ def assign_classes():
     streams = [s.strip() for s in institution.streams.split(',')] if institution.streams else []
     degrees = [d.strip() for d in institution.degrees.split(',')] if institution.degrees else []
 
+    all_subjects = sorted(set(
+        s[0] for s in db.session.query(TeacherClassAssignment.subject)
+        .filter(TeacherClassAssignment.subject != None)
+        .distinct()
+        .all()
+    ))
     return render_template('teacher/assign_classes.html',
         assignments=assignments,
         classes=classes,
@@ -1318,7 +1324,8 @@ def assign_classes():
         degrees=degrees,
         assignment_to_edit=assignment_to_edit,
         institution_type=institution.type.lower() if institution else 'school',
-        teacher_pin=pin.pin_code if pin else ''
+        teacher_pin=pin.pin_code if pin else '',
+    all_subjects=all_subjects
     )
 
 @app.route('/teacher/approve-student/<int:student_id>', methods=['POST'])
@@ -2204,7 +2211,7 @@ def parent_dashboard():
                 'total_classes': total_classes,
                 'present_count': present_count,
                 'attendance_percentage': attendance_percentage,
-                'recent_attendance': attendance_records[-7:]
+                'recent_attendance': attendance_records
             })
 
     if not children_data:
@@ -2780,16 +2787,12 @@ def chatbot():
 from sqlalchemy.exc import IntegrityError
 
 @app.route('/api/check-username', methods=['POST'])
-@login_required
-@role_required('teacher')
 def check_username():
     username = request.json.get('username', '').strip()
     exists = User.query.filter_by(username=username).first() is not None
     return jsonify({'exists': exists})
 
 @app.route('/api/check-email', methods=['POST'])
-@login_required
-@role_required('teacher')
 def check_email():
     email = request.json.get('email', '').strip().lower()
     exists = User.query.filter_by(email=email).first() is not None

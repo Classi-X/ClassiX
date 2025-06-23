@@ -23,7 +23,7 @@
                     <li>Fill in all the required details for each student:
                         <ul>
                             <li><strong>Roll Number</strong> – must be unique (not used before)</li>
-                            <li><strong>Username</strong> – must be unique</li>
+                            <li><strong>Full Name (First + Middle + Last) - Username</strong> – must be unique</li>
                             <li><strong>Email</strong> – must be a valid email and not used for another student</li>
                             <li><strong>Class</strong> – select the class of the student</li>
                             <li><strong>Stream</strong> – only required if class is <strong>11</strong> or
@@ -39,7 +39,7 @@
                     <li><strong>Use the exact format</strong> as shown in the sample file. Each row must contain:
                         <ul>
                             <li>Roll Number</li>
-                            <li>Username</li>
+                            <li>Full Name (First + Middle + Last) - Username</li>
                             <li>Email</li>
                             <li>Class</li>
                             <li>Stream (leave blank if class is not 11 or 12)</li>
@@ -188,9 +188,9 @@
           <div class="text-danger small roll-error d-none">Duplicate roll number</div>
         </div>
         <div class="col-md-2">
-          <label class="form-label fw-semibold">Username</label>
-          <input class="form-control username-input" placeholder="e.g. john_doe" data-key="username" required>
-          <div class="text-danger small username-error d-none">Username already exists</div>
+          <label class="form-label fw-semibold">Full Name</label>
+          <input class="form-control username-input" placeholder="e.g. Desai Aarav Mehta" data-key="username" required>
+          <div class="text-danger small username-error d-none">Full Name (Username) already exists</div>
         </div>
         <div class="col-md-3">
           <label class="form-label fw-semibold">Email</label>

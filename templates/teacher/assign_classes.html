@@ -48,8 +48,14 @@
 
             <div class="mb-3" id="subjectField" style="display: none;">
               <label for="subject" class="form-label fw-semibold">Subject</label>
-              <input type="text" id="subject" name="subject" class="form-control shadow-sm"
+              <input type="text" id="subject" name="subject" class="form-control shadow-sm" list="subjectList"
                 placeholder="e.g., Mathematics" value="{{ assignment_to_edit.subject if assignment_to_edit else '' }}">
+              <datalist id="subjectList">
+                {% for subj in all_subjects %}
+                <option value="{{ subj }}">
+                  {% endfor %}
+              </datalist>
+
             </div>
 
 
