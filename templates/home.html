@@ -4,7 +4,7 @@
 {% block content %}
 
 <section class="position-relative text-white py-5 shadow-lg animate__animated animate__fadeInDown"
-  style="background: url('https://picsum.photos/1600/800?random=1') center center / cover no-repeat;">
+  style="background: url('{{ url_for('static', filename='img/hero-image.png') }}') center center / cover no-repeat;">
   <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
   <div class="container text-center position-relative">
     <h1 class="display-4 fw-bold mb-3">Smart Attendance for Smarter Institutions</h1>
