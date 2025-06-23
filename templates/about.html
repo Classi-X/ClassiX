@@ -31,7 +31,11 @@
       </p>
     </div>
     <div class="col-lg-6 text-center animate__animated animate__fadeInRight">
-      <img src="https://picsum.photos/1600/800?random=2" class="img-fluid" alt="Vision Illustration">
+      <img src="{{ url_for('static', filename='img/vision-illustration.png') }}"
+     class="img-fluid rounded shadow-sm"
+     style="max-height: 400px; object-fit: contain; width: 100%;"
+     alt="Vision Illustration">
+
     </div>
   </div>
 </section>
@@ -139,7 +143,11 @@
         </ul>
       </div>
       <div class="col-md-6 text-center">
-        <img src="https://picsum.photos/1600/800?random=3" class="img-fluid" alt="Security Graphic">
+        <img src="{{ url_for('static', filename='img/security-graphic.png') }}"
+     class="img-fluid rounded shadow-sm"
+     style="max-height: 400px; object-fit: contain; width: 100%;"
+     alt="Security Graphic">
+
       </div>
     </div>
   </div>
