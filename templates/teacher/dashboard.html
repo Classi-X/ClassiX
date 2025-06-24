@@ -325,14 +325,49 @@
               </div>
 
               <style>
-              #assignmentTable thead th {
-                position: sticky;
-                top: 0;
-                background: #f8f9fa;
-                z-index: 1;
-              }
-            </style>
+                #assignmentTable thead th {
+                  position: sticky;
+                  top: 0;
+                  background: #f8f9fa;
+                  z-index: 1;
+                }
+              </style>
               <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <div class="d-flex justify-content-end p-2">
+                  <button id="downloadssCSV" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-download me-1"></i> Download CSV
+                  </button>
+                </div>
+                <script>
+                  document.getElementById('downloadssCSV').addEventListener('click', function () {
+                    const table = document.getElementById('assignmentTable');
+                    const allRows = table.querySelectorAll('thead tr, tbody tr');
+                    let csv = [];
+
+                    allRows.forEach(row => {
+                      if (row.offsetParent !== null) {
+                        const cols = row.querySelectorAll('th, td');
+                        const rowData = [];
+                        cols.forEach(col => {
+                          let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+                          rowData.push(`"${text}"`);
+                        });
+                        csv.push(rowData.join(','));
+                      }
+                    });
+
+                    const csvContent = csv.join('\n');
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'assignments.csv';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  });
+                </script>
+
                 <table class="table table-hover align-middle" id="assignmentTable">
                   <thead class="table-light">
                     <tr>
@@ -516,14 +551,49 @@
               </div>
 
               <style>
-              #pendingStudentsTable thead th {
-                position: sticky;
-                top: 0;
-                background: #f8f9fa;
-                z-index: 1;
-              }
-            </style>
+                #pendingStudentsTable thead th {
+                  position: sticky;
+                  top: 0;
+                  background: #f8f9fa;
+                  z-index: 1;
+                }
+              </style>
               <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <div class="d-flex justify-content-end p-2">
+                  <button id="downloadsCSV" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-download me-1"></i> Download CSV
+                  </button>
+                </div>
+                <script>
+                  document.getElementById('downloadsCSV').addEventListener('click', function () {
+                    const table = document.getElementById('pendingStudentsTable');
+                    const allRows = table.querySelectorAll('thead tr, tbody tr');
+                    let csv = [];
+
+                    allRows.forEach(row => {
+                      if (row.offsetParent !== null) {
+                        const cols = row.querySelectorAll('th, td');
+                        const rowData = [];
+                        cols.forEach(col => {
+                          let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+                          rowData.push(`"${text}"`);
+                        });
+                        csv.push(rowData.join(','));
+                      }
+                    });
+
+                    const csvContent = csv.join('\n');
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'pending_students.csv';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  });
+                </script>
+
                 <table class="table table-hover align-middle mb-0" id="pendingStudentsTable">
                   <thead class="table-light">
                     <tr>
@@ -683,14 +753,49 @@
               </div>
 
               <style>
-              #riskStudentsTable thead th {
-                position: sticky;
-                top: 0;
-                background: #f8f9fa;
-                z-index: 1;
-              }
-            </style>
+                #riskStudentsTable thead th {
+                  position: sticky;
+                  top: 0;
+                  background: #f8f9fa;
+                  z-index: 1;
+                }
+              </style>
               <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <div class="d-flex justify-content-end p-2">
+                  <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-download me-1"></i> Download CSV
+                  </button>
+                </div>
+                <script>
+                  document.getElementById('downloadCSV').addEventListener('click', function () {
+                    const table = document.getElementById('riskStudentsTable');
+                    const allRows = table.querySelectorAll('thead tr, tbody tr');
+                    let csv = [];
+
+                    allRows.forEach(row => {
+                      if (row.offsetParent !== null) {
+                        const cols = row.querySelectorAll('th, td');
+                        const rowData = [];
+                        cols.forEach(col => {
+                          let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+                          rowData.push(`"${text}"`);
+                        });
+                        csv.push(rowData.join(','));
+                      }
+                    });
+
+                    const csvContent = csv.join('\n');
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'risk_students.csv';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  });
+                </script>
+
                 <table class="table table-hover align-middle mb-0" id="riskStudentsTable">
                   <thead class="table-light">
                     <tr>

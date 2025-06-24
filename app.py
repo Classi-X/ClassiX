@@ -937,39 +937,85 @@ def teacher_dashboard():
 @app.route('/teacher/parent-status')
 @role_required('teacher')
 def parent_status():
-    teacher = current_user
-    inst = teacher.institution
-    inst_id = teacher.institution_id
+    try:
+        teacher = current_user
+        teacher_inst = teacher.institution
 
-    institution_type = inst.type.strip().lower() if inst and inst.type else 'school'
+        if not teacher_inst:
+            abort(403, "Institution not found for current teacher")
 
-    assigned_classes = TeacherClassAssignment.query.filter_by(teacher_id=teacher.id).all()
-    class_subject_pairs = {(a.class_name, a.subject) for a in assigned_classes}
+        teacher_inst_id = teacher.institution_id
+        teacher_inst_type = teacher_inst.type.strip().lower()
 
-    students = User.query.filter_by(role='student', institution_id=inst_id).all()
+        assigned_classes = TeacherClassAssignment.query.filter_by(teacher_id=teacher.id).all()
 
-    missing_parents = []
+        students = User.query.filter_by(role='student', institution_id=teacher_inst_id).all()
 
-    for student in students:
-        if (student.class_name, student.subject) not in class_subject_pairs:
-            continue
+        missing_parents = []
 
-        parent = ParentContact.query.filter_by(student_id=student.id).first()
-        if not parent or (not parent.email and not parent.phone):
-            missing_parents.append(student)
+        for student in students:
+            if not student.class_name:
+                continue
 
-    
-    show_send_button = False
-    now = datetime.utcnow()
-    last_sent = teacher.last_parent_report_sent
+            student_class = str(student.class_name).strip()
+            student_stream = (student.stream_or_semester or '').strip().lower()
+            student_degree = (student.degree or '').strip().lower()
+            student_subjects = [s.strip().lower() for s in (student.subject or '').split(',') if s.strip()]
+            student_inst_type = (student.institution.type or '').strip().lower()
 
-    if not last_sent or (last_sent.year != now.year or last_sent.month != now.month):
-        show_send_button = True
+            match_found = False
 
-    return render_template("teacher/parent_status.html",
-                           missing_parents=missing_parents,
-                           show_send_button=show_send_button,
-                           institution_type=institution_type)
+            for assignment in assigned_classes:
+                if assignment.institution_id and assignment.institution_id != teacher_inst_id:
+                    continue
+
+                teacher_class = str(assignment.class_name or '').strip()
+                teacher_stream = (assignment.stream_or_semester or '').strip().lower()
+                teacher_subject = (assignment.subject or '').strip().lower()
+                teacher_degree = (assignment.degree or '').strip().lower()
+
+                if 'school' in [teacher_inst_type, student_inst_type]:
+                    if student_class in ['11', '12']:
+                        if (
+                            student_class == teacher_class and
+                            student_stream == teacher_stream
+                        ):
+                            match_found = True
+                            break
+                    else:
+                        if student_class == teacher_class:
+                            match_found = True
+                            break
+
+                elif teacher_inst_type != 'school' and student_inst_type != 'school':
+                    if (
+                        student_class == teacher_class and
+                        student_degree == teacher_degree and
+                        teacher_subject in student_subjects
+                    ):
+                        match_found = True
+                        break
+
+            if not match_found:
+                continue
+
+            parent = ParentContact.query.filter_by(student_id=student.id).first()
+            if not parent or (not parent.email and not parent.phone):
+                missing_parents.append(student)
+
+        now = datetime.now()
+        last_sent = teacher.last_parent_report_sent
+        show_send_button = not last_sent or (last_sent.year != now.year or last_sent.month != now.month)
+
+        return render_template(
+            "teacher/parent_status.html",
+            missing_parents=missing_parents,
+            show_send_button=show_send_button,
+            institution_type=teacher_inst_type
+        )
+
+    except Exception as e:
+        abort(500, "An error occurred while processing parent status.")
 
 @app.route('/delete-teacher/<int:teacher_id>', methods=['POST'])
 @login_required
@@ -1044,44 +1090,91 @@ from calendar import monthrange
 @app.route('/teacher/send-to-parents')
 @role_required('teacher')
 def send_attendance_to_parents():
-    teacher = current_user
-    inst_id = teacher.institution_id
-    today = date.today()
-    year, month = today.year, today.month
+    try:
+        teacher = current_user
+        teacher_inst = teacher.institution
 
-    assignments = TeacherClassAssignment.query.filter_by(teacher_id=teacher.id).all()
-    class_subject_pairs = {(a.class_name, a.subject) for a in assignments}
+        if not teacher_inst:
+            abort(403, "Institution not found for current teacher")
 
-    students = User.query.filter_by(role='student', institution_id=inst_id).all()
+        inst_id = teacher.institution_id
+        teacher_inst_type = teacher_inst.type.strip().lower()
 
-    missing_info = []
-    sent_email_count = 0
-    sent_whatsapp_count = 0
+        today = date.today()
+        year, month = today.year, today.month
 
-    for student in students:
-        if (student.class_name, student.subject) not in class_subject_pairs:
-            continue
+        assignments = TeacherClassAssignment.query.filter_by(teacher_id=teacher.id).all()
+        students = User.query.filter_by(role='student', institution_id=inst_id).all()
 
-        parent = ParentContact.query.filter_by(student_id=student.id).first()
-        if not parent or (not parent.email and not parent.phone):
-            missing_info.append(student)
-            continue
+        sent_email_count = 0
+        sent_whatsapp_count = 0
+        missing_info = []
 
-        start_date = date(year, month, 1)
-        end_date = date(year, month, monthrange(year, month)[1])
+        for student in students:
+            if not student.class_name:
+                continue
 
-        records = Attendance.query.filter(
-            Attendance.student_id == student.id,
-            Attendance.date >= start_date,
-            Attendance.date <= end_date
-        ).all()
+            student_class = str(student.class_name).strip()
+            student_stream = (student.stream_or_semester or '').strip().lower()
+            student_degree = (student.degree or '').strip().lower()
+            student_subjects = [s.strip().lower() for s in (student.subject or '').split(',') if s.strip()]
+            student_inst_type = (student.institution.type or '').strip().lower()
 
-        total = len(records)
-        present = sum(1 for r in records if r.status == 'Present')
-        percentage = round((present / total) * 100, 1) if total > 0 else 0
+            match_found = False
 
-        subject = f"Monthly Attendance Report - {student.username}"
-        body = f"""Dear {parent.parent_name},
+            for assignment in assignments:
+                if assignment.institution_id and assignment.institution_id != inst_id:
+                    continue
+
+                teacher_class = str(assignment.class_name or '').strip()
+                teacher_stream = (assignment.stream_or_semester or '').strip().lower()
+                teacher_subject = (assignment.subject or '').strip().lower()
+                teacher_degree = (assignment.degree or '').strip().lower()
+
+                if 'school' in [teacher_inst_type, student_inst_type]:
+                    if student_class in ['11', '12']:
+                        if (
+                            student_class == teacher_class and
+                            student_stream == teacher_stream
+                        ):
+                            match_found = True
+                            break
+                    else:
+                        if student_class == teacher_class:
+                            match_found = True
+                            break
+                elif teacher_inst_type != 'school' and student_inst_type != 'school':
+                    if (
+                        student_class == teacher_class and
+                        student_degree == teacher_degree and
+                        teacher_subject in student_subjects
+                    ):
+                        match_found = True
+                        break
+
+            if not match_found:
+                continue
+
+            parent = ParentContact.query.filter_by(student_id=student.id).first()
+            if not parent or (not parent.email and not parent.phone):
+                missing_info.append(student)
+                continue
+
+            start_date = date(year, month, 1)
+            end_date = date(year, month, monthrange(year, month)[1])
+
+            records = Attendance.query.filter(
+                Attendance.student_id == student.id,
+                Attendance.date >= start_date,
+                Attendance.date <= end_date
+            ).all()
+
+            total = len(records)
+            present = sum(1 for r in records if r.status == 'Present')
+            percentage = round((present / total) * 100, 1) if total > 0 else 0
+
+            subject = f"Monthly Attendance Report - {student.username}"
+            body = f"""Dear {parent.parent_name},
 
 This is the monthly attendance report for {student.username}.
 
@@ -1095,46 +1188,98 @@ Regards,
 {teacher.username}
 """
 
-        if parent.email and send_email_notification(to_email=parent.email, subject=subject, body=body):
-            sent_email_count += 1
+            if parent.email and send_email_notification(to_email=parent.email, subject=subject, body=body):
+                sent_email_count += 1
 
-        if parent.phone and send_whatsapp_message(parent.phone, body):
-            sent_whatsapp_count += 1
-    teacher.last_parent_report_sent = datetime.utcnow()
-    db.session.commit()
-    msg = f"✅ Emails sent: {sent_email_count}, WhatsApp messages sent: {sent_whatsapp_count}."
-    if missing_info:
-        missing_names = ', '.join(s.username for s in missing_info)
-        msg += f" ⚠️ Missing contact info for: {missing_names}"
+            if parent.phone and send_whatsapp_message(parent.phone, body):
+                sent_whatsapp_count += 1
 
-    flash(msg, 'info')
-    return redirect(url_for('teacher_dashboard'))
+        teacher.last_parent_report_sent = datetime.utcnow()
+        db.session.commit()
+
+        msg = f"✅ Emails sent: {sent_email_count}, WhatsApp messages sent: {sent_whatsapp_count}."
+        if missing_info:
+            missing_names = ', '.join(s.username for s in missing_info)
+            msg += f" ⚠️ Missing contact info for: {missing_names}"
+
+        flash(msg, 'info')
+        return redirect(url_for('teacher_dashboard'))
+
+    except Exception as e:
+        abort(500, "An error occurred while sending attendance reports.")
 
 @app.route('/teacher/send-missing-info-reminder')
 @role_required('teacher')
 def send_missing_info_reminder():
-    teacher = current_user
-    inst_id = teacher.institution_id
+    try:
+        teacher = current_user
+        teacher_inst = teacher.institution
 
-    assigned_classes = TeacherClassAssignment.query.filter_by(teacher_id=teacher.id).all()
-    class_subject_pairs = {(a.class_name, a.subject) for a in assigned_classes}
+        if not teacher_inst:
+            abort(403, "Institution not found for current teacher")
 
-    students = User.query.filter_by(role='student', institution_id=inst_id).all()
+        teacher_inst_id = teacher.institution_id
+        teacher_inst_type = teacher_inst.type.strip().lower()
 
-    missing_students = []
-    reminders_sent = 0
+        assigned_classes = TeacherClassAssignment.query.filter_by(teacher_id=teacher.id).all()
 
-    for student in students:
-        if (student.class_name, student.subject) not in class_subject_pairs:
-            continue
+        students = User.query.filter_by(role='student', institution_id=teacher_inst_id).all()
 
-        parent = ParentContact.query.filter_by(student_id=student.id).first()
-        if not parent or (not parent.email and not parent.phone):
-            missing_students.append(student)
+        missing_students = []
+        reminders_sent = 0
 
-    for student in missing_students:
-        subject = "Reminder: Provide Parent Contact Details"
-        body = f"""Dear {student.username},
+        for student in students:
+            if not student.class_name:
+                continue
+
+            student_class = str(student.class_name).strip()
+            student_stream = (student.stream_or_semester or '').strip().lower()
+            student_degree = (student.degree or '').strip().lower()
+            student_subjects = [s.strip().lower() for s in (student.subject or '').split(',') if s.strip()]
+            student_inst_type = (student.institution.type or '').strip().lower()
+
+            match_found = False
+
+            for assignment in assigned_classes:
+                if assignment.institution_id and assignment.institution_id != teacher_inst_id:
+                    continue
+
+                teacher_class = str(assignment.class_name or '').strip()
+                teacher_stream = (assignment.stream_or_semester or '').strip().lower()
+                teacher_subject = (assignment.subject or '').strip().lower()
+                teacher_degree = (assignment.degree or '').strip().lower()
+
+                if 'school' in [teacher_inst_type, student_inst_type]:
+                    if student_class in ['11', '12']:
+                        if (
+                            student_class == teacher_class and
+                            student_stream == teacher_stream
+                        ):
+                            match_found = True
+                            break
+                    else:
+                        if student_class == teacher_class:
+                            match_found = True
+                            break
+                elif teacher_inst_type != 'school' and student_inst_type != 'school':
+                    if (
+                        student_class == teacher_class and
+                        student_degree == teacher_degree and
+                        teacher_subject in student_subjects
+                    ):
+                        match_found = True
+                        break
+
+            if not match_found:
+                continue
+
+            parent = ParentContact.query.filter_by(student_id=student.id).first()
+            if not parent or (not parent.email and not parent.phone):
+                missing_students.append(student)
+
+        for student in missing_students:
+            subject = "Reminder: Provide Parent Contact Details"
+            body = f"""Dear {student.username},
 
 Our records show that your parent/guardian's contact information is missing.
 
@@ -1142,15 +1287,20 @@ Please update your profile with valid email and phone number for your parent/gua
 
 This is required to ensure important updates regarding your progress can be shared.
 
-Regards,
+Regards,  
 {teacher.username}
 """
 
-        if student.email and send_email_notification(to_email=student.email, subject=subject, body=body):
-            reminders_sent += 1
+            if student.email and send_email_notification(to_email=student.email, subject=subject, body=body):
+                reminders_sent += 1
 
-    flash(f"📢 Sent reminder to {reminders_sent} student(s) to update parent contact info.", "info")
-    return redirect(url_for('teacher_dashboard'))
+        db.session.commit()
+
+        flash(f"📢 Sent reminder to {reminders_sent} student(s) to update parent contact info.", "info")
+        return redirect(url_for('teacher_dashboard'))
+
+    except Exception as e:
+        abort(500, "An error occurred while sending reminders.")
 
 @app.route('/get-teacher-options', methods=['POST'])
 def get_teacher_options():

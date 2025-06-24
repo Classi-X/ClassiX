@@ -79,6 +79,41 @@
 
 
   <div class="table-responsive animate__animated animate__fadeInUp">
+    <div class="d-flex justify-content-end p-2">
+      <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-download me-1"></i> Download CSV
+      </button>
+    </div>
+    <script>
+      document.getElementById('downloadCSV').addEventListener('click', function () {
+        const table = document.getElementById('studentTable');
+        const allRows = table.querySelectorAll('thead tr, tbody tr');
+        let csv = [];
+
+        allRows.forEach(row => {
+          if (row.offsetParent !== null) {
+            const cols = row.querySelectorAll('th, td');
+            const rowData = [];
+            cols.forEach(col => {
+              let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+              rowData.push(`"${text}"`);
+            });
+            csv.push(rowData.join(','));
+          }
+        });
+
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'students_list.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    </script>
+
     <table class="table table-hover align-middle table-bordered" id="studentTable">
       <thead class="table-dark text-center">
         <tr>
