@@ -36,9 +36,14 @@
             </div>
 
             <div class="d-flex justify-content-center">
-              <button type="button" class="btn btn-success px-4" onclick="captureAndSend()">
-                <i class="fas fa-camera me-2"></i>Scan & Submit
+              <button type="button" class="btn btn-success px-4 d-flex align-items-center justify-content-center"
+                id="scanBtn" onclick="captureAndSend()">
+                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"
+                  id="scanSpinner"></span>
+                <i class="fas fa-camera me-2" id="scanIcon"></i>
+                <span>Scan & Submit</span>
               </button>
+
             </div>
           </form>
 
@@ -101,6 +106,13 @@
     });
 
   function captureAndSend() {
+    const scanBtn = document.getElementById('scanBtn');
+    const scanSpinner = document.getElementById('scanSpinner');
+    const scanIcon = document.getElementById('scanIcon');
+
+    scanBtn.disabled = true;
+    scanSpinner.classList.remove('d-none');
+    scanIcon.classList.add('d-none');
     const context = canvas.getContext('2d');
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = canvas.toDataURL('image/png');
@@ -126,6 +138,9 @@
         }
       })
       .then(data => {
+        scanBtn.disabled = false;
+        scanSpinner.classList.add('d-none');
+        scanIcon.classList.remove('d-none');
         if (data.redirect) {
           window.location.href = data.redirect;
         } else if (data.html) {
@@ -141,6 +156,9 @@
       .catch(err => {
         alert("Something went wrong while submitting the image.");
         console.error(err);
+        scanBtn.disabled = false;
+        scanSpinner.classList.add('d-none');
+        scanIcon.classList.remove('d-none');
       });
 
   }

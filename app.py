@@ -1582,7 +1582,8 @@ def get_students_by_class():
 def generate_qr():
     institution = InstitutionDetails.query.get(current_user.institution_id)
     institution_type = institution.type.lower() if institution else 'school'
-
+    teacher_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
+    print(f"[QR GENERATE] Teacher IP: {teacher_ip}")
     if request.method == 'POST':
         class_name = request.form['class_name']
         subject = request.form.get('subject', '')
@@ -1590,7 +1591,7 @@ def generate_qr():
         degree = request.form.get('degree', '')
         mode = request.form.get('mode', 'qr')
         token = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
-
+        current_user.allowed_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
         qr_session = QRCodeSession(
             token=token,
             class_name=class_name,
@@ -1600,7 +1601,7 @@ def generate_qr():
             teacher_id=current_user.id,
             institution_id=current_user.institution_id,
             expires_at=datetime.now() + timedelta(minutes=15),
-    mode=mode
+            mode=mode
         )
         db.session.add(qr_session)
         db.session.commit()
@@ -1632,7 +1633,7 @@ def generate_qr():
                                 degree=degree,
                                 expires_at=qr_session.expires_at,
                                 institution_type=institution_type)
-
+    print("Student allowed IP:", current_user.allowed_ip)
     assignments = TeacherClassAssignment.query.filter_by(teacher_id=current_user.id).all()
     return render_template('teacher/generate_qr.html',
                            assignments=assignments,
@@ -1836,6 +1837,8 @@ def student_dashboard():
 @app.route('/student/scan-qr', methods=['GET', 'POST'])
 @role_required('student')
 def scan_qr():
+    # student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
+    # print(f"[QR SCAN PAGE] Student IP: {student_ip}")
     if request.method == 'POST':
         token = request.form['token']
 
@@ -1856,7 +1859,15 @@ def scan_qr():
         institution = InstitutionDetails.query.get(current_user.institution_id)
         institution_type = institution.type.lower() if institution else 'school'
 
-        
+        # student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
+        # teacher = User.query.get(qr_session.teacher_id)
+        # teacher_ip = teacher.allowed_ip
+
+        # if teacher_ip and student_ip != teacher_ip:
+        #     flash('You must be on the same network as your teacher to mark attendance.', 'danger')
+        #     print(f"Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
+        #     return render_template('student/scan_qr.html')
+
         if current_user.class_name != qr_session.class_name:
             flash('Class does not match.', 'error')
             return render_template('student/scan_qr.html')
@@ -1903,7 +1914,6 @@ def scan_qr():
             flash('Attendance already marked for today!', 'warning')
             return render_template('student/scan_qr.html')
 
-        
         attendance = Attendance(
             student_id=current_user.id,
             teacher_id=qr_session.teacher_id,
@@ -1922,7 +1932,7 @@ def scan_qr():
 
         flash('Attendance marked successfully via QR!', 'success')
         return redirect(url_for('student_dashboard'))
-
+    
     return render_template('student/scan_qr.html')
 
 @app.route('/student/scan-face')
@@ -1953,6 +1963,7 @@ from PIL import Image
 @app.route('/face-match', methods=['POST'])
 @role_required('student')
 def face_match():
+    # student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
     result = None
 
     image_data = request.form.get('image_data')
@@ -2046,6 +2057,14 @@ def face_match():
 
     institution = InstitutionDetails.query.get(current_user.institution_id)
     institution_type = institution.type.lower() if institution else 'school'
+    # teacher = User.query.get(session.teacher_id)
+    # teacher_ip = teacher.allowed_ip
+
+    # if teacher_ip and student_ip != teacher_ip:
+    #     flash('You must be on the same network as your teacher to mark attendance.', 'danger')
+    #     print(f"Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
+    #     html = render_template('student/biometric_camera.html')
+    #     return jsonify({'html': html})
 
     if current_user.class_name != session.class_name:
         flash("Class does not match!", "error")

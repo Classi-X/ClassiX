@@ -54,9 +54,25 @@
                   <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
                   </a>
-                  <button type="submit" class="btn btn-success">
-                    <i class="fas fa-check me-2"></i>Mark Attendance
+                  <button type="submit" class="btn btn-success d-flex align-items-center justify-content-center"
+                    id="submitBtn">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"
+                      id="submitSpinner"></span>
+                    <i class="fas fa-check me-2" id="submitIcon"></i>
+                    <span>Mark Attendance</span>
                   </button>
+                  <script>
+                    document.getElementById('attendanceForm').addEventListener('submit', function () {
+                      const btn = document.getElementById('submitBtn');
+                      const spinner = document.getElementById('submitSpinner');
+                      const icon = document.getElementById('submitIcon');
+
+                      btn.disabled = true;
+                      spinner.classList.remove('d-none');
+                      icon.classList.add('d-none');
+                    });
+
+                  </script>
                 </div>
               </form>
             </div>
