@@ -4,6 +4,50 @@
 
 {% block content %}
 <div class="container-fluid">
+  <div class="modal fade" id="promotionHelpModal" tabindex="-1" aria-labelledby="promotionHelpLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content shadow border-0">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="promotionHelpLabel">
+            <i class="fas fa-info-circle me-2"></i> How Student Promotions Work
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>This section allows you to promote students to the next class, semester, or stream depending on your
+            institution type.</p>
+
+          <ul class="mb-3">
+            <li><strong>Select Current Class:</strong> Use the filter to show students from a specific class or
+              semester.</li>
+            <li><strong>Promote To:</strong> Choose the new class or semester the selected students will move into.</li>
+            <li><strong>Stream/Semester:</strong>
+              <ul>
+                <li>For <strong>schools</strong>: Only appears for classes 11 and 12.</li>
+                <li>For <strong>colleges/universities</strong>: Can be used for degree specialization or stream.</li>
+              </ul>
+            </li>
+            <li><strong>Select Students:</strong> Use checkboxes or the “Select All” option.</li>
+            <li><strong>Download CSV:</strong> You can export the filtered list before promotion for record keeping.
+            </li>
+            <li><strong>Promote:</strong> Click the green "Promote" button once everything is set.</li>
+          </ul>
+
+          <div class="alert alert-warning small">
+            <i class="fas fa-lightbulb me-1"></i>
+            <strong>Note:</strong> Make sure the target class/semester and stream are appropriate. This action will
+            affect student records.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row">
     <div class="col-12">
       <div class="card mt-3 shadow-sm border-0 animate__animated animate__fadeInUp">
@@ -71,40 +115,44 @@
 
 
             <div class="table-responsive">
-              <div class="d-flex justify-content-end p-2">
-              <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-download me-1"></i> Download CSV
-              </button>
-            </div>
-            <script>
-              document.getElementById('downloadCSV').addEventListener('click', function () {
-                const table = document.getElementById('studentsTable');
-                const allRows = table.querySelectorAll('thead tr, tbody tr');
-                let csv = [];
+              <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
+                <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-download me-1"></i> Download CSV
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                  data-bs-target="#promotionHelpModal">
+                  <i class="fas fa-circle-info me-1"></i> Instructions
+                </button>
+              </div>
+              <script>
+                document.getElementById('downloadCSV').addEventListener('click', function () {
+                  const table = document.getElementById('studentsTable');
+                  const allRows = table.querySelectorAll('thead tr, tbody tr');
+                  let csv = [];
 
-                allRows.forEach(row => {
-                  if (row.offsetParent !== null) {
-                    const cols = row.querySelectorAll('th, td');
-                    const rowData = [];
-                    cols.forEach(col => {
-                      let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
-                      rowData.push(`"${text}"`);
-                    });
-                    csv.push(rowData.join(','));
-                  }
+                  allRows.forEach(row => {
+                    if (row.offsetParent !== null) {
+                      const cols = row.querySelectorAll('th, td');
+                      const rowData = [];
+                      cols.forEach(col => {
+                        let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+                        rowData.push(`"${text}"`);
+                      });
+                      csv.push(rowData.join(','));
+                    }
+                  });
+
+                  const csvContent = csv.join('\n');
+                  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'students.csv';
+                  a.click();
+                  URL.revokeObjectURL(url);
                 });
-
-                const csvContent = csv.join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'students.csv';
-                a.click();
-                URL.revokeObjectURL(url);
-              });
-            </script>
+              </script>
 
               <table class="table table-hover align-middle table-bordered" id="studentsTable">
                 <thead class="table-light">
@@ -140,7 +188,7 @@
                     <td>{{ student.degree or '-' }}</td>
                     {% else %}
                     <td>
-                      {% if student.class_name in ['11', '12'] %}
+                      {% if student.class_name.startswith('11') or student.class_name.startswith('12') %}
                       {{ student.stream_or_semester or '-' }}
                       {% else %}
                       -
@@ -170,10 +218,6 @@
     </div>
   </div>
 </div>
-
-
-
-
 
 <script>
   function filterBySearch() {
@@ -248,9 +292,10 @@
     const streamField = document.getElementById('streamField');
     const institutionType = "{{ institution_type }}";
 
-    if (institutionType === 'school' && (newClass === '11' || newClass === '12')) {
+    if (institutionType === 'school' && (newClass.startsWith('11') || newClass.startsWith('12'))) {
       streamField.style.display = 'block';
-    } else {
+    }
+    else {
       streamField.style.display = 'none';
     }
   });

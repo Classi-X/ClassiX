@@ -4,9 +4,71 @@
 
 {% block content %}
 <div class="container-fluid">
+  <div class="modal fade" id="markAttendanceHelpModal" tabindex="-1" aria-labelledby="markAttendanceHelpModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-sm">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="markAttendanceHelpModalLabel">
+            <i class="fas fa-info-circle me-2"></i> Attendance Marking Instructions
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <h6 class="fw-bold text-secondary">🧭 Step-by-Step Instructions</h6>
+          <ol class="mt-2 ps-3">
+            <li><strong>Select Class/Semester:</strong> Choose the relevant class from the dropdown.</li>
+
+            <li><strong>If applicable:</strong>
+              <ul>
+                <li>Select <strong>Subject</strong> (for college/university only).</li>
+                <li>Select <strong>Stream</strong> (only for Class 11 or 12).</li>
+                <li>Select <strong>Degree</strong> (if required for institution type).</li>
+              </ul>
+            </li>
+
+            <li><strong>Date & Time</strong> is auto-filled based on your current system time in IST.</li>
+
+            <li>Click <strong>"Load Students"</strong> to fetch student list.</li>
+
+            <li>Mark each student as <strong>Present</strong> or <strong>Absent</strong> manually, or use:
+              <ul>
+                <li><span class="badge bg-success">Mark All Present</span> – to mark everyone present</li>
+                <li><span class="badge bg-warning text-dark">Mark All Absent</span> – to mark everyone absent</li>
+              </ul>
+            </li>
+
+            <li>Finally, click <strong>"Save Attendance"</strong> to submit.</li>
+          </ol>
+
+          <hr class="my-3">
+
+          <h6 class="fw-bold text-secondary">📌 Notes</h6>
+          <ul class="mb-0">
+            <li>All required fields must be selected to load students.</li>
+            <li>Attendance is recorded along with subject, stream/degree if applicable.</li>
+            <li>You can only mark attendance once per student per subject per day.</li>
+          </ul>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="card shadow-lg border-0 mt-5 animate__animated animate__fadeIn">
     <div class="card-header bg-primary text-white d-flex align-items-center">
       <h4 class="mb-0"><i class="fas fa-check-circle me-2"></i>Mark Attendance</h4>
+      <button class="btn btn-sm btn-outline-light ms-auto" data-bs-toggle="modal"
+        data-bs-target="#markAttendanceHelpModal">
+        <i class="fas fa-circle-info me-1"></i> Help
+      </button>
+
     </div>
     <div class="card-body bg-light">
       <form method="POST" id="attendanceForm">
@@ -56,8 +118,8 @@
               <option value="">Select Stream</option>
               {% set seen_streams = [] %}
               {% for assignment in assignments %}
-              {% if assignment.class_name in ['11', '12'] and assignment.stream_or_semester and
-              assignment.stream_or_semester not in seen_streams %}
+              {% if (assignment.class_name.startswith('11') or assignment.class_name.startswith('12')) and
+              assignment.stream_or_semester and assignment.stream_or_semester not in seen_streams %}
               {% set _ = seen_streams.append(assignment.stream_or_semester) %}
               <option value="{{ assignment.stream_or_semester }}">{{ assignment.stream_or_semester }}</option>
               {% endif %}
@@ -169,7 +231,7 @@
     degreeRequired.style.display = 'none';
 
     if (institutionType === 'school') {
-      if (classSelect.value === '11' || classSelect.value === '12') {
+      if (classSelect.value.startsWith('11') || classSelect.value.startsWith('12')) {
         streamField.style.display = 'block';
         streamInput.required = true;
         streamRequired.style.display = 'inline';
@@ -245,7 +307,7 @@
       }
 
 
-      if (className === '11' || className === '12') {
+      if (className.startsWith('11') || className.startsWith('12')) {
         if (!stream) {
           alert('Please select stream for class 11 or 12.');
           return;

@@ -141,6 +141,10 @@
         <a href="{{ url_for('ai_chat') }}" class="sidebar-link list-group-item list-group-item-action">
           <i class="fas fa-robot me-2"></i>AI ChatBot
         </a>
+        <a href="https://drive.google.com/file/d/1mSaAdbc8s4DRScSOsAwFlO1NdPY_bvKh/view?usp=sharing"
+          class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-book me-2"></i>Admin User Manual
+        </a>
 
       </div>
 
@@ -183,8 +187,55 @@
         </h1>
       </div>
 
+      <div class="modal fade" id="institutionInfoModal" tabindex="-1" aria-labelledby="institutionInfoModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-info bg-opacity-25">
+              <h5 class="modal-title text-info fw-bold" id="institutionInfoModalLabel">
+                <i class="fas fa-building-columns me-2"></i>Understanding Institution Information
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                This section stores basic details about your institution. These settings affect how the platform behaves
+                for teachers, students, and admins.
+              </p>
 
-      {% if institution %}
+              <h6 class="fw-semibold text-secondary">What each field means:</h6>
+              <ul>
+                <li><strong>Name:</strong> The full name of your school, college, or university.</li>
+                <li><strong>Type:</strong> Defines how the system is customized — for example, <em>School</em>,
+                  <em>College</em>, or <em>University</em>.
+                </li>
+                <li><strong>Location:</strong> City, State, and Country where your institution is based.</li>
+                <li><strong>Allowed Email Domain:</strong> Restricts sign-ups to official email addresses (e.g.,
+                  <code>@yourcollege.edu</code>).
+                </li>
+                <li><strong>Medium:</strong> The language of instruction — e.g., English, Hindi, etc.</li>
+                <li><strong>Classes/Semesters:</strong> The list of academic levels available — such as
+                  <code>1A, 2B, 3C</code> for schools, or semesters for colleges.
+                </li>
+                <li><strong>Streams/Degrees:</strong> Academic divisions based on your institution type — like
+                  Science/Commerce for schools or B.Tech/B.Sc./M.A. for higher ed.</li>
+              </ul>
+
+              <p class="text-muted mb-0">
+                Make sure these details are accurate — they affect how users are onboarded and how data is filtered
+                throughout the system.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if institution and institution.name %}
       <div class="row mt-4">
         <div class="col-12">
           <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
@@ -192,10 +243,17 @@
               <h5 class="mb-0 text-secondary">
                 <i class="fas fa-building-columns me-2 text-primary"></i>Institution Information
               </h5>
-              <a href="{{ url_for('institution_setup') }}"
-                class="btn btn-sm btn-outline-primary d-flex align-items-center">
-                <i class="fas fa-pen-to-square me-1"></i>Edit
-              </a>
+              <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
+                <a href="{{ url_for('institution_setup') }}"
+                  class="btn btn-sm btn-outline-primary d-flex align-items-center">
+                  <i class="fas fa-pen-to-square me-1"></i>Edit
+                </a>
+                <a class="btn btn-sm btn-outline-info d-flex align-items-center" data-bs-toggle="modal"
+                  data-bs-target="#institutionInfoModal">
+                  <i class="fas fa-circle-info me-1"></i> What is this?
+                </a>
+
+              </div>
             </div>
             <div class="card-body">
               <div class="row gy-3">
@@ -238,15 +296,50 @@
         </div>
       </div>
       {% endif %}
+      <div class="modal fade" id="dashboardInfoModal" tabindex="-1" aria-labelledby="dashboardInfoModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-info bg-opacity-25">
+              <h5 class="modal-title text-info fw-bold" id="dashboardInfoModalLabel">
+                <i class="fas fa-chart-bar me-2"></i>Understanding Dashboard Stats
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>This section gives you a quick overview of the most important statistics in your institution.</p>
 
+              <ul class="mb-3">
+                <li><strong>Total Students:</strong> The number of students currently registered and active in the
+                  system.</li>
+                <li><strong>Overall Attendance:</strong> The average attendance percentage calculated across all classes
+                  and subjects.</li>
+                <li><strong>At Risk Students:</strong> Students flagged by the system's AI for having low or declining
+                  attendance. These may need intervention.</li>
+                <li><strong>Pending Approvals:</strong> Number of students, teachers, or staff who registered but are
+                  waiting for admin approval to access the platform.</li>
+              </ul>
 
-
-
-
-
-
+              <p class="text-muted mb-0">
+                Use this dashboard to stay informed and take quick actions where necessary.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="row g-4 mt-4">
+        <div class="d-flex justify-content-end align-items-center mt-2">
+          <button class="btn btn-sm btn-outline-info d-flex align-items-center" data-bs-toggle="modal"
+            data-bs-target="#dashboardInfoModal">
+            <i class="fas fa-circle-info me-1"></i> What does this mean?
+          </button>
+        </div>
 
         <div class="col-sm-6 col-md-3">
           <div
@@ -311,11 +404,6 @@
         </div>
       </div>
 
-
-
-
-
-
       <style>
         .card {
           transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -339,6 +427,42 @@
           letter-spacing: 0.5px;
         }
       </style>
+      <div class="modal fade" id="riskInfoModal" tabindex="-1" aria-labelledby="riskInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning bg-opacity-25">
+              <h5 class="modal-title text-warning fw-bold" id="riskInfoModalLabel">
+                <i class="fas fa-triangle-exclamation me-2"></i>Understanding "Students at Risk"
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                This section highlights students who may need attention due to low attendance. The system uses AI
+                to analyze attendance patterns and automatically flags students whose attendance is falling below
+                safe levels.
+              </p>
+              <h6 class="fw-semibold text-secondary">How it works:</h6>
+              <ul>
+                <li>If a student's attendance drops below <strong>75%</strong>, they are monitored.</li>
+                <li>If it falls below <strong class="text-danger">60%</strong>, they are marked as <span
+                    class="text-danger fw-semibold">High Risk</span>.</li>
+                <li>Risk levels are based on current attendance percentage and whether attendance is
+                  <em>improving</em> or <em>declining</em> over time.
+                </li>
+              </ul>
+              <p class="text-muted mb-0">
+                Use this information to support and guide students before the situation worsens.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
 
       {% if insights.at_risk_students %}
@@ -366,9 +490,13 @@
 
             <div class="card-body p-0">
               <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                <div class="d-flex justify-content-end p-2">
+                <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
                   <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-download me-1"></i> Download CSV
+                  </button>
+                  <button class="btn btn-sm btn-outline-warning d-flex align-items-center" data-bs-toggle="modal"
+                    data-bs-target="#riskInfoModal">
+                    <i class="fas fa-circle-info me-1"></i> What is this?
                   </button>
                 </div>
                 <script>
@@ -464,6 +592,40 @@
       </script>
 
       {% endif %}
+      <div class="modal fade" id="pendingUserInfoModal" tabindex="-1" aria-labelledby="pendingUserInfoModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning bg-opacity-25">
+              <h5 class="modal-title text-warning fw-bold" id="pendingUserInfoModalLabel">
+                <i class="fas fa-user-clock me-2"></i>Understanding Pending User Approvals
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                This section shows all users who have registered but are waiting for admin approval before they can
+                access the system.
+              </p>
+              <h6 class="fw-semibold text-secondary">How it works:</h6>
+              <ul>
+                <li>Users are listed with their details like username, email, role, and registration time.</li>
+                <li>You can approve or reject users individually, or use the checkboxes to <strong>approve/reject
+                    multiple users</strong> at once.</li>
+                <li>Click "Download CSV" to export the list of pending users.</li>
+              </ul>
+              <p class="text-muted mb-0">
+                Make sure to verify each user’s details before approval to maintain data integrity.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {% if pending_users %}
       <div class="row mt-5">
@@ -499,10 +661,15 @@
 
             <div class="card-body p-0">
               <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                <div class="d-flex justify-content-end p-2">
+                <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
                   <button id="downloadsCSV" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-download me-1"></i> Download CSV
                   </button>
+                  <button class="btn btn-sm btn-outline-warning d-flex align-items-center" data-bs-toggle="modal"
+                    data-bs-target="#pendingUserInfoModal">
+                    <i class="fas fa-circle-info me-1"></i> What is this?
+                  </button>
+
                 </div>
                 <script>
                   document.getElementById('downloadsCSV').addEventListener('click', function () {
@@ -655,6 +822,48 @@
       </script>
 
       {% endif %}
+      <div class="modal fade" id="subjectStatsInfoModal" tabindex="-1" aria-labelledby="subjectStatsInfoModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-info bg-opacity-25">
+              <h5 class="modal-title text-info fw-bold" id="subjectStatsInfoModalLabel">
+                <i class="fas fa-book-open-reader me-2"></i>Understanding Subject-wise Attendance Stats
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                This section shows attendance performance for each subject or class (depending on your institution
+                type).
+              </p>
+              <h6 class="fw-semibold text-secondary">What you’ll see:</h6>
+              <ul>
+                <li><strong>Class/Subject Name</strong> (with Stream, if applicable)</li>
+                <li><strong>Total Classes:</strong> The number of lectures or sessions conducted.</li>
+                <li><strong>Attendance Rate:</strong> Percentage of students present across all classes.</li>
+              </ul>
+
+              <h6 class="fw-semibold text-secondary mt-3">Color Indicators:</h6>
+              <ul>
+                <li><span class="badge bg-success">Green</span> – Good attendance (75% and above)</li>
+                <li><span class="badge bg-warning text-dark">Yellow</span> – Moderate attendance (60% to 74%)</li>
+                <li><span class="badge bg-danger">Red</span> – Low attendance (below 60%)</li>
+              </ul>
+
+              <p class="text-muted mb-0">
+                Use these stats to monitor attendance trends and take corrective action for low-performing subjects or
+                classes.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {% if subject_stats %}
       <div class="row mt-5">
@@ -670,6 +879,12 @@
                   placeholder="🔍 Search by class, subject, or stream..." oninput="filterSubjectStats()">
               </div>
             </div>
+            <div class="d-flex flex-wrap gap-2 justify-content-end align-items-center p-2">
+              <button class="btn btn-sm btn-outline-info d-flex align-items-center" data-bs-toggle="modal"
+                data-bs-target="#subjectStatsInfoModal">
+                <i class="fas fa-circle-info me-1"></i> What is this?
+              </button>
+            </div>
 
             <div class="card-body">
               <div class="row g-3" id="subjectStatsContainer">
@@ -680,7 +895,9 @@
                       <h6 class="fw-semibold text-secondary mb-3">
                         {% if institution_type == 'school' %}
                         Class: {{ stats.class_name }}
-                        {% if stats.class_name in ['11', '12'] and stats.stream_or_semester %}
+                        {% if stats.class_name.startswith('11') or stats.class_name.startswith('12') and
+                        stats.stream_or_semester %}
+
                         <br><span class="text-muted">Stream: {{ stats.stream_or_semester }}</span>
                         {% endif %}
                         {% else %}

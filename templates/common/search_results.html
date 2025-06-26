@@ -3,6 +3,41 @@
 
 {% block content %}
 <div class="container mt-5">
+  <div class="modal fade" id="searchHelpModal" tabindex="-1" aria-labelledby="searchHelpLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="searchHelpLabel">
+            <i class="fas fa-info-circle me-2"></i> Understanding Search Results
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>This table shows a list of users based on your search query.</p>
+          <ul>
+            <li><strong>Username, Email, Role:</strong> Shows key details of each user.</li>
+            <li><strong>Search Bar:</strong> Use the input field to further narrow down results in real time.</li>
+            <li><strong>Chat:</strong> Click the <i class="fas fa-comment-dots text-success"></i> button to start a
+              conversation with that user.</li>
+            <li><strong>Download CSV:</strong> Export this list for reporting or backup.</li>
+          </ul>
+
+          <div class="alert alert-info small">
+            <i class="fas fa-info-circle me-1"></i>
+            Results are limited to users within your institution.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="d-flex justify-content-between align-items-center mb-3 animate__animated animate__fadeInDown">
     <h4 class="fw-bold text-primary d-flex align-items-center">
       <i class="fas fa-users me-2"></i> Search Results for "<span class="text-dark">{{ search_term }}</span>"
@@ -20,40 +55,43 @@
 
 
       <div class="table-responsive">
-        <div class="d-flex justify-content-end p-2">
-              <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-download me-1"></i> Download CSV
-              </button>
-            </div>
-            <script>
-              document.getElementById('downloadCSV').addEventListener('click', function () {
-                const table = document.getElementById('usersTable');
-                const allRows = table.querySelectorAll('thead tr, tbody tr');
-                let csv = [];
+        <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
+          <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-download me-1"></i> Download CSV
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#searchHelpModal">
+            <i class="fas fa-circle-info me-1"></i> Instructions
+          </button>
+        </div>
+        <script>
+          document.getElementById('downloadCSV').addEventListener('click', function () {
+            const table = document.getElementById('usersTable');
+            const allRows = table.querySelectorAll('thead tr, tbody tr');
+            let csv = [];
 
-                allRows.forEach(row => {
-                  if (row.offsetParent !== null) {
-                    const cols = row.querySelectorAll('th, td');
-                    const rowData = [];
-                    cols.forEach(col => {
-                      let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
-                      rowData.push(`"${text}"`);
-                    });
-                    csv.push(rowData.join(','));
-                  }
+            allRows.forEach(row => {
+              if (row.offsetParent !== null) {
+                const cols = row.querySelectorAll('th, td');
+                const rowData = [];
+                cols.forEach(col => {
+                  let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+                  rowData.push(`"${text}"`);
                 });
+                csv.push(rowData.join(','));
+              }
+            });
 
-                const csvContent = csv.join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
 
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'users.csv';
-                a.click();
-                URL.revokeObjectURL(url);
-              });
-            </script>
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'users.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+          });
+        </script>
 
         <table class="table table-hover align-middle mb-0" id="usersTable">
           <thead class="table-light">

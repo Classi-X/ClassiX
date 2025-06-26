@@ -4,21 +4,62 @@
 
 {% block content %}
 <div class="container">
+  <div class="modal fade" id="loginHelpModal" tabindex="-1" aria-labelledby="loginHelpLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow border-0">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="loginHelpLabel">
+            <i class="fas fa-info-circle me-2"></i> Login Help
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-3">If you're having trouble logging in, here’s what to do:</p>
+
+          <ol class="ps-3">
+            <li>Enter your <strong>username</strong> or <strong>registered email</strong>.</li>
+            <li>Type your correct password. If you've forgotten it, use the <strong>“Forgot Password?”</strong> link.
+            </li>
+            <li>If you're a new user, click on <strong>“Register here”</strong> to create your account.</li>
+          </ol>
+
+          <div class="alert alert-info mt-4">
+            <i class="fas fa-envelope me-2"></i>Still having issues? Contact support from the <strong>Contact
+              Us</strong> page.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row justify-content-center">
     <div class="col-md-6 col-lg-5">
       <div class="card shadow-lg border-0 mt-3 animate__animated animate__fadeIn">
         <div class="card-header bg-gradient bg-primary text-white text-center rounded-top">
-          <h4 class="mb-0">
-            <i class="fas fa-sign-in-alt me-2"></i> Welcome Back
-          </h4>
-          <small class="text-light">Login to your account</small>
+          <div class="d-flex flex-column align-items-center">
+            <div class="d-flex justify-content-between w-100">
+              <h4 class="mb-0 text-white d-flex align-items-center">
+                <i class="fas fa-sign-in-alt me-2"></i> Welcome Back
+              </h4>
+              <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#loginHelpModal">
+                <i class="fas fa-info-circle me-1"></i> Help
+              </button>
+            </div>
+            <small class="text-light">Login to your account</small>
+          </div>
+
         </div>
         <div class="card-body p-4">
           <form method="POST">
 
             <div class="mb-3">
-              <label for="username" class="form-label fw-semibold"><i
-                  class="fas fa-user me-2 text-primary"></i>Username or Email</label>
+              <label for="username" class="form-label fw-semibold"><i class="fas fa-user me-2 text-primary"></i>Username
+                or Email</label>
               <div class="input-group">
                 <span class="input-group-text bg-light"><i class="fas fa-user"></i></span>
                 <input type="text" class="form-control" id="username" name="username"

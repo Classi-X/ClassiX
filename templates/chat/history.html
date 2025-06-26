@@ -2,7 +2,46 @@
 {% block title %}Chat History | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
 
 {% block content %}
+<div class="modal fade" id="chatHelpModal" tabindex="-1" aria-labelledby="chatHelpLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="chatHelpLabel">
+          <i class="fas fa-info-circle me-2"></i> How to Use Chat History
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <p>This section displays a list of all users you've interacted with via chat.</p>
+
+        <ul class="mb-3">
+          <li><strong>Search:</strong> Use the filter to find users by name, email, or role.</li>
+          <li><strong>Open Chat:</strong> Click the <i class="fas fa-comment-dots text-success"></i> icon to continue
+            chatting with a user.</li>
+          <li><strong>Delete Chat:</strong> Click the <i class="fas fa-trash-alt text-danger"></i> icon to remove the
+            entire conversation. This action cannot be undone.</li>
+          <li><strong>Export:</strong> Use the <i class="fas fa-download text-primary"></i> Download CSV button to
+            export the chat history metadata (not messages).</li>
+        </ul>
+
+        <div class="alert alert-warning small mb-0">
+          <i class="fas fa-exclamation-triangle me-1"></i>
+          <strong>Note:</strong> This does not delete actual user accounts — only the chat record between you and the
+          selected user.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="container py-4 animate__animated animate__fadeIn">
+
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="text-primary d-flex align-items-center">
       <i class="fas fa-comments me-2"></i> Chat History
@@ -16,40 +55,43 @@
   </div>
 
   <div class="table-responsive">
-    <div class="d-flex justify-content-end p-2">
-              <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-download me-1"></i> Download CSV
-              </button>
-            </div>
-            <script>
-              document.getElementById('downloadCSV').addEventListener('click', function () {
-                const table = document.getElementById('usersTable');
-                const allRows = table.querySelectorAll('thead tr, tbody tr');
-                let csv = [];
+    <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
+      <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-download me-1"></i> Download CSV
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#chatHelpModal">
+        <i class="fas fa-circle-info me-1"></i> Instructions
+      </button>
+    </div>
+    <script>
+      document.getElementById('downloadCSV').addEventListener('click', function () {
+        const table = document.getElementById('usersTable');
+        const allRows = table.querySelectorAll('thead tr, tbody tr');
+        let csv = [];
 
-                allRows.forEach(row => {
-                  if (row.offsetParent !== null) {
-                    const cols = row.querySelectorAll('th, td');
-                    const rowData = [];
-                    cols.forEach(col => {
-                      let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
-                      rowData.push(`"${text}"`);
-                    });
-                    csv.push(rowData.join(','));
-                  }
-                });
+        allRows.forEach(row => {
+          if (row.offsetParent !== null) {
+            const cols = row.querySelectorAll('th, td');
+            const rowData = [];
+            cols.forEach(col => {
+              let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+              rowData.push(`"${text}"`);
+            });
+            csv.push(rowData.join(','));
+          }
+        });
 
-                const csvContent = csv.join('\n');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
 
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'users.csv';
-                a.click();
-                URL.revokeObjectURL(url);
-              });
-            </script>
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'users.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    </script>
 
     <table class="table table-hover align-middle shadow-sm border rounded" id="usersTable">
       <thead class="table-light">

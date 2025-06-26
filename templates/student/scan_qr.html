@@ -5,15 +5,63 @@
 {% block content %}
 
 <div class="container py-3">
+  <div class="modal fade" id="qrHelpModal" tabindex="-1" aria-labelledby="qrHelpLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="qrHelpLabel">
+            <i class="fas fa-qrcode me-2"></i> QR Code Attendance Instructions
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <h6 class="fw-bold text-dark mb-3">For Students</h6>
+          <ul>
+            <li>Click <strong>"Start Scanner"</strong> to enable your device’s camera.</li>
+            <li>When asked, <strong>allow camera access</strong> in your browser/device settings.</li>
+            <li>Hold the QR code (provided by your teacher) in front of your camera within the frame.</li>
+            <li>Ensure the area is well-lit and keep the camera steady for quick scanning.</li>
+            <li>Once scanned, your attendance will be marked automatically.</li>
+          </ul>
+
+          <h6 class="fw-bold text-dark mt-4 mb-3">Manual Token Entry</h6>
+          <ul>
+            <li>If QR scan fails or your camera doesn't work, ask your teacher for the token.</li>
+            <li>Enter the token exactly as provided – it is <strong>case-sensitive</strong>.</li>
+            <li>Tokens usually expire within 15 minutes, so enter them promptly.</li>
+            <li>Click <strong>"Mark Attendance"</strong> to submit the form.</li>
+          </ul>
+
+          <div class="alert alert-info mt-4">
+            <i class="fas fa-lightbulb me-2"></i>
+            <strong>Tip:</strong> If the scanner isn't working, try refreshing the page or switching to a different
+            browser (e.g. Chrome or Firefox).
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row justify-content-center">
     <div class="col-lg-9">
 
 
       <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
-        <div class="card-header bg-primary text-white text-center">
+        <div class="card-header bg-primary text-white text-center d-flex justify-content-between gap-2 p-2 flex-wrap">
           <h4 class="mb-0">
             <i class="fas fa-qrcode me-2"></i>Scan QR Code for Attendance
           </h4>
+          <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#qrHelpModal">
+            <i class="fas fa-info-circle me-1"></i> QR Scan Help
+          </button>
+
         </div>
         <div class="card-body">
 
@@ -113,11 +161,6 @@
     </div>
   </div>
 </div>
-
-
-
-
-
 
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 

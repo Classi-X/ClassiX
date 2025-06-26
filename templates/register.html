@@ -4,18 +4,97 @@
 
 {% block content %}
 <div class="container">
+    <div class="modal fade" id="registerHelpModal" tabindex="-1" aria-labelledby="registerHelpLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content shadow border-0">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="registerHelpLabel">
+                        <i class="fas fa-info-circle me-2"></i>Registration Instructions
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Please follow the instructions based on your selected role:</p>
+
+                    <h6 class="text-success fw-bold"><i class="fas fa-user-shield me-2"></i>Admin (Institute Head)</h6>
+                    <ul class="ps-3 mb-3">
+                        <li>Use a <strong>valid official email</strong> of your institution.</li>
+                        <li>No need to fill student-related fields like class, subject, etc.</li>
+                        <li>Admins can later manage teachers, students, and institute settings.</li>
+                    </ul>
+
+                    <h6 class="text-primary fw-bold"><i class="fas fa-chalkboard-teacher me-2"></i>Teacher</h6>
+                    <ul class="ps-3 mb-3">
+                        <li>Use your <strong>official institutional email</strong> (like <code>@college.edu.in</code>).
+                        </li>
+                        <li>Enter the <strong>secure PIN</strong> provided by admin to link you to the right
+                            institution.</li>
+                        <li>No need to enter class or degree info — it will be assigned later.</li>
+                    </ul>
+
+                    <h6 class="text-info fw-bold"><i class="fas fa-user-graduate me-2"></i>Student</h6>
+                    <ul class="ps-3 mb-3">
+                        <li>Use your <strong>official institutional email</strong> if your institute requires it.
+                            Otherwise, you can use your personal Gmail.</li>
+                        <li>Enter the <strong>secure PIN</strong> provided by your class teacher or admin.</li>
+                        <li><strong>Fill these fields correctly:</strong></li>
+                        <ul class="ps-4">
+                            <li><strong>Roll Number</strong>: Your official student ID.</li>
+                            <li><strong>Class/Semester</strong>: The one you currently study in.</li>
+                            <li><strong>Stream</strong>: Required for classes 11 and 12 (school students).</li>
+                            <li><strong>Subject(s)</strong>: Choose your actual subjects, including specializations if
+                                shown.</li>
+                            <li><strong>Degree</strong>: Required for college/university students.</li>
+                        </ul>
+                    </ul>
+
+                    <h6 class="text-secondary fw-bold"><i class="fas fa-user-friends me-2"></i>Parent</h6>
+                    <ul class="ps-3 mb-3">
+                        <li>You can use your <strong>personal email</strong> (Gmail/Yahoo/etc.).</li>
+                        <li>No need to enter any class, subject, or PIN.</li>
+                        <li>Once registered, you will be able to link to your child’s account to monitor their
+                            attendance.</li>
+                    </ul>
+
+                    <div class="alert alert-warning mt-4">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Note:</strong> After entering all required fields, click <strong>Send OTP</strong> to
+                        verify your email.
+                        Do not refresh the page during this process.
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             <div class="card shadow mt-4">
                 <div class="card-header bg-success text-white text-center">
-                    <h4><i class="fas fa-user-plus me-2"></i>Register</h4>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>Register</h4>
+                        <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal"
+                            data-bs-target="#registerHelpModal">
+                            <i class="fas fa-info-circle me-1"></i> Help
+                        </button>
+                    </div>
+
                 </div>
                 <div class="card-body">
                     <form method="POST" id="registerForm">
                         <div class="mb-3">
                             <label for="username" class="form-label">Full Name (First + Middle + Last)<br>
-                            <small class="text-muted">This will also be your <strong>unique username</strong></small><br>
-                            <small class="text-muted">Example: <code>Desai Aarav Mehta</code> → username: <code>Desai Aarav Mehta</code></small></label>
+                                <small class="text-muted">This will also be your <strong>unique
+                                        username</strong></small><br>
+                                <small class="text-muted">Example: <code>Desai Aarav Mehta</code> → username:
+                                    <code>Desai Aarav Mehta</code></small></label>
                             <input type="text" class="form-control" id="username" name="username" required>
                             <div class="text-danger small d-none" id="username-error">Username already exists</div>
                         </div>
@@ -24,7 +103,7 @@
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email" required
                                 placeholder="e.g., student@yourcollege.ac.in or personal@gmail.com">
-                                <div class="text-danger small d-none" id="email-error">Email already exists</div>
+                            <div class="text-danger small d-none" id="email-error">Email already exists</div>
                             <div class="form-text text-muted">
                                 <strong>Important:</strong><br>
                                 If you are registering as a <strong>Student</strong> or <strong>Teacher</strong>, please
@@ -103,6 +182,42 @@
                                 <select id="subject" name="subject" class="form-select" multiple>
                                     <option value="">Select Subject</option>
                                 </select>
+                                <div class="alert alert-info mt-2 py-3 px-4 rounded-3 border-start border-4 border-primary"
+                                    role="alert">
+                                    <h6 class="fw-bold text-primary mb-2">
+                                        How to choose your subjects:
+                                    </h6>
+
+                                    <p class="mb-2">
+                                        Please select your subjects carefully. If your college or university has
+                                        different branches or specializations (like IT, CE, Marketing, etc.), your
+                                        subjects may be listed in the format:
+                                        <br><strong class="text-dark">Subject Name – Branch/Specialization</strong>
+                                    </p>
+
+                                    <ul class="mb-2 ps-4">
+                                        <li><span class="text-dark">Physics – Computer Engineering</span></li>
+                                        <li><span class="text-dark">Mathematics – IT</span></li>
+                                        <li><span class="text-dark">Business Communication – Marketing</span></li>
+                                    </ul>
+
+                                    <p class="mb-2 text-secondary">
+                                        <strong>Don’t see a branch or specialization?</strong><br>
+                                        If you are in college or a general course without branches, just select the
+                                        subject name:
+                                    </p>
+
+                                    <ul class="mb-2 ps-4">
+                                        <li><span class="text-dark">Mathematics</span></li>
+                                        <li><span class="text-dark">English</span></li>
+                                        <li><span class="text-dark">Science</span></li>
+                                    </ul>
+
+                                    <p class="mb-0 text-secondary">
+                                        <strong>Note:</strong> If you're not sure which subject to select, please ask
+                                        your teacher or check your syllabus.
+                                    </p>
+                                </div>
                             </div>
 
 
@@ -249,12 +364,12 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username })
         })
-        .then(res => res.json())
-        .then(data => {
-            const exists = data.exists;
-            usernameError.classList.toggle('d-none', !exists);
-            usernameInput.classList.toggle('is-invalid', exists);
-        });
+            .then(res => res.json())
+            .then(data => {
+                const exists = data.exists;
+                usernameError.classList.toggle('d-none', !exists);
+                usernameInput.classList.toggle('is-invalid', exists);
+            });
     }, 500));
 
     emailInput.addEventListener('input', debounce(() => {
@@ -266,12 +381,12 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
         })
-        .then(res => res.json())
-        .then(data => {
-            const exists = data.exists;
-            emailError.classList.toggle('d-none', !exists);
-            emailInput.classList.toggle('is-invalid', exists);
-        });
+            .then(res => res.json())
+            .then(data => {
+                const exists = data.exists;
+                emailError.classList.toggle('d-none', !exists);
+                emailInput.classList.toggle('is-invalid', exists);
+            });
     }, 500));
 </script>
 

@@ -5,13 +5,50 @@
 {% block content %}
 
 <div class="container py-3">
+  <div class="modal fade" id="parentHelpModal" tabindex="-1" aria-labelledby="parentHelpLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content border-0 shadow-sm">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="parentHelpLabel">
+            <i class="fas fa-info-circle me-2"></i> Instructions
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>This section allows you to update the parent's or guardian's contact information for communication
+            purposes.</p>
+          <ul>
+            <li><strong>Phone Number:</strong> Used for SMS alerts when the student is absent.</li>
+            <li><strong>Email Address:</strong> Required for receiving monthly attendance reports.</li>
+            <li><strong>OTP Verification:</strong> Ensures the email address is valid before submission.</li>
+            <li><strong>Preferences:</strong> Notifications are auto-enabled for critical updates and cannot be turned
+              off for safety reasons.</li>
+          </ul>
+          <div class="alert alert-warning small">
+            <i class="fas fa-exclamation-triangle me-1"></i> Keep this information updated to avoid missing important
+            notifications.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row justify-content-center">
     <div class="col-lg-10">
 
 
       <div class="card shadow-sm border-0 animate__animated animate__fadeIn">
-        <div class="card-header bg-primary text-white d-flex align-items-center">
+        <div
+          class="card-header bg-primary text-white d-flex align-items-center d-flex justify-content-between gap-2 p-2 flex-wrap">
           <h4 class="mb-0"><i class="fas fa-users me-2"></i> Parent/Guardian Contact Information</h4>
+          <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#parentHelpModal">
+            <i class="fas fa-circle-info me-1"></i> Instructions
+          </button>
         </div>
         <div class="card-body">
           <div class="alert alert-info d-flex align-items-center">

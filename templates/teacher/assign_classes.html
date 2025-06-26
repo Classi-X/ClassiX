@@ -49,12 +49,15 @@
             <div class="mb-3" id="subjectField" style="display: none;">
               <label for="subject" class="form-label fw-semibold">Subject</label>
               <input type="text" id="subject" name="subject" class="form-control shadow-sm" list="subjectList"
-                placeholder="e.g., Mathematics" value="{{ assignment_to_edit.subject if assignment_to_edit else '' }}">
+                placeholder="e.g., Physics – Computer Engineering"
+                value="{{ assignment_to_edit.subject if assignment_to_edit else '' }}">
               <datalist id="subjectList">
                 {% for subj in all_subjects %}
                 <option value="{{ subj }}">
                   {% endfor %}
               </datalist>
+              <small class="form-text text-muted">Enter subject as <strong>Subject – Branch</strong> (e.g., Physics –
+                Computer Engineering). See below for full instructions.</small>
 
             </div>
 
@@ -71,7 +74,6 @@
               </select>
             </div>
 
-
             <div class="d-flex justify-content-between align-items-center mt-4">
               <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
@@ -81,6 +83,50 @@
                 {% if assignment_to_edit %}Update{% else %}Assign Class{% endif %}
               </button>
             </div>
+            <div class="mb-3" id="subjectIns" style="display: none;">
+              <div class="alert alert-info mt-2 py-3 px-4 rounded-3 border-start border-4 border-primary" role="alert">
+                <h6 class="fw-bold text-primary mb-2">
+                  How to write the subject properly:
+                </h6>
+
+                <p class="mb-2">
+                  In many degree programs (like Engineering, B.Sc., BBA, Pharmacy, etc.), the same subject may be taught
+                  across different
+                  <strong>branches or specializations</strong>. To avoid confusion and manage data accurately, please
+                  use the following format:
+                </p>
+
+                <p class="mb-2">
+                  <strong class="text-dark">Subject Name – Branch/Specialization</strong>
+                </p>
+
+                <ul class="mb-2 ps-4">
+                  <li><span class="text-dark">Physics – Computer Engineering</span></li>
+                  <li><span class="text-dark">Mathematics – IT</span></li>
+                  <li><span class="text-dark">Business Communication – Marketing</span></li>
+                  <li><span class="text-dark">Organic Chemistry – Pharmaceutical Sciences</span></li>
+                  <li><span class="text-dark">Psychology – Clinical Psychology</span></li>
+                </ul>
+
+                <p class="mb-2 text-secondary">
+                  <strong>When should you write only the subject name?</strong><br>
+                  If your institution does <u>not</u> use branches/specializations (e.g., a college or general program),
+                  you can simply write:
+                </p>
+
+                <ul class="mb-2 ps-4">
+                  <li><span class="text-dark">Mathematics</span></li>
+                  <li><span class="text-dark">English</span></li>
+                  <li><span class="text-dark">Science</span></li>
+                </ul>
+
+                <p class="mb-0 text-secondary">
+                  <strong>Tip:</strong> Use correct spelling and full names to ensure consistency across records.
+                </p>
+              </div>
+
+            </div>
+
           </form>
         </div>
       </div>
@@ -100,6 +146,70 @@
         submitBtn.disabled = !classSelect.value;
       });
     </script>
+    <div class="modal fade" id="assignClassHelpModal" tabindex="-1" aria-labelledby="assignClassHelpModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-sm">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="assignClassHelpModalLabel">
+              <i class="fas fa-info-circle me-2"></i> Assign Class – Instructions
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">
+            <h6 class="fw-semibold mb-2">🎓 Class/Semester</h6>
+            <ul>
+              <li>Select the appropriate class/semester from the dropdown.</li>
+              <li>For schools, this can be grades like "10", "11", "12".</li>
+              <li>For colleges/universities, it could be "1", "2", "3", etc.</li>
+            </ul>
+
+            <hr class="my-3">
+
+            <h6 class="fw-semibold mb-2">🧭 Stream</h6>
+            <ul>
+              <li>Visible only if selected class is <strong>11</strong> or <strong>12</strong> (for schools).</li>
+              <li>Examples: Science, Commerce, Arts, etc.</li>
+            </ul>
+
+            <hr class="my-3">
+
+            <h6 class="fw-semibold mb-2">📚 Subject</h6>
+            <p>Enter the subject in the following format for clarity:</p>
+            <ul class="mb-2 ps-4">
+              <li><strong>Subject – Branch</strong> (e.g., <em>Physics – Mechanical Engineering</em>)</li>
+              <li><strong>Business Law – BBA</strong></li>
+              <li><strong>Organic Chemistry – B.Pharm</strong></li>
+            </ul>
+            <p class="text-muted">If no specialization is needed, enter just the subject (e.g.,
+              <strong>English</strong>).</p>
+
+            <hr class="my-3">
+
+            <h6 class="fw-semibold mb-2">🎓 Degree</h6>
+            <ul>
+              <li>Only applicable for college/university setups.</li>
+              <li>Select the degree like B.Sc., BBA, B.Tech, etc.</li>
+            </ul>
+
+            <hr class="my-3">
+
+            <h6 class="fw-semibold mb-2">💡 Tips</h6>
+            <ul>
+              <li>Use consistent spellings to avoid duplicate records.</li>
+              <li>Make sure subject names are not abbreviated unless universally accepted.</li>
+            </ul>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+              <i class="fas fa-times me-1"></i> Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
 
     <div class="col-md-6">
@@ -120,10 +230,15 @@
 
 
           <div class="table-responsive">
-            <div class="d-flex justify-content-end p-2">
+            <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
               <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
                 <i class="fas fa-download me-1"></i> Download CSV
               </button>
+              <button class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal"
+                data-bs-target="#assignClassHelpModal">
+                <i class="fas fa-circle-info me-1"></i> Help
+              </button>
+
             </div>
             <script>
               document.getElementById('downloadCSV').addEventListener('click', function () {
@@ -163,7 +278,11 @@
                   <th><i class="fas fa-book-open me-1"></i> Subject</th>
                   <th><i class="fas fa-graduation-cap me-1"></i> Degree</th>
                   {% else %}
-                  {% set show_stream = assignments | selectattr("class_name", "in", ["11", "12"]) | list | length > 0 %}
+                  {% set show_stream = assignments | selectattr("class_name") | map(attribute="class_name") | list |
+                  select("string") | list %}
+                  {% set show_stream = show_stream | select("string") | list %}
+                  {% set show_stream = show_stream | list %}
+
                   {% if show_stream %}
                   <th><i class="fas fa-code-branch me-1"></i> Stream</th>
                   {% endif %}
@@ -183,11 +302,9 @@
                   <td>{{ assignment.degree or '-' }}</td>
                   {% else %}
                   {% if show_stream %}
-                  {% if assignment.class_name in ['11', '12'] %}
                   <td>{{ assignment.stream_or_semester or '-' }}</td>
                   {% else %}
                   <td>-</td>
-                  {% endif %}
                   {% endif %}
                   {% endif %}
 
@@ -244,6 +361,7 @@
     const classSelect = document.getElementById('class_name');
     const streamField = document.getElementById('streamField');
     const subjectField = document.getElementById('subjectField');
+    const subjectIns = document.getElementById('subjectIns');
     const degreeField = document.getElementById('degreeField');
     const submitBtn = document.getElementById('submitBtn');
     const form = document.getElementById('assignForm');
@@ -251,19 +369,22 @@
 
     if (institutionType === 'school') {
       subjectField.style.display = 'none';
+      subjectIns.style.display = 'none';
       degreeField.style.display = 'none';
     } else {
       streamField.style.display = 'none';
       subjectField.style.display = 'block';
+      subjectIns.style.display = 'block';
       degreeField.style.display = 'block';
     }
 
 
     if (institutionType === 'school') {
       classSelect.addEventListener('change', function () {
-        if (['11', '12'].includes(classSelect.value)) {
+        if (classSelect.value.startsWith("11") || classSelect.value.startsWith("12")) {
           streamField.style.display = 'block';
-        } else {
+        }
+        else {
           streamField.style.display = 'none';
         }
         validateForm();
@@ -281,8 +402,7 @@
       if (institutionType === 'school') {
 
         if (classValue) {
-          if (['11', '12'].includes(classValue)) {
-
+          if (classValue.startsWith("11") || classValue.startsWith("12")) {
             isValid = streamValue !== '';
           } else {
 

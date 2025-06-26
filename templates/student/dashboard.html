@@ -66,8 +66,7 @@
           <i class="fas fa-qrcode me-2 text-success"></i> Scan QR
         </a>
 
-        <a href="{{ url_for('scan_face') }}"
-          class="list-group-item list-group-item-action d-flex align-items-center">
+        <a href="{{ url_for('scan_face') }}" class="list-group-item list-group-item-action d-flex align-items-center">
           <i class="fas fa-camera me-2 me-2 text-dark"></i> Scan Face
         </a>
 
@@ -128,6 +127,9 @@
         </a>
         <a href="{{ url_for('ai_chat') }}" class="sidebar-link list-group-item list-group-item-action">
           <i class="fas fa-robot me-2"></i>AI ChatBot
+        </a>
+        <a href="https://drive.google.com/file/d/1N-clv6CaCu54kyOuHrUz61l0DGF87gnM/view?usp=sharing" class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-user-graduate me-2"></i>Student User Manual
         </a>
 
       </div>
@@ -197,8 +199,47 @@
         </div>
       </div>
 
+      <div class="modal fade" id="attendanceHelpModal" tabindex="-1" aria-labelledby="attendanceHelpLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+          <div class="modal-content border-0 shadow-sm">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="attendanceHelpLabel">
+                <i class="fas fa-info-circle me-2"></i> Attendance Summary Guide
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <ul class="mb-3">
+                <li><strong>Total Classes:</strong> Total number of classes conducted.</li>
+                <li><strong>Present Days:</strong> Number of days the student was marked present.</li>
+                <li><strong>Absent Days:</strong> Calculated automatically as:
+                  <code>Total Classes - Present Days</code>.</li>
+                <li><strong>Attendance Percentage:</strong> Calculated using:
+                  <code>(Present / Total Classes) × 100</code>.
+                </li>
+              </ul>
+              <div class="alert alert-warning small">
+                <i class="fas fa-exclamation-circle me-1"></i> Attendance below 75% may trigger warnings or restrictions
+                as per institutional policy.
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="row g-4">
+        <div class="d-flex justify-content-end mb-2">
+          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#attendanceHelpModal">
+            <i class="fas fa-circle-info me-1"></i> Instructions
+          </button>
+        </div>
 
         <div class="col-sm-6 col-lg-3">
           <div class="card shadow-sm border-0 bg-primary text-white h-100 animate__animated animate__fadeInUp">
@@ -253,9 +294,6 @@
         </div>
       </div>
 
-
-
-
       <style>
         .card {
           transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -272,14 +310,57 @@
         }
       </style>
 
+      <div class="modal fade" id="attendanceProgressHelpModal" tabindex="-1"
+        aria-labelledby="attendanceProgressHelpLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+          <div class="modal-content border-0 shadow-sm">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="attendanceProgressHelpLabel">
+                <i class="fas fa-info-circle me-2"></i> Attendance Progress Explanation
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <ul class="mb-3">
+                <li><strong>Overall Attendance:</strong> Shows the percentage of classes attended out of the total.</li>
+                <li><strong>Progress Bar:</strong> Uses colors to show status:
+                  <ul>
+                    <li><span class="text-success">Green (≥ 75%)</span> = Good attendance</li>
+                    <li><span class="text-warning">Yellow (60–74.9%)</span> = Needs improvement</li>
+                    <li><span class="text-danger">Red (< 60%)</span> = Poor attendance</li>
+                  </ul>
+                </li>
+                <li><strong>Chart:</strong> Visual breakdown of attendance over time (monthly/weekly).</li>
+                <li><strong>Monthly Summary:</strong> Displays total classes, present and absent days for the current
+                  period.</li>
+              </ul>
+              <div class="alert alert-info small">
+                <i class="fas fa-lightbulb me-1"></i> Regular attendance helps improve academic performance and
+                discipline.
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="row mt-4">
         <div class="col-12">
           <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
-            <div class="card-header bg-light d-flex align-items-center">
+            <div
+              class="card-header bg-light d-flex align-items-center d-flex justify-content-between gap-2 p-2 flex-wrap">
               <h5 class="mb-0 text-primary d-flex align-items-center">
                 <i class="fas fa-chart-line me-2"></i> Attendance Progress
               </h5>
+              <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
+                data-bs-target="#attendanceProgressHelpModal">
+                <i class="fas fa-circle-info me-1"></i> Instructions
+              </button>
             </div>
             <div class="card-body">
 
@@ -377,6 +458,50 @@
 
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+      <div class="modal fade" id="attendanceTableHelpModal" tabindex="-1" aria-labelledby="attendanceTableHelpLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+          <div class="modal-content border-0 shadow-sm">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="attendanceTableHelpLabel">
+                <i class="fas fa-info-circle me-2"></i> Attendance Table Instructions
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <ul class="mb-3">
+                <li><strong>Date:</strong> Shows the exact day of attendance.</li>
+                <li><strong>Class/Semester:</strong> Indicates the level the student is enrolled in.</li>
+                {% if institution_type == 'school' %}
+                <li><strong>Stream:</strong> Visible for classes 11 and 12 only.</li>
+                {% else %}
+                <li><strong>Degree & Subject:</strong> Applicable for college/university level attendance tracking.</li>
+                {% endif %}
+                <li><strong>Status:</strong> Shows whether the student was <span class="text-success">Present</span> or
+                  <span class="text-danger">Absent</span>.</li>
+                <li><strong>Method:</strong> The way attendance was recorded:
+                  <ul>
+                    <li><i class="fas fa-qrcode text-primary"></i> QR Code</li>
+                    <li><i class="fas fa-fingerprint text-primary"></i> Biometric</li>
+                    <li><i class="fas fa-edit text-primary"></i> Manual entry</li>
+                  </ul>
+                </li>
+                <li><strong>Search:</strong> Use the search bar to filter by date, subject, class, etc.</li>
+              </ul>
+              <div class="alert alert-info small">
+                <i class="fas fa-lightbulb me-1"></i> Use this data to understand attendance behavior, identify
+                irregularities, or follow up with the administration.
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="row mt-5">
         <div class="col-12">
@@ -404,10 +529,14 @@
               </style>
 
               <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                <div class="d-flex justify-content-end p-2">
-                <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
-                  <i class="fas fa-download me-1"></i> Download CSV
-                </button>
+                <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
+                  <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-download me-1"></i> Download CSV
+                  </button>
+                  <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
+                    data-bs-target="#attendanceTableHelpModal">
+                    <i class="fas fa-circle-info me-1"></i> Instructions
+                  </button>
                 </div>
                 <script>
                   document.getElementById('downloadCSV').addEventListener('click', function () {
@@ -446,7 +575,7 @@
                       <th scope="col"><i class="fas fa-school me-1"></i> Class/Semester</th>
 
                       {% if institution_type == 'school' %}
-                      {% if student.class_name in ['11', '12'] %}
+                      {% if student.class_name.startswith('11') or student.class_name.startswith('12') %}
                       <th scope="col"><i class="fas fa-stream me-1"></i> Stream</th>
                       {% endif %}
                       {% else %}
@@ -470,7 +599,8 @@
                         {% endif %}
                       </td>
 
-                      {% if institution_type == 'school' and student.class_name in ['11', '12'] %}
+                      {% if institution_type == 'school' and (student.class_name.startswith('11') or
+                      student.class_name.startswith('12')) %}
                       <td>{{ student.stream_or_semester or '-' }}</td>
                       {% elif institution_type != 'school' %}
                       <td>{{ record.degree or '-' }}</td>
@@ -488,7 +618,7 @@
                         <span class="badge bg-secondary">
                           {% if record.method == 'QR' %}
                           <i class="fas fa-qrcode me-1"></i>QR Code
-                          {% elif record.method == 'biometric' %}
+                          {% elif record.method == 'Biometric' %}
                           <i class="fas fa-fingerprint me-1"></i>Biometric
                           {% else %}
                           <i class="fas fa-edit me-1"></i>Manual
@@ -526,18 +656,62 @@
         }
       </script>
 
-
-
-
-
+      <div class="modal fade" id="parentContactHelpModal" tabindex="-1" aria-labelledby="parentContactHelpLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+          <div class="modal-content border-0 shadow-sm">
+            <div class="modal-header bg-info text-white">
+              <h5 class="modal-title" id="parentContactHelpLabel">
+                <i class="fas fa-info-circle me-2"></i> Parent / Guardian Contact Help
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <ul class="mb-3">
+                <li><strong>Parent Name:</strong> The name of the person responsible for the student.</li>
+                <li><strong>Phone Number:</strong> This number is used to send:
+                  <ul>
+                    <li><i class="fas fa-sms text-success me-1"></i> SMS alerts for absences</li>
+                    <li><i class="fas fa-bell text-warning me-1"></i> Urgent school updates</li>
+                  </ul>
+                </li>
+                <li><strong>Email:</strong> Used to send:
+                  <ul>
+                    <li><i class="fas fa-envelope text-primary me-1"></i> Monthly attendance reports</li>
+                    <li><i class="fas fa-info-circle text-secondary me-1"></i> School circulars and important
+                      announcements</li>
+                  </ul>
+                </li>
+                <li><strong>Why this matters:</strong> Without contact info, you may miss critical alerts about your
+                  child's attendance or academic updates.</li>
+              </ul>
+              <div class="alert alert-info small">
+                <i class="fas fa-lightbulb me-1"></i> Make sure the contact details are correct and kept up to date.
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="row mt-5">
         <div class="col-12">
           <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
-            <div class="card-header bg-light d-flex align-items-center">
+            <div
+              class="card-header bg-light d-flex align-items-center d-flex justify-content-between gap-2 p-2 flex-wrap">
               <h5 class="mb-0 text-secondary d-flex align-items-center">
                 <i class="fas fa-user-friends me-2 text-primary"></i> Parent / Guardian Contact
               </h5>
+              <button class="btn btn-sm btn-outline-info ms-3" data-bs-toggle="modal"
+                data-bs-target="#parentContactHelpModal">
+                <i class="fas fa-circle-info me-1"></i> Help
+              </button>
+
             </div>
             <div class="card-body">
               {% if parent_contact %}
@@ -585,10 +759,6 @@
           </div>
         </div>
       </div>
-
-
-
-
 
     </div>
   </div>

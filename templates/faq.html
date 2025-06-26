@@ -25,7 +25,6 @@
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
     content: "\f078";
-    /* fa-chevron-down */
     transition: transform 0.3s ease;
   }
 
@@ -100,6 +99,55 @@
     <p class="text-muted">Find answers to the most common questions about using ClassiX.</p>
   </div>
 
+  <div class="row justify-content-center mb-4 animate__animated animate__fadeInUp">
+    <div class="col-md-10">
+      <div class="card p-3 shadow-sm border-0 rounded-4 bg-light">
+        <h5 class="mb-3 text-center fw-semibold text-primary">
+          <i class="fas fa-book me-2"></i>User Manuals (PDF)
+        </h5>
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+          <a href="https://drive.google.com/file/d/1mSaAdbc8s4DRScSOsAwFlO1NdPY_bvKh/view?usp=sharing"
+            class="btn btn-outline-primary rounded-pill">
+            <i class="fas fa-user-shield me-2"></i> Admin Manual
+          </a>
+          <a href="https://drive.google.com/file/d/10ZYBlKShXjY0F4MF3LTZCJfMrYl3Eryz/view?usp=sharing"
+            class="btn btn-outline-success rounded-pill">
+            <i class="fas fa-chalkboard-teacher me-2"></i> Teacher Manual
+          </a>
+          <a href="https://drive.google.com/file/d/1GyThxr4G_uL1o5WjE6eildQjtcSpPlKv/view?usp=sharing"
+            class="btn btn-outline-warning rounded-pill">
+            <i class="fas fa-user-friends me-2"></i> Parent Manual
+          </a>
+          <a href="https://drive.google.com/file/d/1N-clv6CaCu54kyOuHrUz61l0DGF87gnM/view?usp=sharing"
+            class="btn btn-outline-info rounded-pill">
+            <i class="fas fa-user-graduate me-2"></i> Student Manual
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mb-4 animate__animated animate__fadeInUp">
+    <h5 class="mb-3 text-center fw-semibold text-primary">
+      <i class="fas fa-question-circle me-2"></i>Browse FAQs by Role
+    </h5>
+
+    <div class="btn-group" role="group">
+      <button class="btn btn-outline-primary" onclick="filterByCategory('admin')">
+        <i class="fas fa-user-shield me-1"></i> Admin
+      </button>
+      <button class="btn btn-outline-success" onclick="filterByCategory('teacher')">
+        <i class="fas fa-chalkboard-teacher me-1"></i> Teacher
+      </button>
+      <button class="btn btn-outline-warning" onclick="filterByCategory('parent')">
+        <i class="fas fa-user-friends me-1"></i> Parent
+      </button>
+      <button class="btn btn-outline-info" onclick="filterByCategory('student')">
+        <i class="fas fa-user-graduate me-1"></i> Student
+      </button>
+    </div>
+  </div>
+
   <div class="search-bar animate__animated animate__fadeInUp">
     <i class="fa fa-search"></i>
     <input type="text" id="faqSearch" class="form-control" placeholder="Type to search FAQs..."
@@ -107,21 +155,27 @@
   </div>
 
   <div class="accordion" id="faqAccordion">
-    {% for faq in faqs %}
-    <div class="accordion-item faq-card mb-3" data-question="{{ faq.question|lower }}"
-      data-answer="{{ faq.answer|lower }}">
-      <h2 class="accordion-header" id="heading{{ loop.index }}">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-          data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
-          <i class="fa fa-circle-question me-2 text-primary"></i> {{ faq.question }}
-        </button>
-      </h2>
-      <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}"
-        data-bs-parent="#faqAccordion">
-        <div class="accordion-body">
-          {{ faq.answer }}
+    {% for role in ['Admin', 'Teacher', 'Parent', 'Student'] %}
+    <div class="faq-section" data-role="{{ role | lower }}">
+      <h4 class="fw-bold text-capitalize mt-4 mb-3">
+        <i class="fas fa-angle-double-right me-2"></i>{{ role }} FAQs
+      </h4>
+
+      {% for faq in faqs if faq.category == role %}
+      <div class="accordion-item faq-card mb-3" data-question="{{ faq.question | lower }}"
+        data-answer="{{ faq.answer | lower }}" data-category="{{ faq.category | lower }}">
+        <h2 class="accordion-header" id="heading{{ loop.index }}">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
+            <i class="fa fa-circle-question me-2 text-primary"></i> {{ faq.question }}
+          </button>
+        </h2>
+        <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading{{ loop.index }}"
+          data-bs-parent="#faqAccordion">
+          <div class="accordion-body">{{ faq.answer }}</div>
         </div>
       </div>
+      {% endfor %}
     </div>
     {% endfor %}
   </div>
@@ -134,25 +188,31 @@
 </div>
 
 <script>
-  function filterFaqs() {
-    const input = document.getElementById('faqSearch').value.toLowerCase().trim();
-    const items = document.querySelectorAll('#faqAccordion .accordion-item');
-    let matchFound = false;
-    items.forEach(item => {
-      const question = item.getAttribute('data-question');
-      const answer = item.getAttribute('data-answer');
-      const isMatch = question.includes(input) || answer.includes(input);
-      item.style.display = isMatch ? '' : 'none';
-      if (isMatch) matchFound = true;
-    });
-  }
-
   function scrollToSearch() {
     const searchInput = document.getElementById('faqSearch');
     searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     searchInput.focus();
   }
 
+  function filterFaqs() {
+    const input = document.getElementById('faqSearch').value.toLowerCase().trim();
+    const items = document.querySelectorAll('#faqAccordion .accordion-item');
+    items.forEach(item => {
+      const question = item.getAttribute('data-question');
+      const answer = item.getAttribute('data-answer');
+      const match = question.includes(input) || answer.includes(input);
+      item.style.display = match ? '' : 'none';
+    });
+  }
+
   document.getElementById('faqSearch').addEventListener('input', filterFaqs);
+
+  function filterByCategory(role) {
+    const sections = document.querySelectorAll('.faq-section');
+    sections.forEach(section => {
+      section.style.display = section.getAttribute('data-role') === role ? '' : 'none';
+    });
+    document.getElementById('faqAccordion').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 </script>
 {% endblock %}

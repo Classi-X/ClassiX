@@ -2,6 +2,35 @@
 {% block title %}Students in Class | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
 {% block content %}
 <div class="container py-4">
+  <div class="modal fade" id="studentsInClassHelpModal" tabindex="-1" aria-labelledby="studentsInClassHelpModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="studentsInClassHelpModalLabel">
+            <i class="fas fa-info-circle me-2"></i>How to Use This Section
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ul class="ps-3">
+            <li>Use the <strong>Class, Stream, Subject, or Degree</strong> filters to refine the list of students.</li>
+            <li>You can <strong>search</strong> by student name or email in the search bar.</li>
+            <li>Click <strong>“Download CSV”</strong> to export student data with attendance stats.</li>
+            <li>Use the <strong>“View”</strong> button to open a student’s detailed attendance summary in a modal.</li>
+          </ul>
+          <div class="alert alert-info mt-3">
+            <i class="fas fa-lightbulb me-1"></i> Tip: Use filters together for faster, more accurate results.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="d-flex align-items-center mb-4 animate__animated animate__fadeInDown">
     <h3 class="text-primary fw-bold mb-0">
@@ -21,7 +50,7 @@
       </select>
     </div>
 
-    {% if institution_type == 'school' and selected_class in ['11', '12'] %}
+    {% if institution_type == 'school' and (selected_class.startswith('11') or selected_class.startswith('12')) %}
     <div class="col-md-3">
       <label class="form-label fw-semibold">Stream</label>
       <select name="stream_or_semester" class="form-select" onchange="this.form.submit()">
@@ -62,9 +91,12 @@
 
 
   <div class="table-responsive">
-    <div class="d-flex justify-content-end p-2">
+    <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
       <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
         <i class="fas fa-download me-1"></i> Download CSV
+      </button>
+      <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#studentsInClassHelpModal">
+        <i class="fas fa-info-circle me-1"></i> Help
       </button>
     </div>
     <script>
@@ -123,8 +155,8 @@
           <td>{{ stats.student.roll_number }}</td>
           <td>{{ stats.student.class_name or '-' }}</td>
           {% if institution_type == 'school' %}
-          <td>{% if stats.student.class_name in ['11', '12'] %}{{ stats.student.stream_or_semester or '-' }}{% else
-            %}-{% endif %}</td>
+          <td>{% if stats.student.class_name.startswith('11') or stats.student.class_name.startswith('12') %}{{
+            stats.student.stream_or_semester or '-' }}{% else %}-{% endif %}</td>
           {% elif institution_type in ['college', 'university'] %}
           <td>{{ stats.student.subject or '-' }}</td>
           <td>{{ stats.student.degree or '-' }}</td>
@@ -137,7 +169,7 @@
             <button type="button" class="btn btn-sm btn-outline-primary" onclick="showStudentModal(
               '{{ stats.student.username }}',
               '{{ stats.student.class_name or '-' }}',
-              '{% if institution_type == 'school' and stats.student.class_name in ['11', '12'] %}{{ stats.student.stream_or_semester or '-' }}{% else %}-{% endif %}',
+              '{% if institution_type == 'school' and (stats.student.class_name.startswith('11') or stats.student.class_name.startswith('12')) %}{{ stats.student.stream_or_semester or '-' }}{% else %}-{% endif %}',
               '{% if institution_type in ['college', 'university'] %}{{ stats.student.subject or '-' }}{% else %}-{% endif %}',
               '{% if institution_type in ['college', 'university'] %}{{ stats.student.degree or '-' }}{% else %}-{% endif %}',
               {{ stats.total }},

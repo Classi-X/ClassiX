@@ -3,15 +3,70 @@
 
 {% block content %}
 <div class="container py-4">
+  <div class="modal fade" id="qrHelpModal" tabindex="-1" aria-labelledby="qrHelpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="qrHelpModalLabel">
+            <i class="fas fa-info-circle me-2"></i>QR Attendance Help
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <h6 class="fw-bold text-secondary">📸 How Students Should Mark Attendance</h6>
+          <ol class="ps-3">
+            <li>Go to the <strong>"Scan QR"</strong> section in the student portal.</li>
+            <li>Scan the generated QR code using the device camera.</li>
+            <li>If scanning doesn't work, manually enter the token:
+              <code class="fw-semibold">{{ token }}</code>
+            </li>
+            <li>Attendance is marked immediately after verification.</li>
+          </ol>
+
+          <hr>
+
+          <h6 class="fw-bold text-secondary">⏱️ Validity</h6>
+          <p>The QR code and token are valid for <strong>15 minutes</strong> from generation time. After that, it will
+            expire automatically.</p>
+
+          <div class="alert alert-warning small">
+            <i class="fas fa-exclamation-triangle me-1"></i> Students should scan or enter the token <strong>within the
+              15-minute window</strong>.
+          </div>
+
+          <hr>
+
+          <h6 class="fw-bold text-secondary">💡 Tips</h6>
+          <ul class="ps-3 mb-0">
+            <li>Ensure the QR code is clearly visible if printed or projected.</li>
+            <li>Token can be copied using the <i class="fas fa-copy"></i> button beside it.</li>
+            <li>Use <strong>Generate New QR</strong> if the session expires early.</li>
+          </ul>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row justify-content-center">
     <div class="col-md-8">
 
 
       <div class="card shadow-lg animate__animated animate__fadeInDown">
-        <div class="card-header bg-success text-white text-center">
+        <div class="card-header bg-success text-white text-center d-flex justify-content-end gap-2 p-2 flex-wrap">
           <h4 class="mb-0">
             <i class="fas fa-check-circle me-2"></i>QR Code Generated Successfully
           </h4>
+          <button class="btn btn-sm btn-outline-light ms-auto" data-bs-toggle="modal" data-bs-target="#qrHelpModal">
+            <i class="fas fa-circle-info me-1"></i> Help
+          </button>
+
         </div>
         <div class="card-body text-center bg-light">
 
@@ -24,7 +79,7 @@
             </h5>
 
             {% if institution_type == 'school' %}
-            {% if class_name in ['11', '12'] and stream %}
+            {% if (class_name.startswith('11') or class_name.startswith('12')) and stream %}
             <h5>
               <i class="fas fa-code-branch text-info me-2"></i>
               Stream:

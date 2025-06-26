@@ -4,10 +4,98 @@
 
 {% block content %}
 <div class="container py-3">
+  <div class="modal fade" id="profileHelpModal" tabindex="-1" aria-labelledby="profileHelpLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="profileHelpLabel">
+            <i class="fas fa-info-circle me-2"></i> Profile Update Instructions
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <h6 class="fw-bold mb-3 text-dark">General Instructions (All Users)</h6>
+          <ul>
+            <li><strong>Username:</strong> Should reflect your real or official name.</li>
+            <li><strong>Password:</strong> Leave blank if you don’t want to change it.</li>
+          </ul>
+
+          {% if user.role == 'student' %}
+          <hr class="my-4">
+          <h6 class="fw-bold text-primary mb-2">For Students</h6>
+          <ul>
+            <li><strong>Profile Photo:</strong> Upload a clear front-facing image for face recognition attendance.</li>
+            <li><strong>Roll Number:</strong> Must match your school/college records.</li>
+            <li><strong>Class:</strong> Select your current class or semester.</li>
+          </ul>
+          {% if institution_type == 'school' %}
+          <ul>
+            <li><strong>Stream:</strong> Required for Class 11 and 12 (e.g., Science, Commerce, Arts).</li>
+          </ul>
+          {% elif institution_type in ['college', 'university'] %}
+          <ul>
+            <li><strong>Degree:</strong> Choose your enrolled course (e.g., B.Sc, B.Com, B.A).</li>
+            <li><strong>Subjects:</strong> Select multiple if required. Use branch-specific format like
+              <code>Physics – Computer Engineering</code> if applicable.</li>
+          </ul>
+          {% endif %}
+          {% endif %}
+
+          {% if user.role == 'teacher' %}
+          <hr class="my-4">
+          <h6 class="fw-bold text-primary mb-2">For Teachers</h6>
+          <ul>
+            <li><strong>Username:</strong> Preferably use your full name or staff ID.</li>
+            <li><strong>Email:</strong> Should be your institutional email (if editable).</li>
+            <li><strong>Subjects:</strong> Ensure your subjects list is up to date for correct student mapping.</li>
+          </ul>
+          {% endif %}
+
+          {% if user.role == 'parent' %}
+          <hr class="my-4">
+          <h6 class="fw-bold text-primary mb-2">For Parents</h6>
+          <ul>
+            <li><strong>Username:</strong> Use your full name (e.g., Ramesh Sharma).</li>
+            <li><strong>Email / Phone:</strong> Should match the one registered with the school.</li>
+            <li><strong>Children Mapping:</strong> Automatically linked with your ward(s). If any child is missing,
+              contact admin.</li>
+          </ul>
+          {% endif %}
+
+          {% if user.role == 'admin' %}
+          <hr class="my-4">
+          <h6 class="fw-bold text-primary mb-2">For Admins</h6>
+          <ul>
+            <li><strong>Username & Password:</strong> Ensure a strong password.</li>
+            <li><strong>Email:</strong> This is used for system alerts and resets.</li>
+            <li><strong>Permissions:</strong> Admins have full rights to manage teachers, students, and content. Handle
+              responsibly.</li>
+          </ul>
+          {% endif %}
+
+          <div class="alert alert-warning mt-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Need Help?</strong> Contact the system administrator or your institution's IT support if any detail
+            is missing or incorrect.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="card shadow-lg border-0 rounded-4 animate__animated animate__fadeIn">
     <div class="card-header bg-primary text-white rounded-top-4 d-flex align-items-center">
       <i class="fas fa-user-edit me-2 fs-5"></i>
       <h5 class="mb-0">Edit Profile</h5>
+      <button class="btn btn-sm btn-light ms-auto" data-bs-toggle="modal" data-bs-target="#profileHelpModal">
+        <i class="fas fa-circle-info me-1"></i> Help
+      </button>
+
     </div>
     <div class="card-body">
       <form method="POST" enctype="multipart/form-data">
@@ -251,7 +339,7 @@
         {% if institution_type == 'school' %}
 
         <div class="mb-3" id="streamField"
-          style="display: {% if user.class_name in ['11', '12'] %}block{% else %}none{% endif %};">
+          style="display: {% if user.class_name.startswith('11') or user.class_name.startswith('12') %}block{% else %}none{% endif %};">
           <label class="form-label fw-semibold">
             <i class="fas fa-diagram-project me-1 text-secondary"></i>Stream
           </label>
@@ -290,28 +378,63 @@
             <option value="{{ subject }}" {% if subject in (user.subject or '' ).split(', ') %}selected{% endif %}>{{ subject }}</option>
             {% endfor %}
           </select>
-        </div>
-        {% endif %}
+          <div class="alert alert-info mt-2 py-3 px-4 rounded-3 border-start border-4 border-primary"
+                                    role="alert">
+                                    <h6 class="fw-bold text-primary mb-2">
+                                        How to choose your subjects:
+                                    </h6>
 
-        {% else %}
-        <div class="alert alert-info d-flex align-items-center">
-          <i class="fas fa-info-circle me-2"></i>
-          You can only update your username and password.
-        </div>
-        {% endif %}
+                                    <p class="mb-2">
+                                        Please select your subjects carefully. If your college or university has
+                                        different branches or specializations (like IT, CE, Marketing, etc.), your
+                                        subjects may be listed in the format:
+                                        <br><strong class="text-dark">Subject Name – Branch/Specialization</strong>
+                                    </p>
 
-        
-        <div class="mt-4">
-          <button type="submit" class="btn btn-success me-2">
-            <i class="fas fa-save me-1"></i>Save
-          </button>
-          <a href="{{ url_for('view_own_profile') }}" class="btn btn-secondary">
-              <i class="fas fa-times me-1"></i>Cancel
-              </a>
+                                    <ul class="mb-2 ps-4">
+                                        <li><span class="text-dark">Physics – Computer Engineering</span></li>
+                                        <li><span class="text-dark">Mathematics – IT</span></li>
+                                        <li><span class="text-dark">Business Communication – Marketing</span></li>
+                                    </ul>
+
+                                    <p class="mb-2 text-secondary">
+                                        <strong>Don’t see a branch or specialization?</strong><br>
+                                        If you are in college or a general course without branches, just select the
+                                        subject name:
+                                    </p>
+
+                                    <ul class="mb-2 ps-4">
+                                        <li><span class="text-dark">Mathematics</span></li>
+                                        <li><span class="text-dark">English</span></li>
+                                        <li><span class="text-dark">Science</span></li>
+                                    </ul>
+
+                                    <p class="mb-0 text-secondary">
+                                        <strong>Note:</strong> If you' re not sure which subject to select, please ask
+              your teacher or check your syllabus. </p>
         </div>
-      </form>
     </div>
+    {% endif %}
+
+    {% else %}
+    <div class="alert alert-info d-flex align-items-center">
+      <i class="fas fa-info-circle me-2"></i>
+      You can only update your username and password.
+    </div>
+    {% endif %}
+
+
+    <div class="mt-4">
+      <button type="submit" class="btn btn-success me-2">
+        <i class="fas fa-save me-1"></i>Save
+      </button>
+      <a href="{{ url_for('view_own_profile') }}" class="btn btn-secondary">
+        <i class="fas fa-times me-1"></i>Cancel
+      </a>
+    </div>
+    </form>
   </div>
+</div>
 </div>
 
 
@@ -348,7 +471,7 @@
 
     function toggleStreamField() {
       if (!streamField) return;
-      streamField.style.display = (classInput.value === '11' || classInput.value === '12') ? 'block' : 'none';
+      streamField.style.display = (classInput.value.startsWith('11') || classInput.value.startsWith('12')) ? 'block' : 'none';
     }
 
     if (classInput && streamField) {

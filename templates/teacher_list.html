@@ -2,6 +2,38 @@
 {% block title %}Teacher Directory | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
 {% block content %}
 <div class="container py-4">
+  <div class="modal fade" id="teacherHelpModal" tabindex="-1" aria-labelledby="teacherHelpModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow-sm border-0">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="teacherHelpModalLabel">
+            <i class="fas fa-info-circle me-2"></i>How to Use Teacher Directory
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ul class="ps-3">
+            <li>Use the <strong>filters</strong> above to narrow down the list by Class, Stream, Subject, or Degree.
+            </li>
+            <li>Type in the search bar to <strong>quickly find</strong> a teacher by name or email.</li>
+            <li>Click <strong>“Download CSV”</strong> to export all visible teachers' data.</li>
+            {% if current_user_role == 'admin' %}
+            <li>Admins can <strong>delete teachers</strong> using the red delete button.</li>
+            {% endif %}
+          </ul>
+          <div class="alert alert-info mt-3">
+            <i class="fas fa-lightbulb me-2"></i> Tip: Filtering and exporting together helps with reports.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="mb-4 d-flex align-items-center animate__animated animate__fadeInDown">
     <h3 class="text-primary fw-bold mb-0">
@@ -21,7 +53,8 @@
       </select>
     </div>
 
-    {% if institution_type == 'school' and selected_class in ['11', '12'] %}
+    {% if institution_type == 'school' and selected_class and (selected_class.startswith('11') or
+    selected_class.startswith('12')) %}
     <div class="col-md-3">
       <label class="form-label fw-semibold">Stream</label>
       <select name="stream_or_semester" class="form-select">
@@ -72,6 +105,44 @@
 
 
   <div class="table-responsive animate__animated animate__fadeInUp">
+    <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
+      <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-download me-1"></i> Download CSV
+      </button>
+      <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#teacherHelpModal">
+        <i class="fas fa-info-circle me-1"></i> Help
+      </button>
+    </div>
+    <script>
+      document.getElementById('downloadCSV').addEventListener('click', function () {
+        const table = document.getElementById('teacherTable');
+        const allRows = table.querySelectorAll('thead tr, tbody tr');
+        let csv = [];
+
+        allRows.forEach(row => {
+          if (row.offsetParent !== null) {
+            const cols = row.querySelectorAll('th, td');
+            const rowData = [];
+            cols.forEach(col => {
+              let text = col.innerText.trim().replace(/(\r\n|\n|\r)/gm, "").replace(/"/g, '""');
+              rowData.push(`"${text}"`);
+            });
+            csv.push(rowData.join(','));
+          }
+        });
+
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'teachers_list.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    </script>
+
     <table class="table table-hover table-bordered align-middle text-center" id="teacherTable">
       <thead class="table-dark">
         <tr>

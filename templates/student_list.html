@@ -2,6 +2,35 @@
 {% block title %}Student Directory | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
 {% block content %}
 <div class="container py-4">
+  <div class="modal fade" id="studentDirectoryHelpModal" tabindex="-1" aria-labelledby="studentDirectoryHelpLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="studentDirectoryHelpLabel">
+            <i class="fas fa-info-circle me-2"></i> How to Use Student Directory
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ul class="ps-3">
+            <li><strong>Filter students</strong> by class, stream, subject, or degree using the dropdowns.</li>
+            <li><strong>Search</strong> for students by name, email, or roll number using the search bar.</li>
+            <li>Click <strong>“Download CSV”</strong> to export the student list for offline use.</li>
+            <li>If you are an <strong>admin or teacher</strong>, you can delete student records.</li>
+          </ul>
+          <div class="alert alert-info mt-3">
+            <i class="fas fa-exclamation-circle me-1"></i> Use filters together to refine your results quickly.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="mb-4 d-flex align-items-center animate__animated animate__fadeInDown">
     <h3 class="text-primary fw-bold mb-0">
@@ -21,7 +50,9 @@
       </select>
     </div>
 
-    {% if institution_type == 'school' and selected_class in ['11', '12'] %}
+    {% if institution_type == 'school' and selected_class and (selected_class.startswith('11') or
+    selected_class.startswith('12')) %}
+
     <div class="col-md-3">
       <label class="form-label fw-semibold">Stream</label>
       <select name="stream_or_semester" class="form-select">
@@ -79,9 +110,12 @@
 
 
   <div class="table-responsive animate__animated animate__fadeInUp">
-    <div class="d-flex justify-content-end p-2">
+    <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
       <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
         <i class="fas fa-download me-1"></i> Download CSV
+      </button>
+      <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#studentDirectoryHelpModal">
+        <i class="fas fa-info-circle me-1"></i> Help
       </button>
     </div>
     <script>
@@ -141,7 +175,8 @@
           <td>{{ s.class_name or '-' }}</td>
 
           {% if institution_type == 'school' %}
-          <td>{{ s.stream_or_semester if s.class_name in ['11', '12'] else '-' }}</td>
+          <td>{{ s.stream_or_semester if s.class_name and (s.class_name.startswith('11') or
+            s.class_name.startswith('12')) else '-' }}</td>
           {% elif institution_type in ['college', 'university'] %}
           <td>{{ s.subject or '-' }}</td>
           <td>{{ s.degree or '-' }}</td>

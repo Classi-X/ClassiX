@@ -76,11 +76,54 @@
     </div>
   </div>
 
+  <div class="modal fade" id="attendanceInstructionsModal" tabindex="-1" aria-labelledby="attendanceHelpLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content shadow border-0">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="attendanceHelpLabel">
+            <i class="fas fa-circle-info me-2"></i> Attendance Records Help
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>This section displays attendance entries recorded across different classes or semesters.</p>
+
+          <h6 class="fw-semibold text-secondary">📋 How It Works:</h6>
+          <ul class="ps-3">
+            <li>Use filters (Class, Stream, Subject, Degree, and Date) to narrow down records.</li>
+            <li>Search by student name, roll number, status, or date.</li>
+            <li>Green = Present, Red = Absent for quick visual understanding.</li>
+          </ul>
+
+          <h6 class="fw-semibold text-secondary mt-3">📤 Export Attendance:</h6>
+          <ul class="ps-3">
+            <li>Click <strong>Download CSV</strong> to export visible records.</li>
+            <li>Hidden/filtered rows will not be included in the export.</li>
+          </ul>
+
+          <div class="alert alert-info mt-4">
+            <i class="fas fa-info-circle me-2"></i>
+            Attendance data is crucial for academic compliance and parent reporting. Keep it accurate and timely.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="table-responsive animate__animated animate__fadeInUp">
-    <div class="d-flex justify-content-end p-2">
+    <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
       <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
         <i class="fas fa-download me-1"></i> Download CSV
+      </button>
+      <button class="btn btn-sm btn-outline-secondary shadow-sm" data-bs-toggle="modal"
+        data-bs-target="#attendanceInstructionsModal">
+        <i class="fas fa-circle-info me-1"></i> Instructions
       </button>
     </div>
     <script>

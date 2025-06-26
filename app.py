@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta, date
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from calendar import monthrange
@@ -579,7 +579,7 @@ class AttendanceAnalytics:
             key_parts = [f"Class/Semester: {class_name}"]
 
             if institution_type == 'school':
-                if class_name in ['11', '12']:
+                if class_name.startswith('11') or class_name.startswith('12'):
                     key_parts.append(f"Stream: {stream or '-'}")
             elif institution_type in ['college', 'university']:
                 key_parts.extend([
@@ -613,8 +613,8 @@ class AttendanceAnalytics:
         breakdown = {}
         for row in rows:
             key_parts = [row.class_name]
-            
-            if institution_type == 'school' and row.class_name in ['11', '12']:
+
+            if institution_type == 'school' and (row.class_name.startswith('11') or row.class_name.startswith('12')):
                 key_parts.append(f"Stream: {row.stream_or_semester or '-'}")
             elif institution_type in ['college', 'university']:
                 key_parts.extend([f"Subject: {row.subject}", f"Degree: {row.degree or '-'}"])
@@ -662,7 +662,7 @@ class AttendanceAnalytics:
 
                     result.append({
                         'student': student,
-                        'class': att.class_name,
+                        'class': student.class_name,
                         'subject': subject,
                         'percentage': percent
                     })
@@ -898,7 +898,7 @@ def teacher_dashboard():
 
             if institution_type == 'school':
                 if student_class == assign_class:
-                    if student_class in ['11', '12']:
+                    if student_class.startswith('11') or student_class.startswith('12'):
                         if student_stream == assign_stream:
                             pending_students.append(s)
                             break
@@ -975,7 +975,7 @@ def parent_status():
                 teacher_degree = (assignment.degree or '').strip().lower()
 
                 if 'school' in [teacher_inst_type, student_inst_type]:
-                    if student_class in ['11', '12']:
+                    if student_class.startswith('11') or student_class.startswith('12'):
                         if (
                             student_class == teacher_class and
                             student_stream == teacher_stream
@@ -1087,6 +1087,81 @@ def delete_student(student_id):
 from utils import send_email_notification, send_whatsapp_message
 from calendar import monthrange
 
+@app.route('/teacher/send-custom-message', methods=['POST'])
+@role_required('teacher')
+def send_custom_message_to_parents():
+    try:
+        teacher = current_user
+        subject = request.form.get('subject', '').strip()
+        body = request.form.get('body', '').strip()
+
+        if not subject or not body:
+            flash("Subject and message body cannot be empty.", 'danger')
+            return redirect(url_for('parent_status'))
+
+        teacher_inst = teacher.institution
+        if not teacher_inst:
+            abort(403, "Institution not found for current teacher")
+
+        inst_id = teacher.institution_id
+        teacher_inst_type = teacher_inst.type.strip().lower()
+        assignments = TeacherClassAssignment.query.filter_by(teacher_id=teacher.id).all()
+        students = User.query.filter_by(role='student', institution_id=inst_id).all()
+
+        sent_email_count = 0
+        sent_whatsapp_count = 0
+
+        for student in students:
+            student_class = (student.class_name or '').strip()
+            student_stream = (student.stream_or_semester or '').strip().lower()
+            student_degree = (student.degree or '').strip().lower()
+            student_subjects = [s.strip().lower() for s in (student.subject or '').split(',') if s.strip()]
+            student_inst_type = (student.institution.type or '').strip().lower()
+
+            match_found = False
+            for a in assignments:
+                if a.institution_id != inst_id:
+                    continue
+
+                if teacher_inst_type == 'school':
+                    if student_class.startswith('11') or student_class.startswith('12'):
+                        if student_class == a.class_name and student_stream == (a.stream_or_semester or '').strip().lower():
+                            match_found = True
+                            break
+                    elif student_class == a.class_name:
+                        match_found = True
+                        break
+                else:
+                    if (
+                        student_class == a.class_name and
+                        student_degree == (a.degree or '').strip().lower() and
+                        (a.subject or '').strip().lower() in student_subjects
+                    ):
+                        match_found = True
+                        break
+
+            if not match_found:
+                continue
+
+            parent = ParentContact.query.filter_by(student_id=student.id).first()
+            if not parent:
+                continue
+
+            personalized_msg = f"Dear {parent.parent_name},\n\n{body}\n\nRegards,\n{teacher.username}"
+
+            if parent.email and send_email_notification(to_email=parent.email, subject=subject, body=personalized_msg):
+                sent_email_count += 1
+
+            if parent.phone and send_whatsapp_message(parent.phone, personalized_msg):
+                sent_whatsapp_count += 1
+
+        flash(f"✅ Emails sent: {sent_email_count}, WhatsApp messages sent: {sent_whatsapp_count}.", "info")
+        return redirect(url_for('parent_status'))
+
+    except Exception as e:
+        print("Error sending custom parent message:", str(e))
+        abort(500, "An error occurred while sending the message.")
+
 @app.route('/teacher/send-to-parents')
 @role_required('teacher')
 def send_attendance_to_parents():
@@ -1132,7 +1207,7 @@ def send_attendance_to_parents():
                 teacher_degree = (assignment.degree or '').strip().lower()
 
                 if 'school' in [teacher_inst_type, student_inst_type]:
-                    if student_class in ['11', '12']:
+                    if student_class.startswith('11') or student_class.startswith('12'):
                         if (
                             student_class == teacher_class and
                             student_stream == teacher_stream
@@ -1250,7 +1325,7 @@ def send_missing_info_reminder():
                 teacher_degree = (assignment.degree or '').strip().lower()
 
                 if 'school' in [teacher_inst_type, student_inst_type]:
-                    if student_class in ['11', '12']:
+                    if student_class.startswith('11') or student_class.startswith('12'):
                         if (
                             student_class == teacher_class and
                             student_stream == teacher_stream
@@ -1365,7 +1440,7 @@ def assign_classes():
 
                 
                 if institution and institution.type.lower() == 'school':
-                    if class_name in ['11', '12'] and stream:
+                    if class_name.startswith('11') or class_name.startswith('12') and stream:
                         conflict = TeacherClassAssignment.query.filter(
                             TeacherClassAssignment.class_name == class_name,
                             TeacherClassAssignment.stream_or_semester == stream,
@@ -1406,7 +1481,7 @@ def assign_classes():
             institution = InstitutionDetails.query.get(current_user.institution_id)
 
             if institution and institution.type.lower() == 'school':
-                if class_name in ['11', '12'] and stream:
+                if class_name.startswith('11') or class_name.startswith('12') and stream:
                     
                     existing = TeacherClassAssignment.query.filter_by(
                         class_name=class_name,
@@ -1540,7 +1615,7 @@ def mark_attendance():
         if not class_name:
             error = "Class/Semester is required."
         elif institution_type == 'school':
-            if class_name in ['11', '12'] and not stream_or_semester:
+            if (class_name.startswith('11') or class_name.startswith('12')) and not stream_or_semester:
                 error = "Stream is required for class 11/12."
         elif institution_type in ['college', 'university']:
             if not subject:
@@ -1575,7 +1650,7 @@ def mark_attendance():
                 User.institution_id == current_user.institution_id
             ).all()
 
-            if institution_type == 'school' and class_name in ['11', '12']:
+            if institution_type == 'school' and (class_name.startswith('11') or class_name.startswith('12')):
                 students = [s for s in students if s.stream_or_semester == stream_or_semester and s.class_name == class_name]
 
             elif institution_type in ['college', 'university']:
@@ -1600,7 +1675,7 @@ def mark_attendance():
                         teacher_id=current_user.id,
                         class_name=class_name,
                         subject=subject,
-                        stream_or_semester=stream_or_semester if institution_type == 'school' and class_name in ['11', '12'] else '',
+                        stream_or_semester=stream_or_semester if institution_type == 'school' and (class_name.startswith('11') or class_name.startswith('12')) else '',
                         degree=degree if institution_type in ['college', 'university'] else '',
                         date=date,
                         status=status,
@@ -1624,7 +1699,7 @@ Details:
 • Subject: {subject if institution_type != 'school' else 'N/A'}
 • Date: {date.strftime('%d-%m-%Y %I:%M %p')}
 • Degree: {degree if institution_type != 'school' else 'N/A'}
-• Stream: {stream_or_semester if institution_type == 'school' and class_name in ['11', '12'] else 'N/A'}
+• Stream: {stream_or_semester if institution_type == 'school' and (class_name.startswith('11') or class_name.startswith('12')) else 'N/A'}
 
 Regards,
 {current_user.username}
@@ -1703,7 +1778,7 @@ def get_students_by_class():
     institution = InstitutionDetails.query.get(current_user.institution_id)
     
     if institution and institution.type.lower() == 'school':
-        if class_name in ['11', '12'] and stream_or_semester:
+        if (class_name.startswith('11') or class_name.startswith('12')) and stream_or_semester:
             students = students.filter(
                 User.stream_or_semester == stream_or_semester,
                 User.institution_id == current_user.institution_id,
@@ -1900,7 +1975,7 @@ def students_in_class():
     students_query = User.query.filter_by(role='student', institution_id=current_user.institution_id)
     if selected_class:
         students_query = students_query.filter_by(class_name=selected_class)
-    if institution_type == 'school' and selected_class in ['11', '12'] and selected_stream:
+    if institution_type == 'school' and (selected_class.startswith('11') or selected_class.startswith('12')) and selected_stream:
         students_query = students_query.filter_by(stream_or_semester=selected_stream)
     if institution_type in ['college', 'university']:
         if selected_subject:
@@ -1987,8 +2062,8 @@ def student_dashboard():
 @app.route('/student/scan-qr', methods=['GET', 'POST'])
 @role_required('student')
 def scan_qr():
-    # student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
-    # print(f"[QR SCAN PAGE] Student IP: {student_ip}")
+    student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
+    print(f"[QR SCAN PAGE] Student IP: {student_ip}")
     if request.method == 'POST':
         token = request.form['token']
 
@@ -2009,22 +2084,22 @@ def scan_qr():
         institution = InstitutionDetails.query.get(current_user.institution_id)
         institution_type = institution.type.lower() if institution else 'school'
 
-        # student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
-        # teacher = User.query.get(qr_session.teacher_id)
-        # teacher_ip = teacher.allowed_ip
+        student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
+        teacher = User.query.get(qr_session.teacher_id)
+        teacher_ip = teacher.allowed_ip
 
-        # if teacher_ip and student_ip != teacher_ip:
-        #     flash('You must be on the same network as your teacher to mark attendance.', 'danger')
-        #     print(f"Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
-        #     return render_template('student/scan_qr.html')
+        if teacher_ip and student_ip != teacher_ip:
+            flash('You must be on the same network as your teacher to mark attendance.', 'danger')
+            print(f"Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
+            return render_template('student/scan_qr.html')
 
         if current_user.class_name != qr_session.class_name:
             flash('Class does not match.', 'error')
             return render_template('student/scan_qr.html')
 
         if institution_type == 'school':
-            
-            if current_user.class_name in ['11', '12']:
+
+            if current_user.class_name.startswith('11') or current_user.class_name.startswith('12'):
                 if current_user.stream_or_semester != qr_session.stream_or_semester:
                     flash('Stream does not match for your class!', 'error')
                     return render_template('student/scan_qr.html')
@@ -2113,7 +2188,7 @@ from PIL import Image
 @app.route('/face-match', methods=['POST'])
 @role_required('student')
 def face_match():
-    # student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
+    student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
     result = None
 
     image_data = request.form.get('image_data')
@@ -2207,21 +2282,21 @@ def face_match():
 
     institution = InstitutionDetails.query.get(current_user.institution_id)
     institution_type = institution.type.lower() if institution else 'school'
-    # teacher = User.query.get(session.teacher_id)
-    # teacher_ip = teacher.allowed_ip
+    teacher = User.query.get(session.teacher_id)
+    teacher_ip = teacher.allowed_ip
 
-    # if teacher_ip and student_ip != teacher_ip:
-    #     flash('You must be on the same network as your teacher to mark attendance.', 'danger')
-    #     print(f"Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
-    #     html = render_template('student/biometric_camera.html')
-    #     return jsonify({'html': html})
+    if teacher_ip and student_ip != teacher_ip:
+        flash('You must be on the same network as your teacher to mark attendance.', 'danger')
+        print(f"Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
+        html = render_template('student/biometric_camera.html')
+        return jsonify({'html': html})
 
     if current_user.class_name != session.class_name:
         flash("Class does not match!", "error")
         html = render_template('student/biometric_camera.html')
         return jsonify({'html': html})
 
-    if institution_type == 'school' and current_user.class_name in ['11', '12']:
+    if institution_type == 'school' and (current_user.class_name.startswith('11') or current_user.class_name.startswith('12')):
         if current_user.stream_or_semester != session.stream_or_semester:
             flash("Stream does not match for your class!", "error")
             html = render_template('student/biometric_camera.html')
@@ -2497,7 +2572,7 @@ def student_list():
 
     
     if institution_type == 'school':
-        if selected_class in ['11', '12'] and selected_stream:
+        if selected_class and (selected_class.startswith('11') or selected_class.startswith('12')) and selected_stream:
             query = query.filter(User.stream_or_semester == selected_stream)
     else:
         if selected_subject:
@@ -2869,7 +2944,8 @@ user_context = {}
 chat_history_dict = {}
 
 def clean(text):
-    return re.sub(rf"[{string.punctuation}]", "", text.lower())
+    text = re.sub(rf"[{string.punctuation}]", "", text.lower())
+    return re.sub(r"\s+", " ", text).strip()
 
 def keyword_overlap(q1, q2):
     s1 = set(clean(q1).split())
@@ -2888,8 +2964,8 @@ def score_input(user_input):
     scores = []
     for i, question in enumerate(questions):
         overlap = keyword_overlap(user_input, question)
-        fuzzy = fuzzy_ratio(user_input, question)
-        score = 0.5 * tfidf_scores[i] + 0.3 * overlap + 0.2 * fuzzy
+        fuzzy = fuzzy_ratio(clean(user_input), clean(question))
+        score = 0.4 * tfidf_scores[i] + 0.25 * overlap + 0.35 * fuzzy
         scores.append((score, i))
     scores.sort(reverse=True)
     return scores
@@ -2897,8 +2973,10 @@ def score_input(user_input):
 def get_best_answer(user_input, user_id='default'):
     scores = score_input(user_input)
     top_score, top_idx = scores[0]
+    top_question = questions[top_idx]
+    fuzzy = fuzzy_ratio(clean(user_input), clean(top_question))
 
-    if top_score < 0.35:
+    if top_score < 0.35 and fuzzy < 0.7:
         return "I'm not sure I understand. Could you rephrase that?"
 
     user_context[user_id] = top_idx
@@ -2931,22 +3009,73 @@ def chatbot():
         chat_history_dict[user_id] = []
 
     normalized = user_message.lower()
-    greetings = {'hi', 'hello', 'hey', 'good morning', 'good afternoon'}
-    farewells = {'bye', 'goodbye', 'see you', 'see ya', 'take care'}
-    gratitude = {'thanks', 'thank you', 'thanks a lot', 'thank you very much', 'appreciate it'}
+
+    greetings = {
+        'hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'what’s up', 'is anyone there'
+    }
+    farewells = {
+        'bye', 'goodbye', 'see you', 'see ya', 'take care', 'i’m done', 'that’s all for now', 'talk to you later'
+    }
+    gratitude = {
+        'thanks', 'thank you', 'thank you very much', 'thanks a lot', 'appreciate it', 'i’m grateful', 'that helped a lot'
+    }
+    apologies = {
+        'sorry', 'my bad', 'i didn’t mean to', 'can i try again', 'i entered wrong input'
+    }
+    confirmations = {
+        'okay', 'ok', 'got it', 'sounds good', 'cool', 'alright', 'done', 'i understand'
+    }
+    small_talk = {
+        'are you a bot', 'what can you do', 'who made you', 'are you intelligent',
+        'can you speak hindi', 'tell me more about classix', 'are you available 24/7'
+    }
+    help_requests = {
+        'i need help', 'help', 'can you help me', 'what should i do', 'i don’t understand',
+        'what is this', 'how does this work', 'explain this', 'i’m confused', 'please guide me'
+    }
+    feedback_positive = {
+        'this is great', 'i like it', 'awesome', 'very helpful', 'nice work', 'amazing'
+    }
+    feedback_negative = {
+        'this is useless', 'not working', 'you’re wrong', 'bad answer', 'i hate this'
+    }
+    clarification = {
+        'say again', 'repeat', 'can you repeat that', 'what do you mean', 'explain again', 'repeat please'
+    }
+    casual_fun = {
+        'tell me a joke', 'how old are you', 'what’s your name', 'do you have a brain', 'are you single', 'do you dream'
+    }
 
     if not user_message:
-        bot_response = "I'm sorry, I didn't catch that."
+        bot_response = "I'm sorry, I didn't catch that. Could you try again?"
     elif normalized in greetings:
         bot_response = "Hi there! How can I help you today?"
     elif normalized in farewells:
         bot_response = "Goodbye! Feel free to come back if you have more questions."
     elif normalized in gratitude:
         bot_response = "You're welcome! Let me know if there's anything else I can help with."
-    elif re.search(r'\b(this|that|how|it|do it|what about)\b', normalized):
+    elif normalized in apologies:
+        bot_response = "No worries at all. Let me know what you'd like to do next."
+    elif normalized in confirmations:
+        bot_response = "Great! Let me know if you need anything else."
+    elif normalized in small_talk:
+        bot_response = "I'm your AI assistant for ClassiX. Ask me anything about how the platform works."
+    elif normalized in help_requests:
+        bot_response = "Sure! I’m here to help. You can ask about dashboards, QR scanning, reports, or anything else related to ClassiX."
+    elif normalized in feedback_positive:
+        bot_response = "Thanks! I'm glad it's helpful 😊"
+    elif normalized in feedback_negative:
+        bot_response = "I'm sorry to hear that. Let me try to give a better answer."
+    elif normalized in clarification:
+        last_bot = next((item['text'] for item in reversed(chat_history_dict[user_id]) if item['sender'] == 'bot'), "I'm here to help.")
+        bot_response = f"Sure! Let me repeat: {last_bot}"
+    elif normalized in casual_fun:
+        bot_response = "I'm just lines of code, but I dream of clean JSON and fast queries 😄"
+    elif len(normalized.split()) <= 4 and re.search(r'\b(this|that|how|it|do it|what about)\b', normalized):
         bot_response = get_contextual_answer(user_message, user_id)
     else:
         bot_response = get_best_answer(user_message, user_id)
+        user_context[user_id] = None
 
     chat_history_dict[user_id].append({'sender': 'user', 'text': user_message})
     chat_history_dict[user_id].append({'sender': 'bot', 'text': bot_response})
@@ -3007,10 +3136,10 @@ def add_students():
             emails.add(e)
             roll_numbers.add(r)
 
-            if c in ['11', '12'] and s not in streams:
+            if (c.startswith('11') or c.startswith('12')) and s not in streams:
                 errors.append(f"{u}: Invalid or missing stream.")
                 continue
-            elif c not in ['11', '12']:
+            elif not (c.startswith('11') or c.startswith('12')):
                 s = ''
 
             if User.query.filter((User.username == u) | (User.email == e)).first():

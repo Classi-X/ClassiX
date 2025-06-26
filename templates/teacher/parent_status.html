@@ -3,6 +3,62 @@
 
 {% block content %}
 <div class="container py-4">
+  <div class="modal fade" id="parentHelpModal" tabindex="-1" aria-labelledby="parentHelpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="parentHelpModalLabel">
+            <i class="fas fa-circle-info me-2"></i> Parent Contact Information Guide
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <h6 class="fw-bold text-secondary mb-2">📌 Why Parent Info Is Important</h6>
+          <p class="mb-3">Parent or guardian contact details are required for delivering important notifications
+            regarding attendance, discipline, or academic updates.</p>
+
+          <hr>
+
+          <h6 class="fw-bold text-secondary">📋 What You See on This Page</h6>
+          <ul class="ps-3 mb-3">
+            <li>A list of students who are missing either <strong>parent email</strong> or <strong>phone
+                number</strong>.</li>
+            <li>Each row shows the class, stream (for school), or subject & degree (for colleges).</li>
+            <li>You can search or download the list using the search box and CSV button.</li>
+          </ul>
+
+          <hr>
+
+          <h6 class="fw-bold text-secondary">📤 Actions You Can Take</h6>
+          <ul class="ps-3 mb-3">
+            <li><strong>Notify Students:</strong> Sends a reminder to students via email/app to update parent contact
+              info.</li>
+            <li><strong>Send Monthly Report:</strong> Sends attendance report to parents — available once per month.
+            </li>
+          </ul>
+
+          <div class="alert alert-info small">
+            <i class="fas fa-info-circle me-1"></i>
+            Streams are shown only for class 11 and 12 (in schools). Subjects and degrees appear only for higher
+            education institutions.
+          </div>
+
+          <hr>
+
+          <p class="mb-0 text-muted small">
+            If all students have updated parent information, you’ll see a green confirmation instead of the table.
+          </p>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 
   <div class="mb-4 text-center animate__animated animate__fadeInDown">
@@ -30,9 +86,13 @@
     </div>
     <div class="card-body p-0">
       <div class="table-responsive">
-        <div class="d-flex justify-content-end p-2">
+        <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
           <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
             <i class="fas fa-download me-1"></i> Download CSV
+          </button>
+          <button class="btn btn-sm btn-outline-info mt-3 mt-md-0" data-bs-toggle="modal"
+            data-bs-target="#parentHelpModal">
+            <i class="fas fa-circle-info me-1"></i> Help
           </button>
         </div>
         <script>
@@ -72,7 +132,11 @@
               <th>Student Name</th>
               <th>Class/Semester</th>
               {% if institution_type == 'school' %}
-              {% set has_11_12 = missing_parents | selectattr('class_name', 'in', ['11', '12']) | list %}
+              {% set has_11_12 = missing_parents | selectattr('class_name') | selectattr('class_name', 'string') | list
+              %}
+              {% set has_11_12 = has_11_12 | selectattr('class_name', 'string') | list %}
+              {% set has_11_12 = has_11_12 | selectattr('class_name', 'string') | list %}
+
               {% if has_11_12 %}
               <th>Stream</th>
               {% endif %}
@@ -92,7 +156,7 @@
               <td>{{ student.class_name }}</td>
               {% if institution_type == 'school' %}
               {% if has_11_12 %}
-              {% if student.class_name in ['11', '12'] %}
+              {% if student.class_name.startswith('11') or student.class_name.startswith('12') %}
               <td>{{ student.stream_or_semester or '-' }}</td>
               {% else %}
               <td>-</td>
@@ -175,6 +239,64 @@
       button.classList.add('disabled');
       button.querySelector('.spinner-border').classList.remove('d-none');
       button.querySelector('.btn-text').innerHTML = 'Sending...';
+    }
+  </script>
+
+  <div class="card shadow border-0 animate__animated animate__fadeInUp mt-5">
+    <div class="card-body">
+      <h5 class="card-title text-primary">
+        <i class="fas fa-comment-dots me-2"></i> Send Custom Message to Parents
+      </h5>
+      <form action="{{ url_for('send_custom_message_to_parents') }}" method="POST"
+        onsubmit="return handleCustomMsgSubmit(this)">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Subject</label>
+          <input type="text" name="subject" class="form-control" placeholder="Enter message subject..." required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Message Body</label>
+          <textarea name="body" rows="5" class="form-control" placeholder="Write your message to parents here..."
+            required></textarea>
+        </div>
+
+        <div class="text-end">
+          <button type="submit" class="btn btn-success btn-lg shadow">
+            <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+            <span class="btn-text"><i class="fas fa-paper-plane me-2"></i>Send Message</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="alert alert-info mb-4 mt-5">
+    <h6 class="mb-2 text-primary"><i class="fas fa-info-circle me-2"></i>How to Use This Feature</h6>
+    <ul class="mb-0">
+      <li>Use this form to send <strong>important messages or announcements</strong> to the parents of students in your
+        assigned classes.</li>
+      <li>You only need to enter:
+        <ul>
+          <li>A clear <strong>Subject</strong> — e.g., <em>"Holiday Announcement"</em>, <em>"PTM Schedule"</em></li>
+          <li>The actual <strong>Message Body</strong> — what you want to tell parents (dates, timings, instructions,
+            etc.)</li>
+        </ul>
+      </li>
+      <li><strong>No need to write "Dear Parent" or "Regards".</strong> The system will automatically add greetings and
+        your name as the sender.</li>
+      <li>Messages are delivered to <strong>email and WhatsApp (if available)</strong> for each parent — no extra steps
+        needed from you.</li>
+      <li><strong>Important:</strong> Messages go only to parents of students assigned to you.</li>
+    </ul>
+  </div>
+
+  <script>
+    function handleCustomMsgSubmit(form) {
+      const btn = form.querySelector('button[type="submit"]');
+      btn.classList.add('disabled');
+      btn.querySelector('.spinner-border').classList.remove('d-none');
+      btn.querySelector('.btn-text').innerHTML = 'Sending...';
+      return true;
     }
   </script>
 

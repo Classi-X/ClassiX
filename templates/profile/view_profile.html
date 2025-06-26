@@ -3,14 +3,110 @@
 
 {% block content %}
 <div class="container py-3">
+  <div class="modal fade" id="viewProfileHelpModal" tabindex="-1" aria-labelledby="viewProfileHelpLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="viewProfileHelpLabel">
+            <i class="fas fa-info-circle me-2"></i> Profile View Instructions
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+
+          <h6 class="fw-bold mb-3 text-dark">General Info (All Users)</h6>
+          <ul>
+            <li><strong>Username:</strong> Display name used across the system.</li>
+            <li><strong>Email:</strong> Your registered email. Used for notifications and login recovery.</li>
+            <li><strong>Status:</strong> Shows if your profile is active or inactive.</li>
+            <li><strong>Institution:</strong> The school/college you are part of.</li>
+          </ul>
+
+          {% if user.role == 'student' %}
+          <hr class="my-4">
+          <h6 class="fw-bold text-primary">For Students</h6>
+          <ul>
+            <li><strong>Roll Number:</strong> Must match your student ID.</li>
+            <li><strong>Class/Semester:</strong> Based on your enrollment level.</li>
+            {% if institution_type == 'school' %}
+            <li><strong>Stream:</strong> Visible only for Class 11 & 12 (e.g., Science, Commerce).</li>
+            {% endif %}
+            {% if institution_type in ['college', 'university'] %}
+            <li><strong>Degree & Subjects:</strong> Shown if you're in college/university.</li>
+            {% endif %}
+            <li><strong>Profile Photo:</strong> Required for facial attendance. Shows a warning if missing.</li>
+          </ul>
+          {% endif %}
+
+          {% if user.role == 'teacher' %}
+          <hr class="my-4">
+          <h6 class="fw-bold text-primary">For Teachers</h6>
+          <ul>
+            <li><strong>Assigned Classes:</strong> You will see the classes or subjects assigned to you.</li>
+            {% if institution_type == 'school' %}
+            <li><strong>Stream:</strong> Displayed for Class 11 & 12 (if applicable).</li>
+            {% endif %}
+            {% if institution_type in ['college', 'university'] %}
+            <li><strong>Degree & Subject:</strong> Matches the degree and subject taught by you.</li>
+            {% endif %}
+          </ul>
+          {% endif %}
+
+          {% if user.role == 'parent' %}
+          <hr class="my-4">
+          <h6 class="fw-bold text-primary">For Parents</h6>
+          <ul>
+            <li><strong>Children Info:</strong> You can view your child’s attendance and academic info.</li>
+            <li><strong>Face Photo:</strong> Not required for parents.</li>
+          </ul>
+          {% endif %}
+
+          {% if user.role == 'admin' %}
+          <hr class="my-4">
+          <h6 class="fw-bold text-primary">For Admins</h6>
+          <ul>
+            <li><strong>Admin Role:</strong> View basic info. For detailed access logs, use the admin dashboard.</li>
+            <li><strong>Status & Institution:</strong> Ensure institution data is correct.</li>
+          </ul>
+          {% endif %}
+
+          <div class="alert alert-warning mt-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Need Help?</strong> Contact the system administrator or your institution's IT support if any detail
+            is missing or incorrect.
+          </div>
+
+          {% if user.role == 'student' %}
+          <div class="alert alert-warning mt-4" role="alert">
+            <i class="fas fa-triangle-exclamation me-2"></i>
+            <strong>Note:</strong> If your profile photo is missing or wrong, please upload a clear image from the edit
+            page.
+          </div>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="card shadow-lg border-0 rounded-4 animate__animated animate__fadeIn">
     <div class="card-header bg-primary text-white rounded-top-4 d-flex justify-content-between align-items-center">
       <h5 class="mb-0 d-flex align-items-center">
         <i class="fas fa-user-circle me-2 fs-5"></i>{{ user.role.title() }} Profile
       </h5>
-      <a href="{{ url_for('edit_own_profile') }}" class="btn btn-sm btn-light text-primary fw-semibold shadow-sm">
-        <i class="fas fa-pen-to-square me-1"></i>Edit
-      </a>
+      <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
+        <a href="{{ url_for('edit_own_profile') }}" class="btn btn-sm btn-light text-primary fw-semibold shadow-sm">
+          <i class="fas fa-pen-to-square me-1"></i>Edit
+        </a>
+        <button class="btn btn-sm btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#viewProfileHelpModal">
+          <i class="fas fa-circle-info me-1"></i> Help
+        </button>
+      </div>
     </div>
     <div class="card-body">
       <div class="row gy-3">
@@ -36,7 +132,8 @@
 
           <p><strong>Class/Semester:</strong> {{ user.class_name or '-' }}</p>
           <p><strong>Roll Number:</strong> {{ user.roll_number or '-' }}</p>
-          {% if institution_type == 'school' and user.class_name in ['11', '12'] %}
+          {% if institution_type == 'school' and (user.class_name.startswith('11') or user.class_name.startswith('12'))
+          %}
           <p><strong>Stream:</strong> {{ user.stream_or_semester or '-' }}</p>
           {% endif %}
         </div>
@@ -108,7 +205,7 @@
         <li class="list-group-item px-0">
           {% if institution_type == 'school' %}
           <strong>Class:</strong> {{ c.class_name }}
-          {% if c.class_name in ['11', '12'] %} —
+          {% if (c.class_name.startswith('11') or c.class_name.startswith('12')) %} —
           <strong>Stream:</strong> {{ c.stream_or_semester or '-' }}{% endif %}
           {% elif institution_type in ['college', 'university'] %}
           <strong>Class/Semester:</strong> {{ c.class_name }},
@@ -124,11 +221,6 @@
     </div>
   </div>
 </div>
-
-
-
-
-
 
 <style>
   .card .btn:hover {

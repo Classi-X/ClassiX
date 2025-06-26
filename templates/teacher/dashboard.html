@@ -156,6 +156,10 @@
         <a href="{{ url_for('ai_chat') }}" class="sidebar-link list-group-item list-group-item-action">
           <i class="fas fa-robot me-2"></i>AI ChatBot
         </a>
+        <a href="https://drive.google.com/file/d/10ZYBlKShXjY0F4MF3LTZCJfMrYl3Eryz/view?usp=sharing"
+          class="sidebar-link list-group-item list-group-item-action">
+          <i class="fas fa-chalkboard-teacher me-2"></i>Teacher User Manual
+        </a>
 
       </nav>
 
@@ -206,6 +210,53 @@
 
     </div>
 
+    <div class="modal fade" id="dashboardHelpModal" tabindex="-1" aria-labelledby="dashboardHelpModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="dashboardHelpModalLabel">
+              <i class="fas fa-circle-info me-2"></i> Dashboard Guide
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <h6 class="fw-bold text-secondary mb-2">📊 What’s on this page?</h6>
+            <ul class="ps-3 mb-3">
+              <li><strong>Classes Assigned:</strong> Total number of classes currently assigned to you.</li>
+              <li><strong>Pending Approvals:</strong> Students awaiting approval in your classes.</li>
+              <li><strong>Subjects Taught:</strong> Count of unique subject + class combinations assigned to you.</li>
+              <li><strong>At Risk Students:</strong> Students with low or declining attendance in your classes.</li>
+            </ul>
+
+            <hr>
+
+            <h6 class="fw-bold text-secondary mb-2">🔍 What does "At Risk" mean?</h6>
+            <p class="mb-2">
+              These are students whose attendance is currently <strong>below 75%</strong> or is dropping over time.
+            </p>
+            <ul class="ps-3 mb-3">
+              <li>Below 75% → Monitored</li>
+              <li>Below 60% → <span class="text-danger fw-semibold">High Risk</span></li>
+            </ul>
+
+            <hr>
+
+            <h6 class="fw-bold text-secondary mb-2">💡 Tips</h6>
+            <ul class="ps-3">
+              <li>Click any stat card to drill into more details (if enabled).</li>
+              <li>Use the sidebar to access attendance, reports, or student management.</li>
+              <li>Come back here anytime to track your classroom activity at a glance.</li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+              <i class="fas fa-times me-1"></i> Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="col-md-9 col-lg-10">
 
@@ -215,9 +266,13 @@
           <i class="fas fa-chalkboard-teacher me-2"></i> Teacher Dashboard
         </h1>
         <div class="btn-toolbar mb-2 mb-md-0">
-          <div class="btn-group">
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm" data-bs-toggle="modal"
+              data-bs-target="#dashboardHelpModal">
+              <i class="fas fa-circle-info me-1"></i> Help
+            </button>
             <button type="button" class="btn btn-sm btn-outline-primary shadow-sm">
-              <i class="fas fa-calendar-alt me-2"></i>{{ current_month_year }}
+              <i class="fas fa-calendar-alt me-2"></i> {{ current_month_year }}
             </button>
           </div>
         </div>
@@ -281,11 +336,6 @@
         </div>
       </div>
 
-
-
-
-
-
       <style>
         .card {
           transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -302,6 +352,53 @@
         }
       </style>
 
+      <div class="modal fade" id="assignedClassesHelpModal" tabindex="-1" aria-labelledby="assignedClassesHelpLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+          <div class="modal-content shadow border-0">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="assignedClassesHelpLabel">
+                <i class="fas fa-circle-info me-2"></i> Assigned Classes Instructions
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+              <p>This section shows all the classes and subjects currently assigned to you.</p>
+
+              <h6 class="fw-bold text-secondary mt-3">🔍 Key Columns:</h6>
+              <ul class="ps-3">
+                <li><strong>Class/Semester:</strong> The academic group assigned to you.</li>
+                {% if institution_type == 'school' %}
+                <li><strong>Stream:</strong> For higher secondary school classes (11/12), stream is shown.</li>
+                {% else %}
+                <li><strong>Subject & Degree:</strong> Your subject and its corresponding program (e.g., B.Sc., B.Tech).
+                </li>
+                {% endif %}
+                <li><strong>Assigned Date:</strong> Date on which the class was officially assigned.</li>
+                <li><strong>Actions:</strong> Use the <em>Mark Attendance</em> button if attendance hasn't been taken
+                  today.</li>
+              </ul>
+
+              <h6 class="fw-bold text-secondary mt-4">📥 CSV Export:</h6>
+              <p>You can click <strong>Download CSV</strong> to export all assigned class details for offline use.</p>
+
+              <h6 class="fw-bold text-secondary mt-4">🧠 Tips:</h6>
+              <ul class="ps-3">
+                <li>Use the search bar to quickly filter by class, subject, stream, or degree.</li>
+                <li>If no classes are assigned, click the <strong>Assign New</strong> button to get started.</li>
+              </ul>
+
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="row mt-5">
         <div class="col-12">
@@ -333,9 +430,13 @@
                 }
               </style>
               <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                <div class="d-flex justify-content-end p-2">
+                <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
                   <button id="downloadssCSV" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-download me-1"></i> Download CSV
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary shadow-sm" data-bs-toggle="modal"
+                    data-bs-target="#assignedClassesHelpModal">
+                    <i class="fas fa-circle-info me-1"></i> Instructions
                   </button>
                 </div>
                 <script>
@@ -372,10 +473,17 @@
                   <thead class="table-light">
                     <tr>
                       <th><i class="fas fa-layer-group me-1"></i> Class/Semester</th>
-                      {% set has_11_12 = assignments | selectattr('class_name', 'in', ['11', '12']) | list %}
+                      {% set has_11_12 = [] %}
+                      {% for a in assignments %}
+                      {% if a.class_name.startswith('11') or a.class_name.startswith('12') %}
+                      {% set _ = has_11_12.append(1) %}
+                      {% endif %}
+                      {% endfor %}
+
                       {% if institution_type == 'school' and has_11_12 %}
                       <th><i class="fas fa-code-branch me-1"></i> Stream</th>
                       {% endif %}
+
                       {% if institution_type != 'school' %}
                       <th><i class="fas fa-book-open me-1"></i> Subject</th>
                       <th><i class="fas fa-graduation-cap me-1"></i> Degree</th>
@@ -390,7 +498,7 @@
                       <td><span class="badge bg-primary">{{ assignment.class_name }}</span></td>
 
                       {% if institution_type == 'school' and has_11_12 %}
-                      {% if assignment.class_name in ['11', '12'] %}
+                      {% if assignment.class_name.startswith('11') or assignment.class_name.startswith('12') %}
                       <td>{{ assignment.stream_or_semester or '-' }}</td>
                       {% else %}
                       <td>-</td>
@@ -447,20 +555,67 @@
           });
         }
       </script>
+      <div class="modal fade" id="subjectPerformanceHelpModal" tabindex="-1"
+        aria-labelledby="subjectPerformanceHelpLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+          <div class="modal-content shadow border-0">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="subjectPerformanceHelpLabel">
+                <i class="fas fa-circle-info me-2"></i> Subject Performance Instructions
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
 
+              <p>This section gives a visual summary of student attendance by subject.</p>
 
+              <h6 class="fw-bold text-secondary mt-3">📊 What you see:</h6>
+              <ul class="ps-3">
+                <li><strong>Subject Name:</strong> Displayed at the top of each card.</li>
+                <li><strong>Progress Bar:</strong> Indicates average attendance percentage of students in that subject.
+                </li>
+                <li><strong>Color Code:</strong></li>
+                <ul>
+                  <li><span class="badge bg-success">Green</span>: 75% and above</li>
+                  <li><span class="badge bg-warning text-dark">Yellow</span>: 60%–74%</li>
+                  <li><span class="badge bg-danger">Red</span>: Below 60%</li>
+                </ul>
+                <li><strong>Student Count:</strong> Number of students currently enrolled in the subject.</li>
+              </ul>
 
+              <h6 class="fw-bold text-secondary mt-4">🔍 Using Search:</h6>
+              <p>Use the search box above the cards to quickly locate a specific subject.</p>
 
+              <h6 class="fw-bold text-secondary mt-4">🧠 Tips:</h6>
+              <ul class="ps-3">
+                <li>Use this data to identify which subjects need more attendance focus.</li>
+                <li>Click on student records elsewhere in the dashboard to take action where needed.</li>
+              </ul>
 
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {% if insights.subject_performance %}
       <div class="row mt-5">
         <div class="col-12">
           <div class="card shadow-sm border-0 animate__animated animate__fadeInUp">
-            <div class="card-header bg-light d-flex align-items-center">
+            <div
+              class="card-header bg-light d-flex align-items-center d-flex justify-content-between gap-2 p-2 flex-wrap">
               <h5 class="mb-0 text-primary d-flex align-items-center">
                 <i class="fas fa-chart-bar me-2"></i> Subject Performance
               </h5>
+              <button class="btn btn-sm btn-outline-secondary shadow-sm" data-bs-toggle="modal"
+                data-bs-target="#subjectPerformanceHelpModal">
+                <i class="fas fa-circle-info me-1"></i> Instructions
+              </button>
             </div>
 
             <div class="card-body">
@@ -524,6 +679,61 @@
 
       {% endif %}
 
+      <div class="modal fade" id="pendingApprovalHelpModal" tabindex="-1" aria-labelledby="pendingApprovalHelpLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+          <div class="modal-content shadow border-0">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="pendingApprovalHelpLabel">
+                <i class="fas fa-circle-info me-2"></i> Student Approval Instructions
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+              <p>This section lists students who registered but are awaiting manual approval by the teacher or admin.
+              </p>
+
+              <h6 class="fw-semibold mt-3 text-secondary">📝 How to Approve/Reject:</h6>
+              <ul class="ps-3">
+                <li><strong>Approve:</strong> Confirms student registration and gives access to the platform.</li>
+                <li><strong>Reject:</strong> Removes the student’s pending request from the system.</li>
+              </ul>
+
+              <h6 class="fw-semibold mt-3 text-secondary">🔘 Actions Available:</h6>
+              <ul class="ps-3">
+                <li><strong>Individual Approval:</strong> Click <i class="fas fa-check-circle text-success"></i> or <i
+                    class="fas fa-times-circle text-danger"></i> for each student.</li>
+                <li><strong>Bulk Approval/Reject:</strong> Use checkboxes to select students and click on:
+                  <ul>
+                    <li><i class="fas fa-check-double text-success"></i> Approve Selected</li>
+                    <li><i class="fas fa-times-circle text-danger"></i> Reject Selected</li>
+                  </ul>
+                </li>
+              </ul>
+
+              <h6 class="fw-semibold mt-3 text-secondary">🔍 Using the Search Box:</h6>
+              <p>Quickly filter students by typing their name, class, subject, etc.</p>
+
+              <h6 class="fw-semibold mt-3 text-secondary">📤 Export:</h6>
+              <p>Click <i class="fas fa-download text-primary"></i> to download the current list as a CSV for records.
+              </p>
+
+              <div class="alert alert-warning mt-4">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Note:</strong> Approved students will immediately be moved to the active student list.
+              </div>
+
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {% if pending_students %}
       <div class="row mt-5">
@@ -559,9 +769,13 @@
                 }
               </style>
               <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                <div class="d-flex justify-content-end p-2">
+                <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
                   <button id="downloadsCSV" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-download me-1"></i> Download CSV
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary shadow-sm" data-bs-toggle="modal"
+                    data-bs-target="#pendingApprovalHelpModal">
+                    <i class="fas fa-circle-info me-1"></i> Instructions
                   </button>
                 </div>
                 <script>
@@ -603,7 +817,13 @@
                       <th><i class="fas fa-id-badge me-1"></i> Roll Number</th>
                       <th><i class="fas fa-layer-group me-1"></i> Class/Semester</th>
                       {% if institution_type == 'school' %}
-                      {% set has_11_12 = pending_students | selectattr('class_name', 'in', ['11', '12']) | list %}
+                      {% set has_11_12 = [] %}
+                      {% for student in pending_students %}
+                      {% if student.class_name.startswith('11') or student.class_name.startswith('12') %}
+                      {% set _ = has_11_12.append(1) %}
+                      {% endif %}
+                      {% endfor %}
+
                       {% if has_11_12 %}
                       <th><i class="fas fa-code-branch me-1"></i> Stream</th>
                       {% endif %}
@@ -625,7 +845,7 @@
                       <td><span class="badge bg-secondary">{{ student.class_name }}</span></td>
 
                       {% if institution_type == 'school' and has_11_12 %}
-                      {% if student.class_name in ['11', '12'] %}
+                      {% if student.class_name.startswith('11') or student.class_name.startswith('12') %}
                       <td>{{ student.stream_or_semester or '-' }}</td>
                       {% else %}
                       <td>-</td>
@@ -733,6 +953,50 @@
 
       {% endif %}
 
+      <div class="modal fade" id="atRiskHelpModal" tabindex="-1" aria-labelledby="atRiskHelpLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+          <div class="modal-content shadow border-0">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title" id="atRiskHelpLabel">
+                <i class="fas fa-circle-info me-2"></i> At-Risk Student Guidance
+              </h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+              <p>This section highlights students whose attendance has fallen below acceptable levels.</p>
+
+              <h6 class="fw-semibold mt-3 text-secondary">⚠️ What “At Risk” Means:</h6>
+              <ul class="ps-3">
+                <li>Students with attendance below <strong>60%</strong> are flagged as <span
+                    class="badge bg-warning text-dark">At Risk</span>.</li>
+                <li>They may require intervention, follow-up, or counseling.</li>
+              </ul>
+
+              <h6 class="fw-semibold mt-3 text-secondary">🔍 Features:</h6>
+              <ul class="ps-3">
+                <li><strong>Search:</strong> Filter by name, class, or subject for quick access.</li>
+                <li><strong>Stream or Degree:</strong> Displayed based on institution type.</li>
+                <li><strong>Export:</strong> Download this list as a CSV for parent meetings or administrative review.
+                </li>
+              </ul>
+
+              <div class="alert alert-warning mt-4">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Reminder:</strong> Regular follow-up with at-risk students can significantly improve retention
+                and performance.
+              </div>
+
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                <i class="fas fa-times me-1"></i> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {% if insights.at_risk_in_classes %}
       <div class="row mt-5">
@@ -761,9 +1025,13 @@
                 }
               </style>
               <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                <div class="d-flex justify-content-end p-2">
+                <div class="d-flex justify-content-end gap-2 p-2 flex-wrap">
                   <button id="downloadCSV" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-download me-1"></i> Download CSV
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary shadow-sm" data-bs-toggle="modal"
+                    data-bs-target="#atRiskHelpModal">
+                    <i class="fas fa-circle-info me-1"></i> Instructions
                   </button>
                 </div>
                 <script>
@@ -804,8 +1072,13 @@
                       <th><i class="fas fa-layer-group me-1"></i> Class/Semester</th>
 
                       {% if institution_type == 'school' %}
-                      {% set show_stream = insights.at_risk_in_classes | selectattr('class', 'in', ['11', '12']) | list
-                      %}
+                      {% set show_stream = [] %}
+                      {% for item in insights.at_risk_in_classes %}
+                      {% if item.class.startswith('11') or item.class.startswith('12') %}
+                      {% set _ = show_stream.append(1) %}
+                      {% endif %}
+                      {% endfor %}
+
                       {% if show_stream %}
                       <th><i class="fas fa-code-branch me-1"></i> Stream</th>
                       {% endif %}
@@ -827,7 +1100,7 @@
 
                       {% if institution_type == 'school' %}
                       {% if show_stream %}
-                      {% if student_info.class in ['11', '12'] %}
+                      {% if student_info.class.startswith('11') or student_info.class.startswith('12') %}
                       <td>{{ student_info.student.stream_or_semester or '-' }}</td>
                       {% else %}
                       <td>-</td>

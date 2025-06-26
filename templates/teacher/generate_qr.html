@@ -3,13 +3,75 @@
 
 {% block content %}
 <div class="container">
+  <div class="modal fade" id="smartAttendanceHelpModal" tabindex="-1" aria-labelledby="smartAttendanceHelpLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="smartAttendanceHelpLabel">
+            <i class="fas fa-circle-info me-2"></i>Smart Attendance Guide
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <h6 class="fw-bold text-secondary mb-2">📌 Overview</h6>
+          <p>This page allows teachers to initiate a smart attendance session using either <strong>QR Code</strong> or
+            <strong>Biometric Face Recognition</strong>. The selected session will be active for <strong>15
+              minutes</strong>.</p>
+
+          <hr>
+
+          <h6 class="fw-bold text-secondary">🧭 Steps to Start Attendance</h6>
+          <ol class="ps-3">
+            <li><strong>Select Attendance Mode:</strong> Choose <em>QR Code</em> or <em>Biometric Face</em>.</li>
+            <li><strong>Select Class/Semester:</strong> Choose the target class from your assignments.</li>
+            <li><strong>Stream:</strong> Required if class is 11 or 12 (school).</li>
+            <li><strong>Subject:</strong> Required for colleges and universities.</li>
+            <li><strong>Degree:</strong> Required for degree-level institutions.</li>
+            <li>Click <strong>"Generate"</strong> to initiate the session.</li>
+          </ol>
+
+          <div class="alert alert-info small mt-3">
+            <i class="fas fa-clock me-1"></i>
+            Sessions expire automatically after 15 minutes. Students must mark attendance within that time.
+          </div>
+
+          <hr>
+
+          <h6 class="fw-bold text-secondary">🔍 Attendance Modes Explained</h6>
+          <ul class="ps-3 mb-2">
+            <li><strong>QR Code:</strong> A QR is generated. Students scan it in their app to mark presence.</li>
+            <li><strong>Biometric Face:</strong> Face camera opens. Face must match profile photo for attendance to log.
+            </li>
+          </ul>
+
+          <p class="text-muted small mb-0">
+            🔐 Only assigned classes and subjects will appear in dropdowns.
+          </p>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row justify-content-center">
     <div class="col-md-8">
       <div class="card shadow-lg mt-3 animate__animated animate__fadeIn">
-        <div class="card-header bg-primary text-white d-flex align-items-center">
+        <div
+          class="card-header bg-primary text-white d-flex align-items-center d-flex justify-content-between gap-2 p-2 flex-wrap">
           <h4 class="mb-0" id="dynamicHeading">
             <i class="fas fa-qrcode me-2" id="modeIcon"></i>Smart Attendance
           </h4>
+          <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal"
+            data-bs-target="#smartAttendanceHelpModal">
+            <i class="fas fa-circle-info me-1"></i> Help
+          </button>
         </div>
 
         <div class="card-body bg-light">
@@ -165,7 +227,7 @@
       if (institutionType === 'school') {
         subjectField.style.display = 'none';
         degreeField.style.display = 'none';
-        streamField.style.display = ['11', '12'].includes(selectedClass) ? 'block' : 'none';
+        streamField.style.display = (selectedClass.startsWith('11') || selectedClass.startsWith('12')) ? 'block' : 'none';
       } else {
         streamField.style.display = 'none';
         subjectField.style.display = 'block';

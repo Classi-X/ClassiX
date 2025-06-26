@@ -2,14 +2,61 @@
 {% block title %}Contact Us | ClassiX | AI Attendance Management for Schools & Colleges{% endblock %}
 
 {% block content %}
+<div class="modal fade" id="contactInstructionsModal" tabindex="-1" aria-labelledby="contactHelpLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content shadow border-0">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="contactHelpLabel">
+          <i class="fas fa-circle-info me-2"></i> Contact Form Help
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>This form allows you to get in touch with us for different types of support.</p>
+
+        <h6 class="fw-semibold text-secondary">📝 Form Guide:</h6>
+        <ul class="ps-3">
+          <li><strong>Select Type:</strong> Choose the purpose of your message (e.g., Feedback, Support, etc.).</li>
+          <li><strong>Your Name & Email:</strong> Provide accurate contact info so we can respond.</li>
+          <li><strong>Message:</strong> Clearly explain your query, feedback, or issue.</li>
+        </ul>
+
+        <h6 class="fw-semibold text-secondary mt-3">🚀 What Happens Next?</h6>
+        <ul class="ps-3">
+          <li>Your message will be sent to our team.</li>
+          <li>We usually respond within <strong>24–48 hours</strong>.</li>
+        </ul>
+
+        <div class="alert alert-info mt-4">
+          <i class="fas fa-info-circle me-2"></i>
+          Please do not share sensitive personal information through this form.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="container mt-5 animate__animated animate__fadeIn">
+
   <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
       <div class="card shadow-lg border-0">
         <div class="card-header bg-primary text-white text-center">
-          <h4 class="mb-0">
-            <i class="fas fa-envelope-open-text me-2"></i>Contact Us
-          </h4>
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 d-flex align-items-center">
+              <i class="fas fa-envelope-open-text me-2"></i>Contact Us
+            </h4>
+            <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal"
+              data-bs-target="#contactInstructionsModal">
+              <i class="fas fa-circle-info me-1"></i> Instructions
+            </button>
+          </div>
+
         </div>
         <div class="card-body">
           <form method="POST" onsubmit="handleSubmit(event)" id="contactForm">

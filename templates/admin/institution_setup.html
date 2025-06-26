@@ -3,6 +3,62 @@
 
 {% block content %}
 <div class="container">
+  <div class="modal fade" id="institutionHelpModal" tabindex="-1" aria-labelledby="institutionHelpModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content shadow border-0">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="institutionHelpModalLabel">
+            <i class="fas fa-info-circle me-2"></i> Institution Setup Instructions
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <p>This form allows you to configure your institution based on its type. Below are field-wise instructions:
+          </p>
+
+          <ul class="mb-3">
+            <li><strong>Institution Name:</strong> Enter the full official name of your institution.</li>
+
+            <li><strong>Type:</strong> Select whether it's a <em>School, College</em>, or <em>University</em>. This
+              controls which extra fields (like Streams or Degrees) will be shown.</li>
+
+            <li><strong>Country / State / City:</strong> Enter the location details accurately.</li>
+
+            <li><strong>Email Domain:</strong> (Optional) Only users with emails ending in this domain can register.
+              Example: <code>@mycollege.edu</code>.</li>
+
+            <li><strong>Medium:</strong> Select the primary medium of instruction like English, Hindi, etc.</li>
+
+            <li><strong>Class/Semester:</strong>
+              <ul>
+                <li>For <strong>Schools</strong>: Use class names with sections (e.g., 1A, 2B, 10C).</li>
+                <li>For <strong>Colleges/Universities</strong>: Enter semester numbers like 1, 2, 3...</li>
+                <li><strong>Note:</strong> Separate entries using commas.</li>
+              </ul>
+            </li>
+
+            <li><strong>Streams:</strong> (For 11th & 12th in schools) — e.g., Science, Commerce, Arts.</li>
+            <li><strong>Degrees:</strong> (For Colleges/Universities) — e.g., BSc, BCom, BBA, MSc.</li>
+          </ul>
+
+          <div class="alert alert-warning mb-0">
+            <i class="fas fa-lightbulb me-1"></i>
+            <strong>Tip:</strong> Make sure all mandatory fields are filled before saving. The system uses this setup to
+            enable correct student, teacher, and subject workflows.
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row justify-content-center">
     <div class="col-lg-10 col-xl-9">
       <div class="card shadow-sm border-0 mt-3 animate__animated animate__fadeIn">
@@ -13,6 +69,11 @@
           <p class="text-white-50 mb-0 small">
             Supports <strong>School, College, and University</strong> configurations with relevant fields.
           </p>
+          <button class="btn btn-sm btn-outline-light mt-2" data-bs-toggle="modal"
+            data-bs-target="#institutionHelpModal">
+            <i class="fas fa-circle-info me-1"></i> Instructions
+          </button>
+
         </div>
 
         <div class="card-body bg-light">
@@ -93,7 +154,14 @@
                 <label for="classes" class="form-label">Class/Semester <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="classes" name="classes" placeholder="e.g., 1, 2, 3"
                   value="{{ institution.classes if institution else '' }}" required>
-                <div class="form-text">Comma-separated values (e.g., 1, 2, 3)</div>
+                <div class="form-text">
+                  If you are a <strong>school</strong>, write your classes with sections. For example: 1A, 1B, 2A,
+                  2B.<br>
+                  If you are a <strong>college or university</strong>, write the total semesters. For example: 1, 2, 3,
+                  4, 5.<br>
+                  Separate each value with a comma.
+                </div>
+
               </div>
             </div>
 
@@ -130,11 +198,6 @@
   </div>
 </div>
 
-
-
-
-
-
 <style>
   .form-control,
   .form-select,
@@ -169,7 +232,7 @@
 
     if (type === "School") {
       const classes = classesVal.split(",").map(c => c.trim());
-      if (classes.some(c => c === "11" || c === "12")) {
+      if (classes.some(c => c.startsWith("11") || c.startsWith("12"))) {
         streamsBlock.style.display = "block";
       }
     }

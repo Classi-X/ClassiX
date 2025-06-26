@@ -4,11 +4,88 @@
 
 {% block content %}
 <div class="container py-4">
+    <div class="modal fade" id="studentAddHelpModal" tabindex="-1" aria-labelledby="studentAddHelpLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-sm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="studentAddHelpLabel">
+                        <i class="fas fa-info-circle me-2"></i> Add Students – Help Guide
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <h6 class="fw-semibold mb-2">📌 Manual Entry</h6>
+                    <ul>
+                        <li>Click <strong>Add Student</strong> to generate fields for one student.</li>
+                        <li>Fields Required:
+                            <ul>
+                                <li><strong>Roll Number</strong> – must be unique</li>
+                                <li><strong>Full Name (Username)</strong> – must be unique</li>
+                                <li><strong>Email</strong> – must be valid and not in use</li>
+                                <li><strong>Class</strong> – select from dropdown</li>
+                                <li><strong>Stream</strong> – only if class is 11 or 12</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <hr class="my-3">
+
+                    <h6 class="fw-semibold mb-2">📂 Upload CSV</h6>
+                    <ul>
+                        <li>Download and fill the <strong>sample CSV file</strong> using Excel or Google Sheets.</li>
+                        <li>Do not change the column headers.</li>
+                        <li>Each row must contain:
+                            <ul>
+                                <li>Roll Number</li>
+                                <li>Full Name (Username)</li>
+                                <li>Email</li>
+                                <li>Class</li>
+                                <li>Stream (only if applicable)</li>
+                            </ul>
+                        </li>
+                        <li>Invalid or duplicate rows will be skipped automatically.</li>
+                    </ul>
+                    <p class="mt-2">
+                        <i class="fas fa-download me-1 text-info"></i>
+                        <a href="{{ url_for('static', filename='sample_students.csv') }}" download>
+                            Download CSV Format
+                        </a>
+                    </p>
+
+                    <hr class="my-3">
+
+                    <h6 class="fw-semibold mb-2">🔐 Login Instructions for Students</h6>
+                    <ul>
+                        <li>Passwords are not created here.</li>
+                        <li>After registration, students can use <strong>"Forgot Password"</strong> on login page.</li>
+                        <li>They will enter their registered email and receive an OTP.</li>
+                        <li>Using the OTP, they can set their password.</li>
+                    </ul>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card shadow-lg border-0 rounded-4 animate__animated animate__fadeIn">
-        <div class="card-header bg-primary text-white rounded-top-4 d-flex justify-content-between align-items-center">
+        <div
+            class="card-header bg-primary text-white rounded-top-4 d-flex justify-content-between align-items-center d-flex justify-content-between gap-2 p-2 flex-wrap">
             <h5 class="mb-0">
                 <i class="fas fa-user-plus me-2"></i>Add Students
             </h5>
+            <button class="btn btn-sm btn-outline-light ms-2" data-bs-toggle="modal"
+                data-bs-target="#studentAddHelpModal">
+                <i class="fas fa-circle-info me-1"></i> Help
+            </button>
+
         </div>
         <div class="card-body">
 
@@ -27,7 +104,8 @@
                             <li><strong>Email</strong> – must be a valid email and not used for another student</li>
                             <li><strong>Class</strong> – select the class of the student</li>
                             <li><strong>Stream</strong> – only required if class is <strong>11</strong> or
-                                <strong>12</strong></li>
+                                <strong>12</strong>
+                            </li>
                         </ul>
                     </li>
                 </ul>
@@ -232,7 +310,7 @@
         const rollError = div.querySelector('.roll-error');
 
         classSelect.onchange = () => {
-            const isSenior = ['11', '12'].includes(classSelect.value);
+            const isSenior = classSelect.value.startsWith('11') || classSelect.value.startsWith('12');
             streamSelect.disabled = !isSenior;
             if (!isSenior) streamSelect.value = '';
         };

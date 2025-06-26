@@ -3,14 +3,55 @@
 
 {% block content %}
 <div class="container py-4">
+  <div class="modal fade" id="faceScanHelpModal" tabindex="-1" aria-labelledby="faceScanHelpLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="faceScanHelpLabel">
+            <i class="fas fa-user-check me-2"></i> Biometric Face Scan Instructions
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <h6 class="fw-bold text-dark mb-3">Instructions for Students</h6>
+          <ul>
+            <li>Upload a clear profile photo that shows your full face.</li>
+            <li>When prompted, click "Allow" to grant camera access to your browser.</li>
+            <li>Sit in a well-lit environment with your face clearly visible on screen.</li>
+            <li>Do not wear a mask, sunglasses, or cover your face during the scan.</li>
+            <li>Keep your head straight and eyes open, looking directly at the camera.</li>
+            <li>Once your face is properly aligned, click <strong>Scan & Submit</strong>.</li>
+          </ul>
+
+          <div class="alert alert-info mt-4">
+            <i class="fas fa-lightbulb me-2"></i>
+            <strong>Tip:</strong> For best results, keep your face steady and avoid backlighting.
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row justify-content-center">
     <div class="col-lg-10 col-xl-8">
 
       <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
-        <div class="card-header bg-primary text-white text-center">
+        <div class="card-header bg-primary text-white text-center d-flex justify-content-between gap-2 p-2 flex-wrap">
           <h4 class="mb-0">
             <i class="fas fa-user-check me-2"></i>Biometric Face Scan Attendance
           </h4>
+          <button class="btn btn-sm btn-outline-light float-end" data-bs-toggle="modal"
+            data-bs-target="#faceScanHelpModal">
+            <i class="fas fa-info-circle me-1"></i> Help
+          </button>
+
         </div>
         <div class="card-body">
 
