@@ -18,7 +18,8 @@
           <h6 class="fw-bold text-secondary mb-2">📌 Overview</h6>
           <p>This page allows teachers to initiate a smart attendance session using either <strong>QR Code</strong> or
             <strong>Biometric Face Recognition</strong>. The selected session will be active for <strong>15
-              minutes</strong>.</p>
+              minutes</strong>.
+          </p>
 
           <hr>
 
@@ -76,6 +77,188 @@
 
         <div class="card-body bg-light">
           <form method="POST">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">
+                <i class="fas fa-ruler-combined me-1 text-success"></i>Set Attendance Radius (mm)
+              </label>
+              <div class="d-flex flex-wrap gap-2">
+                <input type="number" name="attendance_radius" id="attendance_radius" class="form-control"
+                  style="max-width: 150px;" placeholder="e.g., 20" required disabled>
+                <button type="button" class="btn btn-outline-primary position-relative" id="startBtn"
+                  onclick="startStraightMode()">
+                  <span class="spinner-border spinner-border-sm me-2 d-none" id="startSpinner" role="status"></span>
+                  Start
+                </button>
+
+                <button type="button" class="btn btn-outline-success position-relative" id="endBtn"
+                  onclick="endStraightMode()">
+                  <span class="spinner-border spinner-border-sm me-2 d-none" id="endSpinner" role="status"></span>
+                  End
+                </button>
+
+              </div>
+              <small class="form-text text-muted">Walk across the room to auto-calculate radius with GPS. Make sure
+                you're connected to GPS/WiFi and allow location permission.</small>
+              <input type="hidden" name="geo_radius" id="geo_radius">
+              <input type="hidden" name="geo_center" id="geo_center">
+            </div>
+
+            <script>
+              let startCoord = null;
+              let endCoord = null;
+              let pathPoints = [];
+
+              function getCurrentLocation(successCallback, errorCallback) {
+                if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition((pos) => {
+                    const accuracy = pos.coords.accuracy;
+                    const coords = {
+                      lat: pos.coords.latitude,
+                      lng: pos.coords.longitude
+                    };
+                    console.log(`📍 Got location: (${coords.lat}, ${coords.lng}) ±${accuracy}m`);
+
+                    if (accuracy > 15) {
+                      alert(`⚠️ Low GPS Accuracy: ±${Math.round(accuracy)} meters. Try moving near a window or outdoors.`);
+                      errorCallback && errorCallback();
+                      return;
+                    }
+
+                    successCallback(coords);
+                  }, (err) => {
+                    console.error("❌ Geolocation error:", err);
+                    alert("Error getting location: " + err.message);
+                    errorCallback && errorCallback();
+                  }, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                  });
+                } else {
+                  alert("❌ Geolocation is not supported by your browser.");
+                  errorCallback && errorCallback();
+                }
+              }
+
+              function startStraightMode() {
+                const btn = document.getElementById('startBtn');
+                const spinner = document.getElementById('startSpinner');
+                btn.disabled = true;
+                spinner.classList.remove('d-none');
+
+                getCurrentLocation((coord) => {
+                  startCoord = coord;
+                  alert(`✅ Start point saved at (${coord.lat}, ${coord.lng})`);
+                  btn.disabled = false;
+                  spinner.classList.add('d-none');
+                }, () => {
+                  btn.disabled = false;
+                  spinner.classList.add('d-none');
+                });
+              }
+
+              function endStraightMode() {
+                const btn = document.getElementById('endBtn');
+                const spinner = document.getElementById('endSpinner');
+                btn.disabled = true;
+                spinner.classList.remove('d-none');
+
+                getCurrentLocation((coord) => {
+                  endCoord = coord;
+                  if (startCoord) {
+                    const radius = calculateDistance(startCoord, coord) / 2;
+                    const center = {
+                      lat: (startCoord.lat + coord.lat) / 2,
+                      lng: (startCoord.lng + coord.lng) / 2
+                    };
+                    updateRadiusFields(radius, center);
+                    alert(`✅ Radius calculated: ${Math.round(radius)} mm`);
+                  } else {
+                    alert("⚠️ Please set the start point first.");
+                  }
+                  btn.disabled = false;
+                  spinner.classList.add('d-none');
+                }, () => {
+                  btn.disabled = false;
+                  spinner.classList.add('d-none');
+                });
+              }
+
+              function addPoint() {
+                getCurrentLocation((coord) => {
+                  pathPoints.push(coord);
+                  alert(`✅ Point added: (${coord.lat}, ${coord.lng})`);
+                });
+              }
+
+              function calculatePolygonRadius() {
+                if (pathPoints.length < 2) {
+                  alert("⚠️ Add at least 2 points to calculate radius.");
+                  return;
+                }
+
+                let sumLat = 0, sumLng = 0;
+                pathPoints.forEach(p => {
+                  sumLat += p.lat;
+                  sumLng += p.lng;
+                });
+
+                const center = {
+                  lat: sumLat / pathPoints.length,
+                  lng: sumLng / pathPoints.length
+                };
+
+                let maxDist = 0;
+                pathPoints.forEach(p => {
+                  const dist = calculateDistance(p, center);
+                  if (dist > maxDist) maxDist = dist;
+                });
+
+                updateRadiusFields(maxDist, center);
+                alert(`✅ Calculated radius from multiple points: ${Math.round(maxDist)} mm`);
+              }
+
+              function updateRadiusFields(radius, center) {
+                document.getElementById('attendance_radius').value = Math.round(radius);
+                document.getElementById('geo_radius').value = radius;
+                document.getElementById('geo_center').value = `${center.lat},${center.lng}`;
+              }
+
+              function calculateDistance(coord1, coord2) {
+                const R = 6371000;
+                const dLat = toRad(coord2.lat - coord1.lat);
+                const dLng = toRad(coord2.lng - coord1.lng);
+                const a = Math.sin(dLat / 2) ** 2 +
+                  Math.cos(toRad(coord1.lat)) * Math.cos(toRad(coord2.lat)) *
+                  Math.sin(dLng / 2) ** 2;
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                const distance_m = R * c;
+                return distance_m * 1000;
+              }
+
+              function toRad(deg) {
+                return deg * (Math.PI / 180);
+              }
+            </script>
+
+            {% if wifi_restriction_allowed %}
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="wifi_restriction" name="wifi_restriction" checked>
+              <label class="form-check-label fw-semibold" for="wifi_restriction">
+                Enable WiFi Restriction for this Session
+              </label>
+              <div class="form-text text-muted">
+                Students will be able to mark attendance only if connected to the institution WiFi.
+                Disable this only if the campus network is unavailable today.
+              </div>
+            </div>
+            {% endif %}
+            {% if wifi_restriction_allowed %}
+            <div class="alert alert-secondary small">
+              <i class="fas fa-wifi me-1"></i> Your current IP: <code>{{ request.remote_addr }}</code>
+            </div>
+            {% endif %}
+
             <div class="mb-3">
               <label class="form-label fw-semibold">
                 <i class="fas fa-toggle-on me-1 text-dark"></i>Select Attendance Mode <span class="text-danger">*</span>

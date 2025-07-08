@@ -122,20 +122,34 @@
               </div>
             </div>
 
-
-            <div class="mb-3">
-              <label for="allowed_domain" class="form-label">
-                Allowed Email Domain <span class="text-muted small">(Optional)</span>
-              </label>
-              <input type="text" class="form-control" id="allowed_domain" name="allowed_domain"
-                value="{{ institution.allowed_domain if institution and institution.allowed_domain else '' }}"
-                placeholder="e.g., @institution.edu">
-              <div class="form-text text-muted">
-                Only users with emails ending in this domain can register.<br>
-                Leave blank to allow any email.
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="allowed_domain" class="form-label">
+                  Allowed Email Domain <span class="text-muted small">(Optional)</span>
+                </label>
+                <input type="text" class="form-control" id="allowed_domain" name="allowed_domain"
+                  value="{{ institution.allowed_domain if institution and institution.allowed_domain else '' }}"
+                  placeholder="e.g., @institution.edu">
+                <div class="form-text text-muted">
+                  Only users with emails ending in this domain can register.<br>
+                  Leave blank to allow any email.
+                </div>
               </div>
-            </div>
+              <div class="form-check mb-3 col-md-6">
+                <input class="form-check-input" type="checkbox" id="wifi_restriction_enabled"
+                  name="wifi_restriction_enabled" {% if institution and institution.wifi_restriction_enabled %}checked{%
+                  endif %}>
+                <label class="form-check-label" for="wifi_restriction_enabled">
+                  Enable WiFi Restriction for Attendance
+                </label>
+                <div class="form-text text-muted">
+                  If enabled, students will be allowed to mark attendance <strong>only when connected to the
+                    institution's WiFi network</strong>.
+                  This helps ensure that attendance is marked from within campus.
+                </div>
+              </div>
 
+            </div>
 
             <div class="row">
               <div class="col-md-6 mb-3">

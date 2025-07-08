@@ -6,6 +6,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://ClassiX_owner:npg_O6zaq3spVuvf@ep-raspy-sky-a90p7qoj-pooler.gwc.azure.neon.tech/ClassiX?sslmode=require&channel_binding=require'
     # sqlite:///classix.db
     # postgresql://classix_user:0nAONiyEmw0WsLMqwH5uVElErq9DBIGW@dpg-d1amq1qli9vc73dpn0hg-a.singapore-postgres.render.com/classix
+    # postgresql://ClassiX_owner:npg_O6zaq3spVuvf@ep-raspy-sky-a90p7qoj-pooler.gwc.azure.neon.tech/ClassiX?sslmode=require&channel_binding=require
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     

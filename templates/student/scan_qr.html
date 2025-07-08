@@ -93,6 +93,9 @@
             </div>
             <div class="card-body">
               <form method="POST" id="attendanceForm">
+                <input type="hidden" name="student_lat" id="student_lat">
+                <input type="hidden" name="student_lng" id="student_lng">
+
                 <div class="mb-3">
                   <label for="token" class="form-label">Enter Token</label>
                   <input type="text" class="form-control text-center" id="token" name="token"
@@ -110,17 +113,53 @@
                     <span>Mark Attendance</span>
                   </button>
                   <script>
-                    document.getElementById('attendanceForm').addEventListener('submit', function () {
+                    document.getElementById('attendanceForm').addEventListener('submit', function (e) {
                       const btn = document.getElementById('submitBtn');
                       const spinner = document.getElementById('submitSpinner');
                       const icon = document.getElementById('submitIcon');
 
+                      if (!navigator.geolocation) {
+                        alert("❌ Geolocation is not supported by your browser.");
+                        return;
+                      }
+
+                      e.preventDefault();
                       btn.disabled = true;
                       spinner.classList.remove('d-none');
                       icon.classList.add('d-none');
-                    });
 
+                      navigator.geolocation.getCurrentPosition(function (position) {
+                        const accuracy = position.coords.accuracy;
+                        console.log(`📍 Student location: (${position.coords.latitude}, ${position.coords.longitude}) ±${accuracy}m`);
+
+                        if (accuracy > 15) {
+                          alert(`⚠️ Low GPS Accuracy: ±${Math.round(accuracy)} meters. Try again near a window or outdoors.`);
+                          btn.disabled = false;
+                          spinner.classList.add('d-none');
+                          icon.classList.remove('d-none');
+                          return;
+                        }
+
+                        document.getElementById('student_lat').value = position.coords.latitude;
+                        document.getElementById('student_lng').value = position.coords.longitude;
+                        e.target.submit();
+
+                      }, function (err) {
+                        console.error("❌ Geolocation error:", err);
+                        alert("Location permission denied or failed. Cannot mark attendance.");
+
+                        btn.disabled = false;
+                        spinner.classList.add('d-none');
+                        icon.classList.remove('d-none');
+
+                      }, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                      });
+                    });
                   </script>
+
                 </div>
               </form>
             </div>

@@ -712,6 +712,7 @@ def institution_setup():
             institution.streams = request.form.get('streams', '')
             institution.degrees = request.form.get('degrees', '')
             institution.allowed_domain = request.form.get('allowed_domain', '').strip()
+            institution.wifi_restriction_enabled = 'wifi_restriction_enabled' in request.form
         else:
             
             institution = InstitutionDetails(
@@ -724,7 +725,8 @@ def institution_setup():
                 classes=request.form['classes'],
                 streams=request.form.get('streams', ''),
                 degrees=request.form.get('degrees', ''),
-                allowed_domain=request.form.get('allowed_domain', '').strip()
+                allowed_domain=request.form.get('allowed_domain', '').strip(),
+                wifi_restriction_enabled='wifi_restriction_enabled' in request.form
             )
             db.session.add(institution)
 
@@ -1807,16 +1809,27 @@ def get_students_by_class():
 def generate_qr():
     institution = InstitutionDetails.query.get(current_user.institution_id)
     institution_type = institution.type.lower() if institution else 'school'
+    wifi_restriction_allowed = institution.wifi_restriction_enabled if institution else False
     teacher_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
     print(f"[QR GENERATE] Teacher IP: {teacher_ip}")
     if request.method == 'POST':
+
         class_name = request.form['class_name']
         subject = request.form.get('subject', '')
         stream = request.form.get('stream_or_semester', '')
         degree = request.form.get('degree', '')
         mode = request.form.get('mode', 'qr')
         token = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+        wifi_restriction = wifi_restriction_allowed and ('wifi_restriction' in request.form)
         current_user.allowed_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
+        geo_radius = request.form.get('geo_radius')
+        geo_center = request.form.get('geo_center')
+        print("== QR SESSION CREATION ==")
+        print(f"Class: {class_name}, Subject: {subject}, Stream: {stream}, Degree: {degree}")
+        print(f"Geo Center: {geo_center}, Geo Radius: {geo_radius}")
+        print(f"WiFi Restriction Enabled: {wifi_restriction}")
+        print(f"Teacher IP: {teacher_ip}")
+        print(f"Generated Token: {token}")
         qr_session = QRCodeSession(
             token=token,
             class_name=class_name,
@@ -1826,7 +1839,11 @@ def generate_qr():
             teacher_id=current_user.id,
             institution_id=current_user.institution_id,
             expires_at=datetime.now() + timedelta(minutes=15),
-            mode=mode
+            mode=mode,
+            wifi_restriction=wifi_restriction,
+            teacher_ip=teacher_ip if wifi_restriction else None,
+            geo_radius=float(geo_radius) if geo_radius else None,
+            geo_center=geo_center if geo_center else None
         )
         db.session.add(qr_session)
         db.session.commit()
@@ -1862,7 +1879,7 @@ def generate_qr():
     assignments = TeacherClassAssignment.query.filter_by(teacher_id=current_user.id).all()
     return render_template('teacher/generate_qr.html',
                            assignments=assignments,
-                           institution_type=institution_type)
+                           institution_type=institution_type, wifi_restriction_allowed=wifi_restriction_allowed)
 
 @app.route('/get-attendance-filter-options', methods=['POST'])
 @login_required
@@ -2085,13 +2102,52 @@ def scan_qr():
         institution_type = institution.type.lower() if institution else 'school'
 
         student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
-        teacher = User.query.get(qr_session.teacher_id)
-        teacher_ip = teacher.allowed_ip
+        institution = InstitutionDetails.query.get(current_user.institution_id)
+        wifi_enabled_by_admin = institution.wifi_restriction_enabled if institution else False
 
-        if teacher_ip and student_ip != teacher_ip:
-            flash('You must be on the same network as your teacher to mark attendance.', 'danger')
-            print(f"Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
-            return render_template('student/scan_qr.html')
+        if qr_session.wifi_restriction and wifi_enabled_by_admin:
+            teacher_ip = qr_session.teacher_ip
+            if teacher_ip and student_ip != teacher_ip:
+                flash('WiFi Restriction: You must be connected to the institution network to mark attendance.', 'danger')
+                print(f"[WiFi Blocked] Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
+                return render_template('student/scan_qr.html')
+        
+        if qr_session.geo_radius and qr_session.geo_center:
+            try:
+                radius_mm = float(qr_session.geo_radius)
+                center_lat, center_lng = map(float, qr_session.geo_center.split(','))
+
+                student_lat = float(request.form.get('student_lat'))
+                student_lng = float(request.form.get('student_lng'))
+
+                def haversine_mm(lat1, lng1, lat2, lng2):
+                    R = 6371000
+                    from math import radians, cos, sin, sqrt, atan2
+                    dlat = radians(lat2 - lat1)
+                    dlng = radians(lng2 - lng1)
+                    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng/2)**2
+                    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+                    distance_m = R * c
+                    return distance_m * 1000
+
+                actual_distance = haversine_mm(center_lat, center_lng, student_lat, student_lng)
+                print(f"Distance from center: {actual_distance:.2f} mm (Allowed: {radius_mm} mm)")
+
+                allowed_radius_mm = float(qr_session.geo_radius) + 1000
+
+                if actual_distance > allowed_radius_mm:
+                    flash("You are outside the allowed attendance radius.", "danger")
+                    return render_template('student/scan_qr.html')
+
+            except Exception as e:
+                print("Location check failed:", e)
+                flash("Unable to verify your location for attendance.", "danger")
+                return render_template('student/scan_qr.html')
+
+        print(f"[QR SCAN] Token matched session ID: {qr_session.id}")
+        print(f"[QR SCAN] Mode: {qr_session.mode}, Expires at: {qr_session.expires_at}")
+        print(f"[QR SCAN] Session Center: {qr_session.geo_center}, Radius (mm): {qr_session.geo_radius}")
+        print(f"[LOCATION] Student Location: {request.form.get('student_lat')}, {request.form.get('student_lng')}")
 
         if current_user.class_name != qr_session.class_name:
             flash('Class does not match.', 'error')
@@ -2282,14 +2338,46 @@ def face_match():
 
     institution = InstitutionDetails.query.get(current_user.institution_id)
     institution_type = institution.type.lower() if institution else 'school'
-    teacher = User.query.get(session.teacher_id)
-    teacher_ip = teacher.allowed_ip
+    institution = InstitutionDetails.query.get(current_user.institution_id)
+    wifi_enabled_by_admin = institution.wifi_restriction_enabled if institution else False
 
-    if teacher_ip and student_ip != teacher_ip:
-        flash('You must be on the same network as your teacher to mark attendance.', 'danger')
-        print(f"Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
+    if session.wifi_restriction and wifi_enabled_by_admin:
+        teacher_ip = session.teacher_ip
+        if teacher_ip and student_ip != teacher_ip:
+            flash('WiFi Restriction: You must be connected to the institution network to mark attendance.', 'danger')
+            print(f"[WiFi Blocked] Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
+
+    if session.geo_radius and session.geo_center:
+        try:
+            radius_mm = float(session.geo_radius)
+            center_lat, center_lng = map(float, session.geo_center.split(','))
+            student_lat = float(request.form.get('student_lat'))
+            student_lng = float(request.form.get('student_lng'))
+
+            def haversine_mm(lat1, lng1, lat2, lng2):
+                from math import radians, cos, sin, sqrt, atan2
+                R = 6371000  
+                dlat = radians(lat2 - lat1)
+                dlng = radians(lng2 - lng1)
+                a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
+                c = 2 * atan2(sqrt(a), sqrt(1 - a))
+                return R * c * 1000 
+
+            actual_distance = haversine_mm(center_lat, center_lng, student_lat, student_lng)
+            print(f"Distance from center: {actual_distance:.2f} mm (Allowed: {radius_mm} mm)")
+
+            if actual_distance > radius_mm + 1000: 
+                flash("You are outside the allowed attendance radius.", "danger")
+                html = render_template('student/biometric_camera.html')
+                return jsonify({'html': html})
+
+        except Exception as e:
+            print("Location check failed:", e)
+            flash("Unable to verify your location for attendance.", "danger")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
 
     if current_user.class_name != session.class_name:
         flash("Class does not match!", "error")

@@ -53,6 +53,7 @@ class InstitutionDetails(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     allowed_domain = db.Column(db.String(100), nullable=True)
+    wifi_restriction_enabled = db.Column(db.Boolean, default=False)
 
 class Pin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -168,6 +169,10 @@ class QRCodeSession(db.Model):
     mode = db.Column(db.String(20), nullable=False, default='qr')
     teacher = db.relationship('User', backref='qr_sessions')
     institution_id = db.Column(db.Integer, db.ForeignKey('institution_details.id'), nullable=False)
+    wifi_restriction = db.Column(db.Boolean, default=False)
+    teacher_ip = db.Column(db.String(100), nullable=True)
+    geo_radius = db.Column(db.Float, nullable=True)
+    geo_center = db.Column(db.String(100), nullable=True)
 
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)

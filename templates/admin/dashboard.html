@@ -281,6 +281,13 @@
                   {% elif institution.type in ['College', 'University'] and institution.degrees %}
                   <p class="mb-1"><strong>Degrees:</strong> {{ institution.degrees }}</p>
                   {% endif %}
+                  <p class="mb-1"><strong>WiFi Restriction:</strong>
+                    {% if institution.wifi_restriction_enabled %}
+                    <span class="text-success">Enabled</span>
+                    {% else %}
+                    <span class="text-muted fst-italic">Disabled</span>
+                    {% endif %}
+                  </p>
                 </div>
               </div>
             </div>
