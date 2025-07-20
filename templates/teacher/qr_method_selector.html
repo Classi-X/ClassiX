@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg border-0 animate__animated animate__fadeInUp" style="width: 100%; max-width: 600px;">
+        <div class="card-header bg-primary text-white text-center">
+            <h4 class="mb-0">
+                <i class="fas fa-qrcode me-2"></i>Select QR Code Mode
+            </h4>
+        </div>
+        <div class="card-body text-center">
+            <p class="text-muted">
+                Choose a QR code method to begin your attendance session.
+                You can either generate a persistent QR (static) or a rotating QR (dynamic every second).
+            </p>
+
+            <div class="d-grid gap-3 mt-4">
+                <a href="{{ url_for('qr_persistent') }}"
+                    class="btn btn-outline-primary btn-lg shadow-sm d-flex justify-content-center align-items-center gap-2 animate__animated animate__fadeInLeft">
+                    <i class="fas fa-infinity fa-lg"></i> Persistent QR Code
+                </a>
+
+                <a href="{{ url_for('qr_rotating') }}"
+                    class="btn btn-outline-success btn-lg shadow-sm d-flex justify-content-center align-items-center gap-2 animate__animated animate__fadeInRight">
+                    <i class="fas fa-sync-alt fa-lg"></i> Rotating QR Code
+                </a>
+            </div>
+
+            <div class="mt-4">
+                <div class="alert alert-info text-start small">
+                    <i class="fas fa-info-circle me-2"></i><strong>What's the difference?</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Persistent QR:</strong> Static and reusable until deleted.</li>
+                        <li><strong>Rotating QR:</strong> Changes every second for high security. Ideal for exams or
+                            sensitive sessions.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer text-center">
+            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+{% endblock %}

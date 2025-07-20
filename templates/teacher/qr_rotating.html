@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg border-0 animate__animated animate__fadeInUp" style="width: 100%; max-width: 500px;">
+        <div class="card-header bg-success text-white text-center">
+            <h4 class="mb-0">
+                <i class="fas fa-sync-alt me-2"></i>Rotating QR Code
+            </h4>
+        </div>
+
+        <div class="card-body text-center">
+
+            <p class="text-muted mb-3">This QR updates every second for high security.<br>Ask students to scan
+                immediately after it's shown.</p>
+
+            <div id="qr-box" class="mb-3 animate__animated animate__pulse">
+                <img id="rotating-qr" src="" alt="Rotating QR" width="200" height="200" class="shadow rounded border">
+                <p class="mt-2 mb-0 small text-muted"><strong>Token:</strong> <span id="qr-token">Loading...</span></p>
+            </div>
+
+            <div class="alert alert-info small text-start">
+                <i class="fas fa-info-circle me-1"></i>
+                <strong>Note:</strong> This QR code expires after one second. A new one will be generated automatically.
+            </div>
+
+        </div>
+        <div class="card-footer text-center">
+            <a href="{{ url_for('qr_method_selector') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to QR Method
+            </a>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<script>
+    function refreshQR() {
+        fetch("{{ url_for('get_rotating_token') }}")
+            .then(res => res.json())
+            .then(data => {
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${data.token}&size=200x200`;
+                document.getElementById('rotating-qr').src = qrUrl;
+                document.getElementById('qr-token').textContent = data.token;
+            })
+            .catch(err => {
+                console.error("Error fetching QR:", err);
+                document.getElementById('qr-token').textContent = "⚠️ Error loading QR";
+            });
+    }
+
+    setInterval(refreshQR, 1000);
+    refreshQR();
+</script>
+{% endblock %}

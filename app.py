@@ -1811,6 +1811,21 @@ def generate_qr():
     institution_type = institution.type.lower() if institution else 'school'
     wifi_restriction_allowed = institution.wifi_restriction_enabled if institution else False
     teacher_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
+    if request.method == 'GET':
+        persistent_qr = PersistentQRCode.query.filter_by(
+            teacher_id=current_user.id,
+            active=True
+        ).first()
+
+        rotating_qr = RotatingQRCode.query.filter(
+            RotatingQRCode.teacher_id == current_user.id,
+            RotatingQRCode.created_at >= datetime.utcnow() - timedelta(seconds=2)
+        ).first()
+
+        if not persistent_qr and not rotating_qr:
+            flash("You must generate a QR first before accessing this page.", "warning")
+            return redirect(url_for('qr_method_selector'))
+
     print(f"[QR GENERATE] Teacher IP: {teacher_ip}")
     if request.method == 'POST':
 
@@ -1822,14 +1837,6 @@ def generate_qr():
         token = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
         wifi_restriction = wifi_restriction_allowed and ('wifi_restriction' in request.form)
         current_user.allowed_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
-        geo_radius = request.form.get('geo_radius')
-        geo_center = request.form.get('geo_center')
-        print("== QR SESSION CREATION ==")
-        print(f"Class: {class_name}, Subject: {subject}, Stream: {stream}, Degree: {degree}")
-        print(f"Geo Center: {geo_center}, Geo Radius: {geo_radius}")
-        print(f"WiFi Restriction Enabled: {wifi_restriction}")
-        print(f"Teacher IP: {teacher_ip}")
-        print(f"Generated Token: {token}")
         qr_session = QRCodeSession(
             token=token,
             class_name=class_name,
@@ -1841,9 +1848,7 @@ def generate_qr():
             expires_at=datetime.now() + timedelta(minutes=15),
             mode=mode,
             wifi_restriction=wifi_restriction,
-            teacher_ip=teacher_ip if wifi_restriction else None,
-            geo_radius=float(geo_radius) if geo_radius else None,
-            geo_center=geo_center if geo_center else None
+            teacher_ip=teacher_ip if wifi_restriction else None
         )
         db.session.add(qr_session)
         db.session.commit()
@@ -1880,6 +1885,52 @@ def generate_qr():
     return render_template('teacher/generate_qr.html',
                            assignments=assignments,
                            institution_type=institution_type, wifi_restriction_allowed=wifi_restriction_allowed)
+
+@app.route('/teacher/qr-method', methods=['GET'])
+@role_required('teacher')
+def qr_method_selector():
+    return render_template('teacher/qr_method_selector.html')
+
+@app.route('/teacher/qr-persistent', methods=['GET', 'POST'])
+@role_required('teacher')
+def qr_persistent():
+    existing = PersistentQRCode.query.filter_by(teacher_id=current_user.id, active=True).first()
+    if request.method == 'POST':
+        if existing:
+            db.session.delete(existing)
+            db.session.commit()
+        token = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+        new_qr = PersistentQRCode(token=token, teacher_id=current_user.id)
+        db.session.add(new_qr)
+        db.session.commit()
+        return redirect(url_for('qr_persistent'))
+
+    return render_template('teacher/qr_persistent.html', qr=existing)
+
+@app.route('/teacher/qr-rotating')
+@role_required('teacher')
+def qr_rotating():
+    return render_template('teacher/qr_rotating.html')
+
+@app.route('/teacher/qr-rotating-token')
+@role_required('teacher')
+def get_rotating_token():
+    token = ''.join(random.choices(string.ascii_letters + string.digits, k=25))
+    db.session.add(RotatingQRCode(token=token, teacher_id=current_user.id))
+    db.session.commit()
+    return jsonify({'token': token})
+
+@app.route('/qr/<token>')
+def handle_qr_scan(token):
+    persistent = PersistentQRCode.query.filter_by(token=token, active=True).first()
+    rotating = RotatingQRCode.query.filter_by(token=token).order_by(RotatingQRCode.created_at.desc()).first()
+
+    if persistent:
+        return redirect(url_for('attendance_mark', token=token))
+    elif rotating and datetime.utcnow() - rotating.created_at <= timedelta(seconds=1):
+        return redirect(url_for('attendance_mark', token=token))
+    else:
+        return "❌ Invalid or expired QR code.", 400
 
 @app.route('/get-attendance-filter-options', methods=['POST'])
 @login_required
@@ -2076,9 +2127,66 @@ def student_dashboard():
                            institution_type=institution_type,
                            student=student)
 
+@app.route('/student/scan-entry', methods=['GET', 'POST'])
+@role_required('student')
+def scan_entry():
+    if request.method == 'POST':
+        token = request.form.get('token', '').strip()
+
+        persistent = PersistentQRCode.query.filter_by(token=token, active=True).first()
+        rotating = RotatingQRCode.query.filter_by(token=token).order_by(RotatingQRCode.created_at.desc()).first()
+
+        if persistent:
+            session['scan_verified_at'] = datetime.utcnow().isoformat()
+            session['scan_type'] = 'persistent'
+            return redirect(url_for('scan_mode_selector'))
+
+        elif rotating and datetime.utcnow() - rotating.created_at <= timedelta(seconds=1):
+            session['scan_verified_at'] = datetime.utcnow().isoformat()
+            session['scan_type'] = 'rotating'
+            return redirect(url_for('scan_mode_selector'))
+
+        flash('Invalid or expired QR code.', 'danger')
+        return redirect(url_for('scan_entry'))
+
+    return render_template('student/scan_entry.html')
+
+@app.route('/student/scan-mode')
+@role_required('student')
+def scan_mode_selector():
+    scan_time_str = session.get('scan_verified_at')
+    if not scan_time_str:
+        flash("You must scan a valid QR before proceeding.", "warning")
+        return redirect(url_for('scan_entry'))
+
+    scan_time = datetime.fromisoformat(scan_time_str)
+    if datetime.utcnow() - scan_time > timedelta(minutes=15):
+        session.pop('scan_verified_at', None)
+        flash("QR session expired. Please scan again.", "warning")
+        return redirect(url_for('scan_entry'))
+
+    return render_template('student/scan_mode_selector.html')  
+
 @app.route('/student/scan-qr', methods=['GET', 'POST'])
 @role_required('student')
 def scan_qr():
+    scan_time_str = session.get('scan_verified_at')
+    if not scan_time_str or datetime.utcnow() - datetime.fromisoformat(scan_time_str) > timedelta(minutes=15):
+        flash("Please scan the valid QR first to proceed.", "warning")
+        return redirect(url_for('scan_entry'))
+
+    scan_time_str = session.get('scan_verified_at')
+    scan_type = session.get('scan_type', 'unknown')
+    if scan_time_str:
+        scanned_at = datetime.fromisoformat(scan_time_str)
+        time_elapsed = (datetime.utcnow() - scanned_at).total_seconds() / 60
+        print(f"[DEBUG] ✅ Scan type: {scan_type}")
+        print(f"[DEBUG] 🕒 Time since scan: {round(time_elapsed, 2)} minutes")
+    else:
+        print("[DEBUG] ❌ No scan_verified_at found in session.")
+
+    print(f"[DEBUG] Session data: {dict(session)}")
+
     student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
     print(f"[QR SCAN PAGE] Student IP: {student_ip}")
     if request.method == 'POST':
@@ -2111,44 +2219,7 @@ def scan_qr():
                 flash('WiFi Restriction: You must be connected to the institution network to mark attendance.', 'danger')
                 print(f"[WiFi Blocked] Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
                 return render_template('student/scan_qr.html')
-        
-        if qr_session.geo_radius and qr_session.geo_center:
-            try:
-                radius_mm = float(qr_session.geo_radius)
-                center_lat, center_lng = map(float, qr_session.geo_center.split(','))
-
-                student_lat = float(request.form.get('student_lat'))
-                student_lng = float(request.form.get('student_lng'))
-
-                def haversine_mm(lat1, lng1, lat2, lng2):
-                    R = 6371000
-                    from math import radians, cos, sin, sqrt, atan2
-                    dlat = radians(lat2 - lat1)
-                    dlng = radians(lng2 - lng1)
-                    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng/2)**2
-                    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-                    distance_m = R * c
-                    return distance_m * 1000
-
-                actual_distance = haversine_mm(center_lat, center_lng, student_lat, student_lng)
-                print(f"Distance from center: {actual_distance:.2f} mm (Allowed: {radius_mm} mm)")
-
-                allowed_radius_mm = float(qr_session.geo_radius) + 1000
-
-                if actual_distance > allowed_radius_mm:
-                    flash("You are outside the allowed attendance radius.", "danger")
-                    return render_template('student/scan_qr.html')
-
-            except Exception as e:
-                print("Location check failed:", e)
-                flash("Unable to verify your location for attendance.", "danger")
-                return render_template('student/scan_qr.html')
-
-        print(f"[QR SCAN] Token matched session ID: {qr_session.id}")
-        print(f"[QR SCAN] Mode: {qr_session.mode}, Expires at: {qr_session.expires_at}")
-        print(f"[QR SCAN] Session Center: {qr_session.geo_center}, Radius (mm): {qr_session.geo_radius}")
-        print(f"[LOCATION] Student Location: {request.form.get('student_lat')}, {request.form.get('student_lng')}")
-
+    
         if current_user.class_name != qr_session.class_name:
             flash('Class does not match.', 'error')
             return render_template('student/scan_qr.html')
@@ -2219,6 +2290,10 @@ def scan_qr():
 @app.route('/student/scan-face')
 @role_required('student')
 def scan_face():
+    scan_time_str = session.get('scan_verified_at')
+    if not scan_time_str or datetime.utcnow() - datetime.fromisoformat(scan_time_str) > timedelta(minutes=15):
+        flash("Please scan the valid QR first to proceed.", "warning")
+        return redirect(url_for('scan_entry'))
     if not current_user.photo:
         flash("You must upload your face photo in your profile before using biometric attendance.", "danger")
         return redirect(url_for('edit_own_profile'))  
@@ -2244,6 +2319,10 @@ from PIL import Image
 @app.route('/face-match', methods=['POST'])
 @role_required('student')
 def face_match():
+    scan_time_str = session.get('scan_verified_at')
+    if not scan_time_str or datetime.utcnow() - datetime.fromisoformat(scan_time_str) > timedelta(minutes=15):
+        flash("Please scan the valid QR first to proceed.", "warning")
+        return redirect(url_for('scan_entry'))
     student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
     result = None
 
@@ -2346,36 +2425,6 @@ def face_match():
         if teacher_ip and student_ip != teacher_ip:
             flash('WiFi Restriction: You must be connected to the institution network to mark attendance.', 'danger')
             print(f"[WiFi Blocked] Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
-            html = render_template('student/biometric_camera.html')
-            return jsonify({'html': html})
-
-    if session.geo_radius and session.geo_center:
-        try:
-            radius_mm = float(session.geo_radius)
-            center_lat, center_lng = map(float, session.geo_center.split(','))
-            student_lat = float(request.form.get('student_lat'))
-            student_lng = float(request.form.get('student_lng'))
-
-            def haversine_mm(lat1, lng1, lat2, lng2):
-                from math import radians, cos, sin, sqrt, atan2
-                R = 6371000  
-                dlat = radians(lat2 - lat1)
-                dlng = radians(lng2 - lng1)
-                a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
-                c = 2 * atan2(sqrt(a), sqrt(1 - a))
-                return R * c * 1000 
-
-            actual_distance = haversine_mm(center_lat, center_lng, student_lat, student_lng)
-            print(f"Distance from center: {actual_distance:.2f} mm (Allowed: {radius_mm} mm)")
-
-            if actual_distance > radius_mm + 1000: 
-                flash("You are outside the allowed attendance radius.", "danger")
-                html = render_template('student/biometric_camera.html')
-                return jsonify({'html': html})
-
-        except Exception as e:
-            print("Location check failed:", e)
-            flash("Unable to verify your location for attendance.", "danger")
             html = render_template('student/biometric_camera.html')
             return jsonify({'html': html})
 

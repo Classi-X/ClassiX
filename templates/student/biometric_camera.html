@@ -75,8 +75,6 @@
               <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
               <input type="hidden" name="image_data" id="image_data">
             </div>
-            <input type="hidden" name="student_lat" id="student_lat">
-            <input type="hidden" name="student_lng" id="student_lng">
 
             <div class="d-flex justify-content-center">
               <button type="button" class="btn btn-success px-4 d-flex align-items-center justify-content-center"
@@ -157,90 +155,53 @@
     scanSpinner.classList.remove('d-none');
     scanIcon.classList.add('d-none');
 
-    if (!navigator.geolocation) {
-      alert("❌ Geolocation is not supported.");
-      scanBtn.disabled = false;
-      scanSpinner.classList.add('d-none');
-      scanIcon.classList.remove('d-none');
-      return;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL('image/png');
+    imageDataInput.value = imageData;
+
+    const form = new FormData();
+    form.append('image_data', imageData);
+
+    const savedRef = localStorage.getItem('savedProfileImage');
+    if (savedRef) {
+      form.append('fallback_image', savedRef);
     }
 
-    navigator.geolocation.getCurrentPosition(function (position) {
-      const accuracy = position.coords.accuracy;
-      console.log(`📍 Student location: (${position.coords.latitude}, ${position.coords.longitude}) ±${accuracy}m`);
-
-      if (accuracy > 15) {
-        alert(`⚠️ Low GPS Accuracy: ±${Math.round(accuracy)} meters. Try again near a window or outdoors.`);
+    fetch("{{ url_for('face_match') }}", {
+      method: 'POST',
+      body: form
+    })
+      .then(async res => {
+        try {
+          return await res.json();
+        } catch (e) {
+          throw new Error("Invalid JSON returned");
+        }
+      })
+      .then(data => {
         scanBtn.disabled = false;
         scanSpinner.classList.add('d-none');
         scanIcon.classList.remove('d-none');
-        return;
-      }
-
-      document.getElementById('student_lat').value = position.coords.latitude;
-      document.getElementById('student_lng').value = position.coords.longitude;
-
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = canvas.toDataURL('image/png');
-      imageDataInput.value = imageData;
-
-      const form = new FormData();
-      form.append('image_data', imageData);
-      form.append('student_lat', position.coords.latitude);
-      form.append('student_lng', position.coords.longitude);
-
-      const savedRef = localStorage.getItem('savedProfileImage');
-      if (savedRef) {
-        form.append('fallback_image', savedRef);
-      }
-
-      fetch("{{ url_for('face_match') }}", {
-        method: 'POST',
-        body: form
+        if (data.redirect) {
+          window.location.href = data.redirect;
+        } else if (data.html) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data.html, 'text/html');
+          const newMessages = doc.querySelector('#flash-messages');
+          const currentMessages = document.getElementById('flash-messages');
+          if (newMessages && currentMessages) {
+            currentMessages.innerHTML = newMessages.innerHTML;
+          }
+        }
       })
-        .then(async res => {
-          try {
-            return await res.json();
-          } catch (e) {
-            throw new Error("Invalid JSON returned");
-          }
-        })
-        .then(data => {
-          scanBtn.disabled = false;
-          scanSpinner.classList.add('d-none');
-          scanIcon.classList.remove('d-none');
-          if (data.redirect) {
-            window.location.href = data.redirect;
-          } else if (data.html) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(data.html, 'text/html');
-            const newMessages = doc.querySelector('#flash-messages');
-            const currentMessages = document.getElementById('flash-messages');
-            if (newMessages && currentMessages) {
-              currentMessages.innerHTML = newMessages.innerHTML;
-            }
-          }
-        })
-        .catch(err => {
-          alert("Something went wrong while submitting the image.");
-          console.error(err);
-          scanBtn.disabled = false;
-          scanSpinner.classList.add('d-none');
-          scanIcon.classList.remove('d-none');
-        });
-
-    }, function (err) {
-      alert("Location permission denied or failed. Cannot proceed.");
-      console.error(err);
-      scanBtn.disabled = false;
-      scanSpinner.classList.add('d-none');
-      scanIcon.classList.remove('d-none');
-    }, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    });
+      .catch(err => {
+        alert("Something went wrong while submitting the image.");
+        console.error(err);
+        scanBtn.disabled = false;
+        scanSpinner.classList.add('d-none');
+        scanIcon.classList.remove('d-none');
+      });
   }
 
 </script>

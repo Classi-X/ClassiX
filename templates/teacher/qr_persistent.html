@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg border-0 animate__animated animate__fadeInUp" style="width: 100%; max-width: 500px;">
+        <div class="card-header bg-primary text-white text-center">
+            <h4 class="mb-0">
+                <i class="fas fa-infinity me-2"></i>Persistent QR Code
+            </h4>
+        </div>
+
+        <div class="card-body text-center">
+
+            {% if qr %}
+            <p class="text-muted">This QR is reusable unless you delete it.</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ qr.token }}&size=200x200"
+                alt="Persistent QR Code" class="shadow-sm mb-3 animate__animated animate__zoomIn rounded" width="200"
+                height="200">
+            <p class="mt-2"><strong>Token:</strong> <code>{{ qr.token }}</code></p>
+
+            <form method="POST">
+                <button class="btn btn-danger btn-sm mt-3">
+                    <i class="fas fa-trash-alt me-1"></i>Delete & Regenerate
+                </button>
+            </form>
+            {% else %}
+            <p class="text-muted">Click the button below to generate your persistent QR code.</p>
+            <form method="POST">
+                <button class="btn btn-primary btn-lg animate__animated animate__pulse">
+                    <i class="fas fa-qrcode me-2"></i>Generate QR
+                </button>
+            </form>
+            {% endif %}
+
+        </div>
+
+        <div class="card-footer text-center">
+            <a href="{{ url_for('qr_method_selector') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to QR Method
+            </a>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+{% endblock %}

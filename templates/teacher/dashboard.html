@@ -84,11 +84,25 @@
         </a>
         {% endif %}
 
+
+        <a href="{{ url_for('qr_method_selector') }}"
+          class="list-group-item list-group-item-action d-flex align-items-center">
+          <i class="fas fa-cogs me-2 text-primary"></i> QR Method Selector
+        </a>
+
+        <a href="{{ url_for('qr_persistent') }}"
+          class="list-group-item list-group-item-action d-flex align-items-center">
+          <i class="fas fa-infinity me-2 text-dark"></i> Persistent QR
+        </a>
+
+        <a href="{{ url_for('qr_rotating') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+          <i class="fas fa-sync-alt me-2 text-success"></i> Rotating QR
+        </a>
+
         <a href="{{ url_for('parent_status') }}"
           class="list-group-item list-group-item-action d-flex align-items-center">
           <i class="fas fa-user-friends me-2"></i> Parent Status
         </a>
-
 
         <a href="{{ url_for('attendance_records') }}"
           class="list-group-item list-group-item-action d-flex align-items-center">

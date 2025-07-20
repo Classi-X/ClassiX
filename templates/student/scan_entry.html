@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg border-0 animate__animated animate__fadeInUp" style="width: 100%; max-width: 500px;">
+        <div class="card-header bg-primary text-white text-center">
+            <h4 class="mb-0">
+                <i class="fas fa-qrcode me-2"></i>QR Scan Required
+            </h4>
+        </div>
+
+        <div class="card-body text-center">
+            <p class="text-muted">
+                Please scan the QR code shown by your teacher using your device camera.
+            </p>
+
+            <div id="qr-reader" style="width: 100%; max-width: 300px;" class="mx-auto mb-3"></div>
+            <div id="qr-status" class="text-muted small animate__animated animate__fadeIn">
+                📷 Camera is active. Hold QR steady.
+            </div>
+
+            <form method="POST" id="scanForm" style="display: none;">
+                <input type="hidden" name="token" id="tokenInput">
+            </form>
+
+            <div class="mt-3 text-center">
+                <div class="alert alert-info small mb-0">
+                    <i class="fas fa-info-circle me-1"></i> Ensure camera access is allowed. Hold your phone still for
+                    best results.
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer text-center">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    const qrStatus = document.getElementById('qr-status');
+    const tokenInput = document.getElementById('tokenInput');
+    const scanForm = document.getElementById('scanForm');
+
+    function onScanSuccess(decodedText, decodedResult) {
+        qrStatus.textContent = "✅ QR scanned. Validating...";
+
+        fetch("{{ url_for('scan_entry') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ token: decodedText })
+        })
+            .then(res => res.redirected ? window.location.href = res.url : res.text())
+            .then(data => {
+                if (typeof data === "string" && (data.includes("Invalid") || data.includes("expired"))) {
+                    qrStatus.textContent = "❌ Invalid or expired QR. Try again.";
+                }
+            })
+            .catch(err => {
+                console.error("Validation error:", err);
+                qrStatus.textContent = "❌ An error occurred. Try again.";
+            });
+
+        html5QrCode.clear().catch(error => {
+            console.error("Error clearing QR code scanner:", error);
+        });
+    }
+
+    function onScanError(errorMessage) {
+        // Silently handle scan errors
+    }
+
+    const html5QrCode = new Html5Qrcode("qr-reader");
+    Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+            const cameraId = devices[0].id;
+            html5QrCode.start(
+                cameraId,
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess,
+                onScanError
+            );
+        }
+    }).catch(err => {
+        qrStatus.textContent = "❌ Camera not accessible. Please allow permission.";
+        console.error("Camera error:", err);
+    });
+</script>
+{% endblock %}

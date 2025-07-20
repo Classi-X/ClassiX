@@ -171,8 +171,19 @@ class QRCodeSession(db.Model):
     institution_id = db.Column(db.Integer, db.ForeignKey('institution_details.id'), nullable=False)
     wifi_restriction = db.Column(db.Boolean, default=False)
     teacher_ip = db.Column(db.String(100), nullable=True)
-    geo_radius = db.Column(db.Float, nullable=True)
-    geo_center = db.Column(db.String(100), nullable=True)
+
+class PersistentQRCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(64), unique=True, nullable=False)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    active = db.Column(db.Boolean, default=True)
+
+class RotatingQRCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
