@@ -1,6 +1,6 @@
 import os
 from datetime import datetime, timedelta, date
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, abort, current_app
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from calendar import monthrange
@@ -443,6 +443,48 @@ def edit_own_profile():
         subject_options=subject_options,
         degree_options=degree_options
     )
+
+from fingerprint_device import enroll_and_download_template, FingerprintError, match_fingerprint
+from models import Fingerprint 
+from sqlalchemy.exc import SQLAlchemyError
+
+@app.route('/api/fingerprint/enroll', methods=['POST'])
+@login_required
+def api_fingerprint_enroll():
+    if not current_app.config.get('FINGERPRINT_ENABLE', True):
+        return jsonify(success=False, error='Fingerprint feature is disabled by admin.'), 503
+
+    if current_user.role != 'student':
+        return jsonify(success=False, error='Only students can register fingerprint.'), 403
+
+    try:
+        position, template_bytes = enroll_and_download_template()
+
+        fp = Fingerprint.query.filter_by(user_id=current_user.id).first()
+        if not fp:
+            fp = Fingerprint(user_id=current_user.id, sensor_position=position, template=template_bytes)
+            db.session.add(fp)
+        else:
+            fp.sensor_position = position
+            fp.template = template_bytes
+
+        db.session.commit()
+
+        return jsonify(
+            success=True,
+            message='Fingerprint registered successfully.',
+            data={'sensor_position': position, 'user_id': current_user.id, 'username': current_user.username}
+        ), 200
+
+    except FingerprintError as fe:
+        db.session.rollback()
+        return jsonify(success=False, error=str(fe)), 400
+    except SQLAlchemyError as se:
+        db.session.rollback()
+        return jsonify(success=False, error='Database error while saving template.'), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, error='Unexpected error during enrollment.'), 500
 
 @app.route('/logout')
 @login_required
@@ -1871,7 +1913,7 @@ def generate_qr():
                                 stream=stream,
                                 degree=degree,
                                 institution_type=institution_type)
-        else:
+        elif mode == 'biometric':
             return render_template('teacher/biometric_generated.html',
                                 token=token,
                                 class_name=class_name,
@@ -1880,11 +1922,97 @@ def generate_qr():
                                 degree=degree,
                                 expires_at=qr_session.expires_at,
                                 institution_type=institution_type)
+
+        elif mode == 'fingerprint':
+            return redirect(url_for('fingerprint_session', session_id=qr_session.id))
+    
     print("Student allowed IP:", current_user.allowed_ip)
     assignments = TeacherClassAssignment.query.filter_by(teacher_id=current_user.id).all()
     return render_template('teacher/generate_qr.html',
                            assignments=assignments,
                            institution_type=institution_type, wifi_restriction_allowed=wifi_restriction_allowed)
+
+@app.route('/teacher/fingerprint-session/<int:session_id>', methods=['GET', 'POST'])
+@role_required('teacher')
+def fingerprint_session(session_id):
+    qr_session = QRCodeSession.query.get_or_404(session_id)
+
+    if request.method == 'POST':
+        try:
+            students = User.query.filter_by(
+                institution_id=current_user.institution_id,
+                role='student'
+            ).all()
+
+            matched_student = None
+
+            for student in students:
+                if student.fingerprint and match_fingerprint(student.fingerprint.template):
+                    matched_student = student
+                    break
+
+            if not matched_student:
+                return jsonify(success=False, error="No fingerprint matched.")
+
+            institution = InstitutionDetails.query.get(matched_student.institution_id)
+            institution_type = institution.type.lower() if institution else 'school'
+
+            if matched_student.class_name != qr_session.class_name:
+                return jsonify(success=False, error="Class does not match.")
+
+            if institution_type == 'school':
+                if matched_student.class_name.startswith('11') or matched_student.class_name.startswith('12'):
+                    if matched_student.stream_or_semester != qr_session.stream_or_semester:
+                        return jsonify(success=False, error="Stream does not match for your class!")
+            elif institution_type in ['college', 'university']:
+                if matched_student.degree != qr_session.degree:
+                    return jsonify(success=False, error="Degree does not match!")
+                student_subjects = [s.strip().lower() for s in (matched_student.subject or '').split(',')]
+                qr_subject = (qr_session.subject or '').strip().lower()
+                if qr_subject not in student_subjects:
+                    return jsonify(success=False, error="Subject does not match your enrolled subjects!")
+
+            today = datetime.utcnow().date()
+
+            if institution_type in ['college', 'university']:
+                existing = Attendance.query.filter(
+                    Attendance.student_id == matched_student.id,
+                    Attendance.teacher_id == qr_session.teacher_id,
+                    Attendance.subject == qr_session.subject,
+                    Attendance.degree == qr_session.degree,
+                    func.date(Attendance.date) == today
+                ).first()
+            else:
+                existing = Attendance.query.filter(
+                    Attendance.student_id == matched_student.id,
+                    func.date(Attendance.date) == today
+                ).first()
+
+            if existing:
+                return jsonify(success=False, error="Attendance already marked today.")
+
+            attendance = Attendance(
+                student_id=matched_student.id,
+                teacher_id=qr_session.teacher_id,
+                class_name=qr_session.class_name,
+                subject=qr_session.subject,
+                stream_or_semester=matched_student.stream_or_semester or '',
+                degree=matched_student.degree or '',
+                institution_id=matched_student.institution_id,
+                date=today,
+                status='Present',
+                method='Fingerprint',
+                roll_number=matched_student.roll_number,
+            )
+            db.session.add(attendance)
+            db.session.commit()
+
+            return jsonify(success=True, student_name=matched_student.username)
+
+        except Exception as e:
+            return jsonify(success=False, error=str(e))
+
+    return render_template('teacher/fingerprint_session.html', session=qr_session)
 
 @app.route('/teacher/qr-method', methods=['GET'])
 @role_required('teacher')
@@ -2316,182 +2444,193 @@ import base64
 from io import BytesIO
 from PIL import Image
 
+import traceback
+
 @app.route('/face-match', methods=['POST'])
 @role_required('student')
 def face_match():
-    scan_time_str = session.get('scan_verified_at')
-    if not scan_time_str or datetime.utcnow() - datetime.fromisoformat(scan_time_str) > timedelta(minutes=15):
-        flash("Please scan the valid QR first to proceed.", "warning")
-        return redirect(url_for('scan_entry'))
-    student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
-    result = None
-
-    image_data = request.form.get('image_data')
-    if not image_data:
-        flash("No image captured!", "error")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
-
     try:
-        header, encoded = image_data.split(",", 1)
-        image_bytes = base64.b64decode(encoded)
-        np_arr = np.frombuffer(image_bytes, np.uint8)
-        uploaded_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-    except Exception as e:
-        flash("Failed to process captured image.", "error")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
+        scan_time_str = session.get('scan_verified_at')
+        if not scan_time_str or datetime.utcnow() - datetime.fromisoformat(scan_time_str) > timedelta(minutes=15):
+            flash("Please scan the valid QR first to proceed.", "warning")
+            return jsonify({'redirect': url_for('scan_entry')})
 
-    gray_uploaded = cv2.cvtColor(uploaded_img, cv2.COLOR_BGR2GRAY)
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    faces_uploaded = face_cascade.detectMultiScale(gray_uploaded, 1.1, 5)
+        student_ip = request.headers.get('X-Forwarded-For') or request.remote_addr
 
-    if len(faces_uploaded) == 0:
-        flash("No face detected!", "error")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
-
-    x, y, w, h = faces_uploaded[0]
-    test_face = gray_uploaded[y:y+h, x:x+w]
-    test_face = cv2.resize(test_face, (200, 200))
-
-    ref_path = os.path.join('static', current_user.photo)
-
-    if os.path.exists(ref_path):
-        ref_img = cv2.imread(ref_path)
-    else:
-        fallback_base64 = request.form.get('fallback_image')
-        if not fallback_base64:
-            flash("Reference photo not found!", "error")
+        image_data = request.form.get('image_data')
+        if not image_data:
+            flash("No image captured!", "error")
             html = render_template('student/biometric_camera.html')
             return jsonify({'html': html})
+
         try:
-            header, encoded = fallback_base64.split(",", 1)
-            image_bytes = base64.b64decode(encoded)
+            image_bytes = base64.b64decode(image_data)
             np_arr = np.frombuffer(image_bytes, np.uint8)
-            ref_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        except Exception:
-            flash("Failed to decode fallback reference photo.", "error")
+            uploaded_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            if uploaded_img is None:
+                raise ValueError("cv2.imdecode returned None")
+        except Exception as e:
+            print("❌ Image decode error:", e)
+            flash("Failed to process captured image.", "error")
             html = render_template('student/biometric_camera.html')
             return jsonify({'html': html})
 
-    if ref_img is None:
-        flash("Failed to load reference image.", "error")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
+        gray_uploaded = cv2.cvtColor(uploaded_img, cv2.COLOR_BGR2GRAY)
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces_uploaded = face_cascade.detectMultiScale(gray_uploaded, 1.1, 5)
 
-    gray_ref = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
-    faces_ref = face_cascade.detectMultiScale(gray_ref, 1.1, 5)
-    if len(faces_ref) == 0:
-        flash("No face found in reference photo!", "error")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
-
-    x_ref, y_ref, w_ref, h_ref = faces_ref[0]
-    ref_face = gray_ref[y_ref:y_ref+h_ref, x_ref:x_ref+w_ref]
-    ref_face = cv2.resize(ref_face, (200, 200))
-
-    try:
-        recognizer = cv2.face.LBPHFaceRecognizer_create()
-        recognizer.train([ref_face], np.array([1]))
-        label, confidence = recognizer.predict(test_face)
-    except Exception as e:
-        flash("Error during face recognition.", "error")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
-
-    if confidence >= 60:
-        flash("Face did not match!", "error")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
-
-    session = QRCodeSession.query.filter_by(
-        institution_id=current_user.institution_id,
-        mode='biometric'
-    ).order_by(QRCodeSession.expires_at.desc()).first()
-
-    if not session or session.expires_at < datetime.now():
-        flash("No active biometric session found. Contact teacher.", "error")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
-
-    institution = InstitutionDetails.query.get(current_user.institution_id)
-    institution_type = institution.type.lower() if institution else 'school'
-    institution = InstitutionDetails.query.get(current_user.institution_id)
-    wifi_enabled_by_admin = institution.wifi_restriction_enabled if institution else False
-
-    if session.wifi_restriction and wifi_enabled_by_admin:
-        teacher_ip = session.teacher_ip
-        if teacher_ip and student_ip != teacher_ip:
-            flash('WiFi Restriction: You must be connected to the institution network to mark attendance.', 'danger')
-            print(f"[WiFi Blocked] Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
+        if len(faces_uploaded) == 0:
+            flash("No face detected!", "error")
             html = render_template('student/biometric_camera.html')
             return jsonify({'html': html})
 
-    if current_user.class_name != session.class_name:
-        flash("Class does not match!", "error")
-        html = render_template('student/biometric_camera.html')
-        return jsonify({'html': html})
+        x, y, w, h = faces_uploaded[0]
+        test_face = gray_uploaded[y:y+h, x:x+w]
+        test_face = cv2.resize(test_face, (200, 200))
 
-    if institution_type == 'school' and (current_user.class_name.startswith('11') or current_user.class_name.startswith('12')):
-        if current_user.stream_or_semester != session.stream_or_semester:
-            flash("Stream does not match for your class!", "error")
+        ref_path = os.path.join('static', current_user.photo)
+        if os.path.exists(ref_path):
+            ref_img = cv2.imread(ref_path)
+        else:
+            fallback_base64 = request.form.get('fallback_image')
+            if not fallback_base64:
+                flash("Reference photo not found!", "error")
+                html = render_template('student/biometric_camera.html')
+                return jsonify({'html': html})
+            try:
+                header, encoded = fallback_base64.split(",", 1)
+                image_bytes = base64.b64decode(encoded)
+                np_arr = np.frombuffer(image_bytes, np.uint8)
+                ref_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            except Exception:
+                flash("Failed to decode fallback reference photo.", "error")
+                html = render_template('student/biometric_camera.html')
+                return jsonify({'html': html})
+
+        if ref_img is None:
+            flash("Failed to load reference image.", "error")
             html = render_template('student/biometric_camera.html')
             return jsonify({'html': html})
 
-    if institution_type in ['college', 'university']:
-        if current_user.degree != session.degree:
-            flash("Degree does not match!", "error")
+        gray_ref = cv2.cvtColor(ref_img, cv2.COLOR_BGR2GRAY)
+        faces_ref = face_cascade.detectMultiScale(gray_ref, 1.1, 5)
+        if len(faces_ref) == 0:
+            flash("No face found in reference photo!", "error")
             html = render_template('student/biometric_camera.html')
             return jsonify({'html': html})
 
-        student_subjects = [s.strip().lower() for s in (current_user.subject or '').split(',')]
-        session_subject = (session.subject or '').strip().lower()
+        x_ref, y_ref, w_ref, h_ref = faces_ref[0]
+        ref_face = gray_ref[y_ref:y_ref+h_ref, x_ref:x_ref+w_ref]
+        ref_face = cv2.resize(ref_face, (200, 200))
 
-        if session_subject not in student_subjects:
-            flash("Subject does not match your enrolled subjects!", "error")
+        try:
+            recognizer = cv2.face.LBPHFaceRecognizer_create()
+            recognizer.train([ref_face], np.array([1]))
+            label, confidence = recognizer.predict(test_face)
+        except Exception as e:
+            flash("Error during face recognition.", "error")
             html = render_template('student/biometric_camera.html')
             return jsonify({'html': html})
 
-    today = datetime.now().date()
+        if confidence >= 60:
+            flash("Face did not match!", "error")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
 
-    if institution_type in ['college', 'university']:
-        existing = Attendance.query.filter(
-            Attendance.student_id == current_user.id,
-            Attendance.teacher_id == session.teacher_id,
-            Attendance.subject == session.subject,
-            Attendance.degree == session.degree,
-            func.date(Attendance.date) == today
-        ).first()
-    else:
-        existing = Attendance.query.filter(
-            Attendance.student_id == current_user.id,
-            Attendance.class_name == session.class_name,
-            func.date(Attendance.date) == today
-        ).first()
+        qr_session = QRCodeSession.query.filter_by(
+            institution_id=current_user.institution_id,
+            mode='biometric'
+        ).order_by(QRCodeSession.expires_at.desc()).first()
 
-    if existing:
-        flash("Attendance already marked for today!", "warning")
+        if not qr_session or qr_session.expires_at < datetime.now():
+            flash("No active biometric session found. Contact teacher.", "error")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
+
+        institution = InstitutionDetails.query.get(current_user.institution_id)
+        institution_type = institution.type.lower() if institution else 'school'
+        wifi_enabled_by_admin = institution.wifi_restriction_enabled if institution else False
+
+        if qr_session.wifi_restriction and wifi_enabled_by_admin:
+            teacher_ip = qr_session.teacher_ip
+            if teacher_ip and student_ip != teacher_ip:
+                flash('WiFi Restriction: You must be connected to the institution network to mark attendance.', 'danger')
+                print(f"[WiFi Blocked] Student IP: {student_ip} ≠ Teacher IP: {teacher_ip}")
+                html = render_template('student/biometric_camera.html')
+                return jsonify({'html': html})
+
+        if current_user.class_name != qr_session.class_name:
+            flash("Class does not match!", "error")
+            html = render_template('student/biometric_camera.html')
+            return jsonify({'html': html})
+
+        if institution_type == 'school' and (current_user.class_name.startswith('11') or current_user.class_name.startswith('12')):
+            if current_user.stream_or_semester != qr_session.stream_or_semester:
+                flash("Stream does not match for your class!", "error")
+                html = render_template('student/biometric_camera.html')
+                return jsonify({'html': html})
+
+        if institution_type in ['college', 'university']:
+            if current_user.degree != qr_session.degree:
+                flash("Degree does not match!", "error")
+                html = render_template('student/biometric_camera.html')
+                return jsonify({'html': html})
+
+            student_subjects = [s.strip().lower() for s in (current_user.subject or '').split(',')]
+            session_subject = (qr_session.subject or '').strip().lower()
+            if session_subject not in student_subjects:
+                flash("Subject does not match your enrolled subjects!", "error")
+                html = render_template('student/biometric_camera.html')
+                return jsonify({'html': html})
+
+        today = datetime.now().date()
+        if institution_type in ['college', 'university']:
+            existing = Attendance.query.filter(
+                Attendance.student_id == current_user.id,
+                Attendance.teacher_id == qr_session.teacher_id,
+                Attendance.subject == qr_session.subject,
+                Attendance.degree == qr_session.degree,
+                func.date(Attendance.date) == today
+            ).first()
+        else:
+            existing = Attendance.query.filter(
+                Attendance.student_id == current_user.id,
+                Attendance.class_name == qr_session.class_name,
+                func.date(Attendance.date) == today
+            ).first()
+
+        if existing:
+            flash("Attendance already marked for today!", "warning")
+            return jsonify({'redirect': url_for('student_dashboard')})
+
+        attendance = Attendance(
+            student_id=current_user.id,
+            teacher_id=qr_session.teacher_id,
+            class_name=qr_session.class_name,
+            subject=qr_session.subject,
+            stream_or_semester=current_user.stream_or_semester or '',
+            degree=current_user.degree or '',
+            institution_id=current_user.institution_id,
+            date=today,
+            status='Present',
+            method='Biometric',
+            roll_number=current_user.roll_number,
+        )
+        db.session.add(attendance)
+        db.session.commit()
+
+        flash("Attendance marked successfully via Face Recognition!", "success")
         return jsonify({'redirect': url_for('student_dashboard')})
 
-    attendance = Attendance(
-        student_id=current_user.id,
-        teacher_id=session.teacher_id,
-        class_name=session.class_name,
-        subject=session.subject,
-        stream_or_semester=current_user.stream_or_semester or '',
-        degree=current_user.degree or '',
-        institution_id=current_user.institution_id,
-        date=today,
-        status='Present',
-        method='Biometric',
-        roll_number=current_user.roll_number,
-    )
-    db.session.add(attendance)
-    db.session.commit()
+    except Exception as e:
+        print("Error in /face-match route:", str(e))
+        traceback.print_exc()
 
-    flash("Attendance marked successfully via Face Recognition!", "success")
-    return jsonify({'redirect': url_for('student_dashboard')})
+        html = render_template('student/biometric_camera.html')
+        return jsonify({
+            'html': html,
+            'error': str(e)
+        }), 500
 
 @app.route('/send-otps', methods=['POST'])
 def send_otps():

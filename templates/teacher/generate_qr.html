@@ -103,6 +103,7 @@
                 <option value="">Choose Mode</option>
                 <option value="qr">QR Code</option>
                 <option value="biometric">Biometric Face</option>
+                <option value="fingerprint">Biometric Fingerprint</option>
               </select>
             </div>
 
@@ -227,6 +228,11 @@
         heading.innerHTML = '<i class="fas fa-user-check me-2" id="modeIcon"></i>Biometric Face Attendance';
         submitIcon.className = 'fas fa-user-check me-2';
         submitText.textContent = 'Start Face Attendance';
+      }
+      else if (mode === 'fingerprint') {
+        heading.innerHTML = '<i class="fas fa-fingerprint me-2"></i>Fingerprint Attendance';
+        submitIcon.className = 'fas fa-fingerprint me-2';
+        submitText.textContent = 'Start Fingerprint Attendance';
       } else {
         heading.innerHTML = '<i class="fas fa-user-shield me-2" id="modeIcon"></i>Smart Attendance';
         submitIcon.className = 'fas fa-user-shield me-2';

@@ -4,6 +4,143 @@
 
 {% block content %}
 <div class="container py-3">
+  {% if user.role == 'student' %}
+  <!-- ADD: Fingerprint Enrollment Modal -->
+  <div class="modal fade" id="fingerprintModal" tabindex="-1" aria-labelledby="fingerprintModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-dark text-white rounded-top-4">
+          <h5 class="modal-title" id="fingerprintModalLabel">
+            <i class="fas fa-fingerprint me-2"></i> Register Your Fingerprint
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alert alert-secondary d-flex align-items-start gap-2">
+            <i class="fas fa-info-circle mt-1"></i>
+            <div>
+              Place the same finger <strong>twice</strong> when prompted. Keep it flat and steady.
+            </div>
+          </div>
+
+          <div id="fpStatus" class="p-3 rounded-3 bg-light border small">
+            <div class="d-flex align-items-center gap-2">
+              <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+              <div><strong>Ready:</strong> Click “Start Enrollment” and follow on-screen steps…</div>
+            </div>
+          </div>
+
+          <div class="text-center my-3">
+            <i class="fas fa-hand-point-up fa-2x text-muted d-block mb-2"></i>
+            <small class="text-muted">You’ll be asked to place and lift your finger.</small>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btnStartEnroll" class="btn btn-primary">
+            <i class="fas fa-play me-1"></i> Start Enrollment
+          </button>
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-xmark me-1"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD: JS to call the enrollment API and show progress -->
+  <script>
+    (function () {
+      const startBtn = document.getElementById('btnStartEnroll');
+      const statusBox = document.getElementById('fpStatus');
+
+      function setStatus(html, tone = 'light') {
+        statusBox.className = `p-3 rounded-3 border small bg-${tone}`;
+        statusBox.innerHTML = html;
+      }
+
+      async function enroll() {
+        startBtn.disabled = true;
+
+        setStatus(`
+        <div class="d-flex align-items-center gap-2">
+          <div class="spinner-border spinner-border-sm" role="status"></div>
+          <div><strong>Step 1:</strong> Place finger on sensor…</div>
+        </div>
+      `, 'warning');
+
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 120000); // 120s safety
+
+          // Kick the API (long running; do not send any body)
+          let res = await fetch('{{ url_for("api_fingerprint_enroll") }}', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            signal: controller.signal
+          });
+
+          clearTimeout(timeout);
+
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || 'Enrollment failed.');
+          }
+
+          const data = await res.json();
+
+          if (!data.success) {
+            throw new Error(data.error || 'Enrollment failed.');
+          }
+
+          setStatus(`
+          <div class="d-flex align-items-start gap-2">
+            <i class="fas fa-check-circle mt-1"></i>
+            <div>
+              <div class="fw-bold">Fingerprint registered successfully.</div>
+              <div class="small text-muted">User: <code>${data.data.username}</code> (ID: ${data.data.user_id})</div>
+              <div class="small text-muted">Sensor Slot: <code>${data.data.sensor_position}</code></div>
+            </div>
+          </div>
+        `, 'success');
+
+        } catch (err) {
+          let msg = (err && err.message) ? err.message : 'Unknown error';
+          // Attempt to parse JSON error from server if stringified
+          try {
+            const maybe = JSON.parse(msg);
+            if (maybe && maybe.error) msg = maybe.error;
+          } catch (_) { }
+
+          setStatus(`
+          <div class="d-flex align-items-start gap-2">
+            <i class="fas fa-triangle-exclamation mt-1"></i>
+            <div>
+              <div class="fw-bold">Enrollment failed.</div>
+              <div class="small">${msg}</div>
+              <ul class="small mt-2 mb-0">
+                <li>Ensure sensor is connected on correct port and powered.</li>
+                <li>Keep finger flat; try a different finger if quality is low.</li>
+                <li>Ask admin to check <code>FINGERPRINT_SERIAL_PORT</code> config.</li>
+              </ul>
+            </div>
+          </div>
+        `, 'danger');
+
+        } finally {
+          startBtn.disabled = false;
+        }
+      }
+
+      if (startBtn) {
+        startBtn.addEventListener('click', enroll);
+      }
+    })();
+  </script>
+  {% endif %}
+
   <div class="modal fade" id="profileHelpModal" tabindex="-1" aria-labelledby="profileHelpLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content border-0 shadow">
@@ -27,6 +164,7 @@
             <li><strong>Profile Photo:</strong> Upload a clear front-facing image for face recognition attendance.</li>
             <li><strong>Roll Number:</strong> Must match your school/college records.</li>
             <li><strong>Class:</strong> Select your current class or semester.</li>
+            <li><strong>Fingerprint:</strong> Click “Register Fingerprint” to enroll your finger for attendance.</li>
           </ul>
           {% if institution_type == 'school' %}
           <ul>
@@ -36,7 +174,8 @@
           <ul>
             <li><strong>Degree:</strong> Choose your enrolled course (e.g., B.Sc, B.Com, B.A).</li>
             <li><strong>Subjects:</strong> Select multiple if required. Use branch-specific format like
-              <code>Physics – Computer Engineering</code> if applicable.</li>
+              <code>Physics – Computer Engineering</code> if applicable.
+            </li>
           </ul>
           {% endif %}
           {% endif %}
@@ -95,9 +234,15 @@
       <button class="btn btn-sm btn-light ms-auto" data-bs-toggle="modal" data-bs-target="#profileHelpModal">
         <i class="fas fa-circle-info me-1"></i> Help
       </button>
-
+      {% if user.role == 'student' %}
+      <button class="btn btn-sm btn-warning ms-2" data-bs-toggle="modal" data-bs-target="#fingerprintModal">
+        <i class="fas fa-fingerprint me-1"></i>
+        {{ 'Update Fingerprint' if user.fingerprint else 'Register Fingerprint' }}
+      </button>
+      {% endif %}
     </div>
     <div class="card-body">
+
       <form method="POST" enctype="multipart/form-data">
         <div class="mb-3">
           <label class="form-label fw-semibold">
@@ -422,7 +567,6 @@
       You can only update your username and password.
     </div>
     {% endif %}
-
 
     <div class="mt-4">
       <button type="submit" class="btn btn-success me-2">

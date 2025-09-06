@@ -26,12 +26,28 @@ class User(UserMixin, db.Model):
     )
     last_parent_report_sent = db.Column(db.DateTime)
     roll_number = db.Column(db.String(50))
-
+    fingerprint = db.relationship('Fingerprint', uselist=False, back_populates='user')
+    
     def check_password(self, password):
         return check_password_hash(self.password, password)  
 
     def set_password(self, password):
         self.password = generate_password_hash(password)  
+
+class Fingerprint(db.Model):
+    __tablename__ = 'fingerprint'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    sensor_position = db.Column(db.Integer, nullable=False)
+    template = db.Column(db.LargeBinary, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = db.relationship('User', back_populates='fingerprint')
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', name='uq_fingerprint_user_single'),
+    )
 
 class InstitutionDetails(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Fingerprint Attendance | ClassiX{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="card shadow-lg animate__animated animate__fadeInDown">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">
+        <i class="fas fa-fingerprint me-2"></i>Fingerprint Attendance Session
+      </h4>
+      <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-home me-1"></i> Dashboard
+      </a>
+    </div>
+    <div class="card-body bg-light text-center">
+
+      <div class="alert alert-info">
+        <i class="fas fa-clock me-2"></i>
+        Session active for <strong>15 minutes</strong>. Place student’s finger on scanner.
+      </div>
+
+      <!-- Scan button -->
+      <button id="scanBtn" class="btn btn-success btn-lg shadow-sm">
+        <i class="fas fa-fingerprint me-2"></i><span id="scanText">Scan Fingerprint</span>
+        <span id="spinner" class="spinner-border spinner-border-sm d-none"></span>
+      </button>
+
+      <!-- Result section -->
+      <div id="result" class="mt-4"></div>
+
+      <!-- Next button (hidden until scan is done) -->
+      <button id="nextBtn" class="btn btn-primary mt-3 d-none">
+        <i class="fas fa-forward me-2"></i>Next Student
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const scanBtn = document.getElementById("scanBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const scanText = document.getElementById("scanText");
+    const spinner = document.getElementById("spinner");
+    const resultDiv = document.getElementById("result");
+
+    scanBtn.addEventListener("click", async () => {
+      scanBtn.disabled = true;
+      spinner.classList.remove("d-none");
+      scanText.textContent = "Scanning...";
+
+      try {
+        let response = await fetch(window.location.pathname, {
+          method: "POST"
+        });
+        let data = await response.json();
+
+        if (data.success) {
+          resultDiv.innerHTML = `
+          <div class="alert alert-success animate__animated animate__fadeIn">
+            ✅ Attendance marked for <strong>${data.student_name}</strong>
+          </div>`;
+          nextBtn.classList.remove("d-none");
+        } else {
+          resultDiv.innerHTML = `
+          <div class="alert alert-danger animate__animated animate__fadeIn">
+            ❌ ${data.error}
+          </div>`;
+          nextBtn.classList.remove("d-none");
+        }
+
+      } catch (err) {
+        resultDiv.innerHTML = `
+        <div class="alert alert-warning">
+          ⚠️ Error: ${err.message}
+        </div>`;
+      }
+
+      spinner.classList.add("d-none");
+      scanText.textContent = "Scan Fingerprint";
+    });
+
+    nextBtn.addEventListener("click", () => {
+      resultDiv.innerHTML = "";
+      nextBtn.classList.add("d-none");
+      scanBtn.disabled = false;
+    });
+  });
+</script>
+{% endblock %}

@@ -125,6 +125,25 @@
       </div>
 
       {% if user.role == 'student' %}
+      <div class="d-flex align-items-center gap-3 mt-3 p-3 rounded border shadow-sm bg-light">
+        <i class="fas fa-fingerprint fs-3 text-primary"></i>
+        <div>
+          {% if user.fingerprint %}
+          <div class="fw-semibold text-success">Fingerprint registered</div>
+          <div class="text-muted small">You can update it if needed.</div>
+          <a href="{{ url_for('edit_own_profile') }}" class="btn btn-sm btn-warning mt-2">
+            <i class="fas fa-sync-alt me-1"></i> Update Fingerprint
+          </a>
+          {% else %}
+          <div class="fw-semibold text-danger">No fingerprint registered</div>
+          <div class="text-muted small">Click below to register your fingerprint.</div>
+          <a href="{{ url_for('edit_own_profile') }}" class="btn btn-sm btn-outline-primary mt-2">
+            <i class="fas fa-fingerprint me-1"></i> Register Fingerprint
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
       <hr class="my-4">
       <h6 class="text-primary fw-bold mb-3"><i class="fas fa-user-graduate me-2"></i>Student Info</h6>
       <div class="row gy-2">
