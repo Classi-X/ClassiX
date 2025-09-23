@@ -3,7 +3,7 @@ from datetime import timedelta
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'classix_multimosaic_6708@'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://classix_bb5s_user:z8vje2qLvdgicH1ztkK0A72ZgWRSrnQ5@dpg-d3912g8gjchc73dd3i4g-a.singapore-postgres.render.com/classix_bb5s'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///classix.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     
@@ -17,13 +17,13 @@ class Config:
     MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
-    MAIL_USERNAME = "multimosaic.help@gmail.com"
-    MAIL_PASSWORD = "ctjl zqot rytv codx"
-    MAIL_DEFAULT_SENDER = 'multimosaic.help@gmail.com'
+    MAIL_USERNAME = "username@gmail.com"
+    MAIL_PASSWORD = "app password"
+    MAIL_DEFAULT_SENDER = 'username@gmail.com'
 
-    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID') or 'ACe22c004acbbbef75cec10cd919dbea35'
-    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN') or '1aaaefedc9f99d3858da6b97d77f1411'
-    TWILIO_WHATSAPP_FROM = 'whatsapp:+14155238886'  
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID') or 'TWILIO_ACCOUNT_SID'
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN') or 'TWILIO_AUTH_TOKEN'
+    TWILIO_WHATSAPP_FROM = 'TWILIO_WHATSAPP_FROM'  
 
     
     QR_CODE_EXPIRY_MINUTES = 15
@@ -31,9 +31,9 @@ class Config:
     
     MINIMUM_ATTENDANCE_PERCENTAGE = 75
 
-    FINGERPRINT_SERIAL_PORT = os.getenv('FINGERPRINT_SERIAL_PORT', '/dev/ttyUSB0')  # e.g. 'COM3' on Windows
+    FINGERPRINT_SERIAL_PORT = os.getenv('FINGERPRINT_SERIAL_PORT', '/dev/ttyUSB0') 
     FINGERPRINT_BAUDRATE = int(os.getenv('FINGERPRINT_BAUDRATE', '57600'))
-    FINGERPRINT_SENSOR_PASSWORD = int(os.getenv('FINGERPRINT_SENSOR_PASSWORD', '0'))  # default 0x00000000
+    FINGERPRINT_SENSOR_PASSWORD = int(os.getenv('FINGERPRINT_SENSOR_PASSWORD', '0')) 
     FINGERPRINT_ENABLE = True
     FINGERPRINT_MOCK = True
 
