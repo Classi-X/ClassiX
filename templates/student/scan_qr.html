@@ -157,28 +157,37 @@
   document.getElementById('startScanner').addEventListener('click', function () {
     const qrReader = new Html5Qrcode("qr-reader");
 
-    qrReader.start(
-      { facingMode: "environment" },
-      {
-        fps: 10,
-        qrbox: 250
-      },
-      qrCodeMessage => {
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        let cameraId;
 
-        qrReader.stop().then(() => {
-          document.getElementById('token').value = qrCodeMessage;
-          alert("QR Code Scanned: " + qrCodeMessage);
-          document.getElementById('attendanceForm').submit();
-        }).catch(err => {
-          console.error("Failed to stop scanner", err);
+        if (/Android/i.test(navigator.userAgent)) {
+          const backCam = devices.find(d => d.label.toLowerCase().includes("back"));
+          cameraId = backCam ? backCam.id : devices[0].id;
+        } else {
+          cameraId = devices[0].id;
+        }
+
+        qrReader.start(
+          cameraId,
+          { fps: 10, qrbox: 250 },
+          qrCodeMessage => {
+            qrReader.stop().then(() => {
+              document.getElementById('token').value = qrCodeMessage;
+              alert("QR Code Scanned: " + qrCodeMessage);
+              document.getElementById('attendanceForm').submit();
+            }).catch(err => console.error("Failed to stop scanner", err));
+          },
+          errorMessage => {
+          }
+        ).catch(err => {
+          alert("Camera initialization failed: " + err);
         });
-      },
-      errorMessage => {
-
       }
-    ).catch(err => {
-      alert("Camera initialization failed: " + err);
+    }).catch(err => {
+      alert("Unable to access cameras: " + err);
     });
   });
+
 </script>
 {% endblock %}

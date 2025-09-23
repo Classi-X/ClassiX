@@ -77,7 +77,16 @@
     const html5QrCode = new Html5Qrcode("qr-reader");
     Html5Qrcode.getCameras().then(devices => {
         if (devices && devices.length) {
-            const cameraId = devices[0].id;
+            let cameraId;
+
+            if (/Android/i.test(navigator.userAgent)) {
+                const backCam = devices.find(d => d.label.toLowerCase().includes("back"));
+                cameraId = backCam ? backCam.id : devices[0].id;
+            }
+            else {
+                cameraId = devices[0].id;
+            }
+
             html5QrCode.start(
                 cameraId,
                 { fps: 10, qrbox: { width: 250, height: 250 } },
@@ -89,5 +98,6 @@
         qrStatus.textContent = "❌ Camera not accessible. Please allow permission.";
         console.error("Camera error:", err);
     });
+
 </script>
 {% endblock %}

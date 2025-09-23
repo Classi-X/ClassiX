@@ -3,7 +3,7 @@ from datetime import timedelta
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'classix_multimosaic_6708@'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///classix.db'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://classix_bb5s_user:z8vje2qLvdgicH1ztkK0A72ZgWRSrnQ5@dpg-d3912g8gjchc73dd3i4g-a.singapore-postgres.render.com/classix_bb5s'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     
@@ -18,7 +18,7 @@ class Config:
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
     MAIL_USERNAME = "multimosaic.help@gmail.com"
-    MAIL_PASSWORD = "sahx xwrl rorx irbh"
+    MAIL_PASSWORD = "ctjl zqot rytv codx"
     MAIL_DEFAULT_SENDER = 'multimosaic.help@gmail.com'
 
     TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID') or 'ACe22c004acbbbef75cec10cd919dbea35'
