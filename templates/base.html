@@ -77,6 +77,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        html,
+        body {
+            overscroll-behavior-y: none;
+        }
+
         .navbar-brand {
             font-weight: bold;
         }
@@ -329,6 +334,12 @@
             }
         </style>
         <script>
+            document.addEventListener('touchmove', function (e) {
+                if (window.scrollY === 0 && e.touches[0].clientY > 0) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
             document.addEventListener('DOMContentLoaded', () => {
                 const blinkTargets = [
                     document.getElementById('myChatsLink'),
