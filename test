@@ -1,3 +1,0 @@
-psql "postgresql://ClassiX_owner:npg_O6zaq3spVuvf@ep-raspy-sky-a90p7qoj-pooler.gwc.azure.neon.tech/ClassiX?sslmode=require&channel_binding=require"
-
-pipreqs . --force 
