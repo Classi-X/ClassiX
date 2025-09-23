@@ -212,8 +212,8 @@ We welcome contributions!
 
 ## 📜 License
 
-This project is licensed under the **MIT License**.
-You are free to use, modify, and distribute it with attribution.
+This project is **not open-source**. All rights are reserved by the author.  
+You **may not** use, copy, modify, or distribute this project without explicit written permission. Commercial or personal use is **prohibited** unless authorized by the owner.
 
 ---
 
