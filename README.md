@@ -106,7 +106,7 @@ flask db upgrade
 ### 5. Run the Server
 
 ```bash
-python run.py
+python app.py
 ```
 
 Visit: `http://127.0.0.1:5000/`
@@ -139,7 +139,7 @@ Visit: `http://127.0.0.1:5000/`
 
 ```
 ClassiX/
-│── app.py              # Main application with routes/controllers
+│── app.py              # Main application with routes/controllers - Entry point (Prefered)
 │── models.py           # Database models (User, Attendance, etc.)
 │── analytics.py        # Attendance analytics & trends
 │── utils.py            # Helper functions (QR, notifications, calculations)
@@ -147,7 +147,7 @@ ClassiX/
 │── config.py           # App configurations
 │── extensions.py       # Flask extensions (db, login, mail)
 │── requirements.txt    # Python dependencies
-│── run.py              # Entry point
+│── run.py              # Entry point (But not prefered)
 │── static/             # Assets (faq.json, CSS, JS, uploads)
 │── templates/          # Jinja2 HTML templates
 └── instance/           # SQLite DB (development)
