@@ -13,7 +13,6 @@ scikit_learn
 SQLAlchemy
 twilio
 Werkzeug
-uvicorn
 gunicorn
 psycopg2-binary
 pyfingerprint
