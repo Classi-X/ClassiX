@@ -3,7 +3,7 @@ from datetime import timedelta
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'classix_multimosaic_6708@'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///classix.db'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://classix_bb5s_user:z8vje2qLvdgicH1ztkK0A72ZgWRSrnQ5@dpg-d3912g8gjchc73dd3i4g-a.singapore-postgres.render.com/classix_bb5s'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     
@@ -17,13 +17,13 @@ class Config:
     MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
-    MAIL_USERNAME = "username@gmail.com"
-    MAIL_PASSWORD = "app password"
-    MAIL_DEFAULT_SENDER = 'username@gmail.com'
+    MAIL_USERNAME = "multimosaic.help@gmail.com"
+    MAIL_PASSWORD = "eurr xxsx brxz anrz"
+    MAIL_DEFAULT_SENDER = 'multimosaic.help@gmail.com'
 
-    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID') or 'TWILIO_ACCOUNT_SID'
-    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN') or 'TWILIO_AUTH_TOKEN'
-    TWILIO_WHATSAPP_FROM = 'TWILIO_WHATSAPP_FROM'  
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID') or 'ACe22c004acbbbef75cec10cd919dbea35'
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN') or '7e9ec87efd5a3d18d7f6d4e673b62632'
+    TWILIO_WHATSAPP_FROM = '+17153175873'  
 
     
     QR_CODE_EXPIRY_MINUTES = 15
