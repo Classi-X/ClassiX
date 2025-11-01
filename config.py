@@ -3,7 +3,7 @@ from datetime import timedelta
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'classix_multimosaic_6708@'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://classix_bb5s_user:z8vje2qLvdgicH1ztkK0A72ZgWRSrnQ5@dpg-d3912g8gjchc73dd3i4g-a.singapore-postgres.render.com/classix_bb5s'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///dev.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     
