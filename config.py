@@ -17,13 +17,13 @@ class Config:
     MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
-    MAIL_USERNAME = "multimosaic.help@gmail.com"
-    MAIL_PASSWORD = "eurr xxsx brxz anrz"
-    MAIL_DEFAULT_SENDER = 'multimosaic.help@gmail.com'
+    MAIL_USERNAME = ""
+    MAIL_PASSWORD = ""
+    MAIL_DEFAULT_SENDER = ''
 
-    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID') or 'ACe22c004acbbbef75cec10cd919dbea35'
-    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN') or '7e9ec87efd5a3d18d7f6d4e673b62632'
-    TWILIO_WHATSAPP_FROM = '+17153175873'  
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID') or ''
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN') or ''
+    TWILIO_WHATSAPP_FROM = ''  
 
     
     QR_CODE_EXPIRY_MINUTES = 15
